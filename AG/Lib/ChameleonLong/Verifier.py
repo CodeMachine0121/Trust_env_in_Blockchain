@@ -6,47 +6,44 @@ from Crypto.Util.number import inverse
 
 class Verifier:
     def __init__(self):
-        self.eccKey = ECC.generate(curve='P-384')
-        self.P = self.eccKey.pointQ
-        self.ZP = int(self.P.__mul__(int(getrandbits(32))).x)  # 隨機找常數來相乘轉純量
-        self.q = int(self.eccKey.d)
+        self.ecc = ECC.generate(curve='P-384')
+        self.P = self.ecc.pointQ
+        self.Px = int(self.P.x)
+        self.Py = int(self.P.y)
+        self.q = int(self.ecc.d)
 
-        ## 變色龍金鑰產生
-        self.k = int(getrandbits(32))
-        self.x = int(getrandbits(16))
+        self.k= int(getrandbits(32)) % self.q
+        # 自己的 keypair
+        self.kn = int(getrandbits(16))% self.q
 
-        self.Y = self.x * self.ZP
-        self.x_plum = pow(self.x, -1)
+        self.Kn = self.P.__mul__(self.kn)
 
-        ## key pair
-        self.kn = int(getrandbits(16))
-        self.Kn = self.kn * self.ZP
+        self.H1 = HMAC.new(b'', digestmod=SHA256)
+        self.CHash = self.init_Hash('This is Address')
 
-        ## 變色龍雜湊
-        self.CHash = self.init_Hash()
+    def get_Kn(self):
+        return int(self.Kn.x), int(self.Kn.y)
 
-    def init_Hash(self):
-        H1 = HMAC.new(b'', digestmod=SHA256)
-        H1.update("Helll".encode())
-        Hm = int(H1.hexdigest(), 16)
-        d = Hm * self.kn * self.x_plum
-        r = (self.k - d) % self.q  # r for verifier
-        return Hm * self.Kn + r * self.Y
+    def init_Hash(self,msg):
+        self.H1.update(msg.encode())
+        hm = int(self.H1.hexdigest(), 16)
+        r = (self.k - (hm*self.kn)) % self.q
+        rP = self.P.__mul__(r)
+        CH = self.Kn.__mul__(hm).__add__(rP)
+        return CH.x, CH.y
 
     def Signing(self, msg):
-        H1 = HMAC.new(b'', digestmod=SHA256)
-        H1.update(msg.encode())
-        Hm = int(H1.hexdigest(), 16)
-
-        d = Hm * self.kn * self.x_plum
-        r = (self.k - d) % self.q  # r for verifier
-
+        self.H1.update(msg.encode())
+        hm = int(self.H1.hexdigest(), 16)
+        r = (self.k - (hm * self.kn)) % self.q
         return r
 
-    def Verifying(self, msg, r_plum, Kn):
-        H1 = HMAC.new(b'', digestmod=SHA256)
-        H1.update(msg.encode())
-        Hm = int(H1.hexdigest(), 16)
+    def Verifying(self, msg, r_plum, Knx, Kny):
+        Kn = ECC.EccPoint(Knx, Kny, 'P-384')
 
-        CH = Hm * Kn + (r_plum * self.Y)
+        self.H1.update(msg.encode())
+        hm = int(self.H1.hexdigest(), 16)
+        rP = self.P.__mul__(r_plum)
+        CH = Kn.__mul__(hm).__add__(rP)
+        CH = (CH.x, CH.y)
         return self.CHash == CH

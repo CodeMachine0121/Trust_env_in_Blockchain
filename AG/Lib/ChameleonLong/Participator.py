@@ -5,38 +5,44 @@ from Crypto.PublicKey import ECC
 
 class Participator:
 
-    def __init__(self, ZP, x_plum, k, q, HK, CHash):
+    def __init__(self, Px, Py, k, q,):
         ## 變色龍金鑰產生
-        #self.P = ECC.EccPoint(Px, Py, 'P-384')
-        self.ZP = ZP  # 隨機找常數來相乘轉純量
+        self.P = ECC.EccPoint(Px, Py, 'P-384')
         self.q = q  # 一定要是質數
-
-        self.Y = HK
         self.k = k
-        self.x_plum = x_plum
 
         ## key pair
-        self.kn = int(getrandbits(16))
-        self.Kn = self.kn * self.ZP
+        self.kn = int(getrandbits(16)) % q
+        self.Kn = self.P.__mul__(self.kn)
 
+        self.H1 = HMAC.new(b'', digestmod=SHA256)
         ## 變色龍雜湊
-        self.CHash = CHash
+        self.CHash = self.init_Hash('This is Address')
+
+    def init_Hash(self, msg):
+        self.H1.update(msg.encode())
+        hm = int(self.H1.hexdigest(),16)
+        r = (self.k - (hm*self.kn)) % self.q
+        rP = self.P.__mul__(r)
+        CH = self.Kn.__mul__(hm).__add__(rP)
+        return CH.x, CH.y
+
+    def get_Kn(self):
+        return int(self.Kn.x), int(self.Kn.y)
 
     def Signing(self, msg):
-        H1 = HMAC.new(b'', digestmod=SHA256)
-        H1.update(msg.encode())
-        Hm = int(H1.hexdigest(), 16)
-
-        d = Hm * self.kn * self.x_plum
-        r = (self.k - d) % self.q  # r for client
-
+        self.H1.update(msg.encode())
+        hm = int(self.H1.hexdigest(), 16)
+        r = (self.k - (hm * self.kn)) % self.q
         return r
 
-    def Veriying(self, msg, r_plum, Kn):
-        # K_n 對方的公鑰
-        H1 = HMAC.new(b'', digestmod=SHA256)
-        H1.update(msg.encode())
-        Hm = int(H1.hexdigest(), 16)
+    def Verifying(self, msg, r_plum, Knx, Kny):
+        Kn = ECC.EccPoint(Knx, Kny, 'P-384')
 
-        CH = Hm * Kn + (r_plum * self.Y)
+        self.H1.update(msg.encode())
+        hm = int(self.H1.hexdigest(), 16)
+        rP = self.P.__mul__(r_plum)
+        CH = Kn.__mul__(hm).__add__(rP)
+        CH = (CH.x, CH.y)
         return self.CHash == CH
+

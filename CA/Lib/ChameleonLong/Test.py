@@ -2,24 +2,16 @@ from Participator import Participator
 from Verifier import Verifier
 
 ver = Verifier()
+Px = int(ver.P.x)
+Py = int(ver.P.y)
 
+vKx, vKy = ver.get_Kn()
+msg = 'Hello'
+vr = ver.Signing(msg)
 
-cpk = int(ver.k)
-czp = ver.ZP
-cpx_plum = ver.x_plum
-cpq = ver.q
-HK = ver.Y
-CHash = ver.CHash
+part = Participator(Px, Py, ver.k, ver.q)
 
-part = Participator(czp, cpx_plum, cpk, cpq, HK, CHash)
+#print('ch: ', ver.CHash == part.CHash)
+result = part.Verifying(msg, vr, vKx, vKy)
 
-
-vmsg = 'you'
-pmsg = 'me'
-vr = ver.Signing(vmsg)
-pr = part.Signing(pmsg)
-
-result = ver.Verifying(pmsg, pr, part.Kn)
-result2 = part.Veriying(vmsg, vr, ver.Kn)
-
-print()
+print(result)
