@@ -18,7 +18,7 @@ class Participator:
         self.Kn = self.P.__mul__(self.kn)
 
         ## 變色龍雜湊
-        self.CHash = None
+        self.CHash =None
 
         ## 雜湊
         self.H1 = HMAC.new(b'', digestmod=SHA256)
@@ -28,7 +28,8 @@ class Participator:
         self.z = int(getrandbits(16))
         xp = ECC.EccPoint(Kx, Ky, curve='P-384')
         self.sk = int(xp.__mul__(self.z).x)
-
+        # 初始化雜湊值
+        self.CHash = self.init_Hash()
         # 要送回去的部分
         zp = self.P.__mul__(self.z)
         return int(zp.x), int(zp.y)
@@ -56,12 +57,14 @@ class Participator:
         r = (self.sk - d) % self.q
         return r
 
-    def Verifying(self, msg, r_plum, Kn):
+    def Verifying(self, msg, r_plum, KnX, KnY):
         if self.CHash is None:
             return 'Chameleon Hash is not initialized'
 
         self.H1.update(msg.encode())
         Hm = int(self.H1.hexdigest(), 16)
+
+        Kn = ECC.EccPoint(KnX, KnY, curve='P-384')
 
         rp = self.P.__mul__(r_plum)
         CH = Kn.__mul__(Hm).__add__(rp)

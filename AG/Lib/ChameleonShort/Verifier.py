@@ -37,7 +37,8 @@ class Verifier:
     def set_Session_key(self, Kx, Ky):
 
         zp = ECC.EccPoint(Kx,Ky, curve='P-384')
-        self.sk = zp.__mul__(self.x_plum).x
+        self.sk = int(zp.__mul__(self.x_plum).x)
+        self.CHash = self.init_Hash()
 
     def init_Hash(self):
         if self.sk == -1:
@@ -62,13 +63,15 @@ class Verifier:
         r = (self.sk - d) % self.q
         return r
 
-    def Verifying(self, msg, r_plum, Kn):
+    def Verifying(self, msg, r_plum, KnX,KnY):
         if self.CHash is None:
             return 'Chameleon Hash is not initialized'
+        Kn = ECC.EccPoint(KnX, KnY, curve='P-384')
 
         self.H1.update(msg.encode())
         Hm = int(self.H1.hexdigest(), 16)
 
         rp = self.P.__mul__(r_plum)
         CH = Kn.__mul__(Hm).__add__(rp)
+
         return self.CHash == CH
