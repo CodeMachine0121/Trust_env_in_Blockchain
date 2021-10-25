@@ -40,7 +40,7 @@ class Verifier:
         self.sk = zp.__mul__(self.x_plum).x
 
     def init_Hash(self):
-        if self.sk is -1:
+        if self.sk == -1:
             return 'Session key is not ready'
 
         self.H1.update('Hello'.encode())
@@ -53,7 +53,7 @@ class Verifier:
         return CH
 
     def Signing(self, msg):
-        if self.sk is -1:
+        if self.sk == -1:
             return 'Session key is not ready'
 
         self.H1.update(msg.encode())

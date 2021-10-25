@@ -34,7 +34,7 @@ class Participator:
         return int(zp.x), int(zp.y)
 
     def init_Hash(self):
-        if self.sk is -1:
+        if self.sk == -1:
             return 'Session key is not ready'
 
         self.H1.update('Hello'.encode())
@@ -47,7 +47,7 @@ class Participator:
         return CH
 
     def Signing(self, msg):
-        if self.sk is -1:
+        if self.sk == -1:
             return 'Session key is not ready'
 
         self.H1.update(msg.encode())
