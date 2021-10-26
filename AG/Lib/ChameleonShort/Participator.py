@@ -14,7 +14,7 @@ class Participator:
         self.sk = -1
 
         ## key pair
-        self.kn = int(getrandbits(32))
+        self.kn = int(getrandbits(64))
         self.Kn = self.P.__mul__(self.kn)
 
         ## 變色龍雜湊
@@ -27,7 +27,7 @@ class Participator:
     def Session_key_Exchange(self, Kx, Ky):  ## sk = x^{-1}P * z
         self.z = int(getrandbits(16))
         xp = ECC.EccPoint(Kx, Ky, curve='P-384')
-        self.sk = int(xp.__mul__(self.z).x)
+        self.sk = int(xp.__mul__(self.z).x) % self.q
         # 初始化雜湊值
         self.CHash = self.init_Hash()
         # 要送回去的部分

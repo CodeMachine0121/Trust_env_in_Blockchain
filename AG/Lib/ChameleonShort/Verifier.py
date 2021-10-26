@@ -11,7 +11,7 @@ class Verifier:
 
         ## 變色龍金鑰產生
         self.k = k
-        self.x = int(getrandbits(32))
+        self.x = int(getrandbits(2048))
 
         ## Session key
         self.x_plum = inverse(self.x, self.q)
@@ -37,7 +37,7 @@ class Verifier:
     def set_Session_key(self, Kx, Ky):
 
         zp = ECC.EccPoint(Kx,Ky, curve='P-384')
-        self.sk = int(zp.__mul__(self.x_plum).x)
+        self.sk = int(zp.__mul__(self.x_plum).x) % self.q
         self.CHash = self.init_Hash()
 
     def init_Hash(self):

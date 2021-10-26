@@ -12,9 +12,9 @@ class Verifier:
         self.Py = int(self.P.y)
         self.q = int(self.ecc.d)
 
-        self.k= int(getrandbits(32)) % self.q
+        self.k= int(getrandbits(2048))
         # 自己的 keypair
-        self.kn = int(getrandbits(16))% self.q
+        self.kn = int(getrandbits(64))
 
         self.Kn = self.P.__mul__(self.kn)
 

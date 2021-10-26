@@ -12,7 +12,7 @@ class Participator:
         self.k = k
 
         ## key pair
-        self.kn = int(getrandbits(16)) % q
+        self.kn = int(getrandbits(64))
         self.Kn = self.P.__mul__(self.kn)
 
         self.H1 = HMAC.new(b'', digestmod=SHA256)
