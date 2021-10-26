@@ -21,26 +21,23 @@ class Participator:
 
     def init_Hash(self, msg):
         self.H1.update(msg.encode())
-        hm = int(self.H1.hexdigest(),16)
-        r = (self.k - (hm*self.kn)) % self.q
+        hm = int(self.H1.hexdigest(), 16) % self.q
+        r = (self.k - (hm*self.kn) % self.q) % self.q
         rP = self.P.__mul__(r)
         CH = self.Kn.__mul__(hm).__add__(rP)
-        return CH.x, CH.y
-
-    def get_Kn(self):
-        return int(self.Kn.x), int(self.Kn.y)
+        return int(CH.x), int(CH.y)
 
     def Signing(self, msg):
         self.H1.update(msg.encode())
-        hm = int(self.H1.hexdigest(), 16)
-        r = (self.k - (hm * self.kn)) % self.q
+        hm = int(self.H1.hexdigest(), 16) % self.q
+        r = (self.k - (hm * self.kn) % self.q) % self.q
         return r
 
     def Verifying(self, msg, r_plum, Knx, Kny):
         Kn = ECC.EccPoint(Knx, Kny, 'P-384')
 
         self.H1.update(msg.encode())
-        hm = int(self.H1.hexdigest(), 16)
+        hm = int(self.H1.hexdigest(), 16) % self.q
         rP = self.P.__mul__(r_plum)
         CH = Kn.__mul__(hm).__add__(rP)
         CH = (CH.x, CH.y)

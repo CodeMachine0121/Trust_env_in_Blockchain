@@ -45,20 +45,20 @@ class Verifier:
             return 'Session key is not ready'
 
         self.H1.update('Hello'.encode())
-        Hm = int(self.H1.hexdigest(), 16)
+        Hm = int(self.H1.hexdigest(), 16) % self.q
         d = (Hm * self.kn) % self.q
         r = (self.sk - d) % self.q
 
         rp = self.P.__mul__(r)
         CH = self.Kn.__mul__(Hm).__add__(rp)
-        return CH
+        return int(CH.x), int(CH.y)
 
     def Signing(self, msg):
         if self.sk == -1:
             return 'Session key is not ready'
 
         self.H1.update(msg.encode())
-        Hm = int(self.H1.hexdigest(), 16)
+        Hm = int(self.H1.hexdigest(), 16) % self.q
         d = (Hm * self.kn) % self.q
         r = (self.sk - d) % self.q
         return r
@@ -69,9 +69,9 @@ class Verifier:
         Kn = ECC.EccPoint(KnX, KnY, curve='P-384')
 
         self.H1.update(msg.encode())
-        Hm = int(self.H1.hexdigest(), 16)
+        Hm = int(self.H1.hexdigest(), 16) % self.q
 
         rp = self.P.__mul__(r_plum)
         CH = Kn.__mul__(Hm).__add__(rp)
-
+        CH = (CH.x, CH.y)
         return self.CHash == CH
