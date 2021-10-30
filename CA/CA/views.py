@@ -11,6 +11,8 @@ from Lib.ChameleonLong.Verifier import Verifier
 ver = Verifier()
 
 ## 區塊練相關宣告
+Contract_addr = ""
+Contract_abi = ""
 
 
 # API Function
@@ -19,14 +21,12 @@ def getSystem_Parameters(request):
     return HttpResponse(
         # ZP, x_plum, k, q, HK, CHash
         json.dumps({
-            "ZP": ver.ZP,
-            #"x_plum": ver.x_plum, # 不提供TKHK
-            #"k": ver.k,
+            "Px": int(ver.P.x),
+            "Py": int(ver.P.y),
+            "k": ver.k,
             "q": ver.q,
-            'HK': ver.Y,
-            "CHash": ver.CHash,
-            "Kn": ver.Kn,
-
+            "Knx": int(ver.Kn.x),
+            "Kny": int(ver.Kn.y),
         }),
         content_type='application/json'
     )
@@ -59,7 +59,6 @@ def AG_Register(request):
     Kn = upload.get('Kn')
     signature = upload.get('signature')
 
-    result = ver.Verifying(msg,  signature, Kn)
+    result = ver.Verifying(msg, signature, Kn)
 
     return HttpResponse(json.dumps({'result': result}))
-

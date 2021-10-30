@@ -2,23 +2,16 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import json
 import sys
+from web3 import Web3
+from Logic.LongTermCode import LongTermCode as LPart
+from Logic.ShortTermCode import ShortTermCode as SVer
 
 # 變色龍雜湊
-sys.path.append('..')
-from Lib.Chameleon.Verifier import Verifier
-from Lib.Chameleon.Participator import Participator
-
-## Create your views here.
-ver = Verifier()
-P = ver.P
-q = ver.q
-HK = ver.Y
-Kn = ver.Kn
-x_plum = ver.x_plum
-
+lpart = LPart()
+sver = SVer(lpart.Px, lpart.Py, lpart.q, lpart.kn, lpart.k)
 # --------------------------------------------------------- #
 # 乙太坊區塊鏈網路
-from web3 import Web3
+
 
 NodeHost = "https://192.168.0.135:8545"
 w3 = Web3(Web3.HTTPProvider(NodeHost))
@@ -28,8 +21,12 @@ Txn_List = {}  ## 存放交易雜湊用的字典
 # API Function
 ## Register_for_Clients
 def getSystem_Parameters(request):
-    return HttpResponse(json.dumps({"P": P, "q": q, "Kn": Kn, "HK": HK, "x_plum": x_plum}),
-                        content_type='application/json')
+    return HttpResponse(json.dumps({
+                            "Px": sver.Px,
+                            "Py": sver.Py,
+                            "q": sver.q,
+                            "Knx": int(sver.sver.Kn.x),
+                            "Kny": int(sver.sver.Kn.y)}), content_type='application/json')
 
 
 # Session key 交換 採用 ECDH
