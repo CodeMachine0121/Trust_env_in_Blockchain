@@ -22,22 +22,25 @@ Txn_List = {}  ## 存放交易雜湊用的字典
 ## Register_for_Clients
 def getSystem_Parameters(request):
     return HttpResponse(json.dumps({
-                            "Px": sver.Px,
-                            "Py": sver.Py,
-                            "q": sver.q,
-                            "Knx": int(sver.sver.Kn.x),
-                            "Kny": int(sver.sver.Kn.y)}), content_type='application/json')
+        "Px": sver.Px,
+        "Py": sver.Py,
+        "q": sver.q,
+        "Knx": int(sver.sver.Kn.x),
+        "Kny": int(sver.sver.Kn.y)}), content_type='application/json')
 
 
 # Session key 交換 採用 ECDH
 def SessionKey_exchange(request):
-    # 計算 P*k
-    Pk = P * ver.k
-    zP = json.loads(request.body.decode("utf-8")).get('zP')
-    ver.sk = zP * ver.k
+    # 我覺得需要公鑰去記得誰的Session Key是哪一把
+    # 接收另一半 zP.x zP.y
+    # 回傳 x^{-1} * P
+    data = json.loads(request.body.decode("utf-8"))
+    xpX, xpY = sver.SessionKey()
+    zpX = data.get('zpX')
+    zpY = data.get('zpY')
+    sver.setSessionKey(zpX, zpY)
 
-    rv = ver.Signing("Init SK")
-    return HttpResponse(json.dumps({"Pk": Pk}), content_type="application/json")
+    return HttpResponse(json.dumps({"xpX": xpX, "xpY": xpY}), content_type="application/json")
 
 
 ## 簽名驗證

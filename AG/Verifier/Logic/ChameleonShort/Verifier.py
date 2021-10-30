@@ -15,14 +15,14 @@ class Verifier:
 
         ## Session key
         self.x_plum = inverse(self.x, self.q)
-        self.sk = -1  ## 還需要進行金鑰交換
+        # self.sk = -1  ## 還需要進行金鑰交換
 
         ## key pair
         self.kn = kn
         self.Kn = self.P.__mul__(self.kn)
 
         ## 變色龍雜湊
-        self.CHash = None
+        #self.CHash = None
 
         ## 雜湊
         self.H1 = HMAC.new(b'', digestmod=SHA256)
@@ -30,6 +30,7 @@ class Verifier:
     ################################################
     #   server 需要先傳送自己的半金鑰，再接收另一半，再設定。     #
     ########################################################
+
     def Session_key_Exchange(self, ):  # sk = x^{-1} * z * P
         xp = self.P.__mul__(self.x_plum)
         return int(xp.x), int(xp.y)
@@ -37,35 +38,28 @@ class Verifier:
     def set_Session_key(self, Kx, Ky):
 
         zp = ECC.EccPoint(Kx,Ky, curve='P-384')
-        self.sk = int(zp.__mul__(self.x_plum).x) % self.q
-        self.CHash = self.init_Hash()
+        sk = int(zp.__mul__(self.x_plum).x) % self.q
+        CHash = self.init_Hash(sk)
+        return sk, CHash
 
-    def init_Hash(self):
-        if self.sk == -1:
-            return 'Session key is not ready'
-
+    def init_Hash(self, sk):
         self.H1.update('Hello'.encode())
         Hm = int(self.H1.hexdigest(), 16) % self.q
         d = (Hm * self.kn) % self.q
-        r = (self.sk - d) % self.q
+        r = (sk - d) % self.q
 
         rp = self.P.__mul__(r)
         CH = self.Kn.__mul__(Hm).__add__(rp)
         return int(CH.x), int(CH.y)
 
-    def Signing(self, msg):
-        if self.sk == -1:
-            return 'Session key is not ready'
-
+    def Signing(self, msg, sk):
         self.H1.update(msg.encode())
         Hm = int(self.H1.hexdigest(), 16) % self.q
         d = (Hm * self.kn) % self.q
-        r = (self.sk - d) % self.q
+        r = (sk - d) % self.q
         return r
 
-    def Verifying(self, msg, r_plum, KnX, KnY):
-        if self.CHash is None:
-            return 'Chameleon Hash is not initialized'
+    def Verifying(self, msg, r_plum, KnX, KnY, CHash):
         Kn = ECC.EccPoint(KnX, KnY, curve='P-384')
 
         self.H1.update(msg.encode())
@@ -74,4 +68,4 @@ class Verifier:
         rp = self.P.__mul__(r_plum)
         CH = Kn.__mul__(Hm).__add__(rp)
         CH = (CH.x, CH.y)
-        return self.CHash == CH
+        return CHash == CH
