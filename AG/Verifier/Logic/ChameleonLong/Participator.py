@@ -15,29 +15,34 @@ class Participator:
         self.kn = int(getrandbits(64))
         self.Kn = self.P.__mul__(self.kn)
 
-        self.H1 = HMAC.new(b'', digestmod=SHA256)
+
         ## 變色龍雜湊
         self.CHash = self.init_Hash('This is Address')
 
     def init_Hash(self, msg):
-        self.H1.update(msg.encode())
-        hm = int(self.H1.hexdigest(), 16) % self.q
+        # Hash function obj
+        H1 = HMAC.new(b'', digestmod=SHA256)
+        H1.update(msg.encode())
+        hm = int(H1.hexdigest(), 16) % self.q
         r = (self.k - (hm*self.kn) % self.q) % self.q
         rP = self.P.__mul__(r)
         CH = self.Kn.__mul__(hm).__add__(rP)
         return int(CH.x), int(CH.y)
 
     def Signing(self, msg):
-        self.H1.update(msg.encode())
-        hm = int(self.H1.hexdigest(), 16) % self.q
+        # Hash function obj
+        H1 = HMAC.new(b'', digestmod=SHA256)
+        H1.update(msg.encode())
+        hm = int(H1.hexdigest(), 16) % self.q
         r = (self.k - (hm * self.kn) % self.q) % self.q
         return r
 
     def Verifying(self, msg, r_plum, Knx, Kny):
         Kn = ECC.EccPoint(Knx, Kny, 'P-384')
-
-        self.H1.update(msg.encode())
-        hm = int(self.H1.hexdigest(), 16) % self.q
+        # Hash function obj
+        H1 = HMAC.new(b'', digestmod=SHA256)
+        H1.update(msg.encode())
+        hm = int(H1.hexdigest(), 16) % self.q
         rP = self.P.__mul__(r_plum)
         CH = Kn.__mul__(hm).__add__(rP)
         CH = (CH.x, CH.y)

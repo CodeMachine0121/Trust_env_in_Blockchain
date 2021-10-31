@@ -1,4 +1,4 @@
-from ChameleonLong.Participator import Participator as LPart
+from .ChameleonLong.Participator import Participator as LPart
 import requests
 import json
 

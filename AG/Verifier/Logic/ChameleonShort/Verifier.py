@@ -1,71 +1,90 @@
-from Crypto.PublicKey import ECC
 from Crypto.Hash import HMAC, SHA256
 from Crypto.Random.random import getrandbits
-from Crypto.Util.number import inverse
+from Crypto.PublicKey import ECC
 
 
 class Verifier:
-    def __init__(self, Px, Py, q, kn, k):
-        self.P = ECC.EccPoint(Px, Py, curve='P-384')
-        self.q = q
+    def __init__(self):
+        self.ecc = ECC.generate(curve='P-384')
+        self.P = self.ecc.pointQ
+        self.q = int(self.ecc.d)
 
-        ## 變色龍金鑰產生
-        self.k = k
-        self.x = int(getrandbits(2048))
-
-        ## Session key
-        self.x_plum = inverse(self.x, self.q)
-        # self.sk = -1  ## 還需要進行金鑰交換
-
-        ## key pair
-        self.kn = kn
+        # Trap door key
+        self.x = int(getrandbits(32))
+        # Key pair
+        self.kn = int(getrandbits(64))
         self.Kn = self.P.__mul__(self.kn)
 
-        ## 變色龍雜湊
-        #self.CHash = None
+        # Session key,  變色龍雜湊: 因為要記錄多個使用者所以用MAP紀錄
+        self.sessionKeys = dict()
 
-        ## 雜湊
-        self.H1 = HMAC.new(b'', digestmod=SHA256)
+    def start_SessionKey(self):
+        xP = self.P.__mul__(self.x)
+        return int(xP.x), int(xP.y)
 
-    ################################################
-    #   server 需要先傳送自己的半金鑰，再接收另一半，再設定。     #
-    ########################################################
+    def set_SessionKey(self, zpx, zpy, cli_PubX):
+        zP = ECC.EccPoint(zpx, zpy, curve='P-384')
+        sk = int(zP.__mul__(self.x).x)
 
-    def Session_key_Exchange(self, ):  # sk = x^{-1} * z * P
-        xp = self.P.__mul__(self.x_plum)
-        return int(xp.x), int(xp.y)
+        # 初始化 變色龍雜湊值
+        Chash = self.init_CHash(sk)
+        print("[Line 34] CH: ", Chash[0])
+        print("[Line 35] SK: ", sk)
+        # 用公鑰x值紀錄
+        self.sessionKeys[cli_PubX] = {
+            "sk": sk,
+            "Chash": Chash,
+            'times': 10
+        }
+        return
 
-    def set_Session_key(self, Kx, Ky):
+    def init_CHash(self, sk):
+        # Hash function obj
+        H1 = HMAC.new(b'', digestmod=SHA256)
+        H1.update(b'Initialize')
+        hm = int(H1.hexdigest(), 16)
 
-        zp = ECC.EccPoint(Kx,Ky, curve='P-384')
-        sk = int(zp.__mul__(self.x_plum).x) % self.q
-        CHash = self.init_Hash(sk)
-        return sk, CHash
+        rP = self.P.__mul__(sk - hm * self.kn)
+        hKn = self.Kn.__mul__(hm)
+        Chash = hKn.__add__(rP)
+        return int(Chash.x), int(Chash.y)
 
-    def init_Hash(self, sk):
-        self.H1.update('Hello'.encode())
-        Hm = int(self.H1.hexdigest(), 16) % self.q
-        d = (Hm * self.kn) % self.q
-        r = (sk - d) % self.q
+    def VerifySignature(self, msg, r_plum, Knx, Kny):
+        # 建立 ECC obj
+        cliPub = ECC.EccPoint(Knx, Kny, curve='P-384')
+        # 建立 msg hash
+        # Hash function obj
+        H1 = HMAC.new(b'', digestmod=SHA256)
+        H1.update(msg.encode())
+        hm = int(H1.hexdigest(), 16)
 
-        rp = self.P.__mul__(r)
-        CH = self.Kn.__mul__(Hm).__add__(rp)
-        return int(CH.x), int(CH.y)
+        # Calculate
+        hKn = cliPub.__mul__(hm)
+        rP = self.P.__mul__(r_plum)
+        chash = hKn.__add__(rP)
+        chash = (int(chash.x), int(chash.y))
 
-    def Signing(self, msg, sk):
-        self.H1.update(msg.encode())
-        Hm = int(self.H1.hexdigest(), 16) % self.q
-        d = (Hm * self.kn) % self.q
-        r = (sk - d) % self.q
+        result = chash == self.sessionKeys[Knx]['Chash']
+        print("[Line 67] CH: ", self.sessionKeys[Knx]['Chash'][0])
+        print("[Line 68] CH(1): ", chash[0])
+        print("[Line 69] Kn: ", Knx)
+        print("[Line 70] hKn: ", int(hKn.x))
+        print("[Line 71] rp: ", int(rP.x))
+        print("[Line 72] hm: ", hm)
+        return result
+
+    def MakeSignature(self, msg, Knx):
+        # Hash function obj
+        H1 = HMAC.new(b'', digestmod=SHA256)
+        # calculate r
+        sk = self.sessionKeys[Knx]['sk']
+        H1.update(msg.encode())
+        hm = int(H1.hexdigest(), 16)
+        r = sk - hm * self.kn
+
+        # Calculate
+        hKn = self.Kn.__mul__(hm)
+        rP = self.P.__mul__(r)
+        chash = hKn.__add__(rP)
+        chash = (int(chash.x), int(chash.y))
         return r
-
-    def Verifying(self, msg, r_plum, KnX, KnY, CHash):
-        Kn = ECC.EccPoint(KnX, KnY, curve='P-384')
-
-        self.H1.update(msg.encode())
-        Hm = int(self.H1.hexdigest(), 16) % self.q
-
-        rp = self.P.__mul__(r_plum)
-        CH = Kn.__mul__(Hm).__add__(rp)
-        CH = (CH.x, CH.y)
-        return CHash == CH
