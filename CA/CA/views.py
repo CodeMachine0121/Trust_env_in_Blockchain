@@ -56,9 +56,10 @@ def AG_Register(request):
     upload = json.loads(request.body.decode("utf-8"))
     ## 請對於訊息進行加密
     msg = upload.get('msg')
-    Kn = upload.get('Kn')
+    Knx = upload.get('Knx')
+    Kny = upload.get('Kny')
     signature = upload.get('signature')
 
-    result = ver.Verifying(msg, signature, Kn)
+    result = ver.Verifying(msg, signature, Knx, Kny)
 
     return HttpResponse(json.dumps({'result': result}))
