@@ -18,6 +18,10 @@ Contract_abi = ""
 # API Function
 ## Register_for_Clients
 def getSystem_Parameters(request):
+# only AG
+    # Using rsa to encrypt data
+
+
     return HttpResponse(
         # ZP, x_plum, k, q, HK, CHash
         json.dumps({
