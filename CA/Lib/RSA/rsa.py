@@ -1,36 +1,57 @@
+# coding:utf-8
+
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-
-
+import os
+from os.path import join
 class RSA_Library:
     def __init__(self):
-        self.Key = RSA.generate(2048)
-        
-        # public key
-        self.publicKey = self.Key.publickey()
-    
+        # check if keyfile exist
+        if 'keystore'  not in os.listdir() or len(os.listdir('keystore'))==0:
+            
+            try:
+                os.mkdir('keystore') # create folder to save rsa keys
+            except:
+                pass
+            # private key
+            self.privateKey = RSA.generate(2048)
+            # public key
+            self.publicKey = self.privateKey.publickey()
+            self.BackupKey()
+
+        else:
+            self.privateKey, self.publicKey = self.ImportKey()
+
     def BackupKey(self):
         secretCode = 'codeToreadKey'
         ##  寫成文件的時候要以祕文儲存
-        private = self.Key.export_key(passphrase=secretCode, pkcs=8, protection="scryptAndAES128-CBC")
+        private = self.privateKey.export_key(passphrase=secretCode, pkcs=8, protection="scryptAndAES128-CBC")
         
         #  寫入文件
-        with open("private.pem", "wb") as f:
+        path = join('.','keystore')
+        with open(join(path,"private.pem"), "wb") as f:
             f.write(private)
+        
+        return 
 
-    def ImportKey(self)
+    def ImportKey(self):
         secretCode = 'codeToreadKey'
-        # 讀取金鑰文件
-        encodedKey = open('private.pem', 'rb').read()
+        # 讀取金鑰文件i
+        path = join('.','keystore')
+        encodedKey = open(join(path,'private.pem'), 'rb').read()
 
-        self.Key = RSA.import_key(encodedKey, passphrase=secretCode)
-        self.pbulicKey = self.Key.publicKey()
-
+        privateKey = RSA.import_key(encodedKey, passphrase=secretCode)
+        publicKey = privateKey.publickey()
+        return privateKey, publicKey
+    
+    
 
     def EncryptFunc(self,msg, publicKey):
         
         ##  匯入接收方公鑰
-        public = RSA.import_key(publicKey.encode('utf-8'))
+        
+        strpub = '-----BEGIN PUBLIC KEY-----\n'+publicKey+'-----END PUBLIC KEY-----'
+        public = RSA.import_key(strpub.encode('utf-8'))
 
         cipherRSA=PKCS1_OAEP.new(self.publicKey)
         msg = msg.encode()
