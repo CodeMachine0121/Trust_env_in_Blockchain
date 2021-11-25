@@ -16,7 +16,7 @@ sver = SVer()
 
 # API Function
 ## Register_for_Clients
-def getSystem_Parameters(request):
+def get_shortTerm_SystemParameters(request):
     return HttpResponse(json.dumps({
         "Px": int(sver.P.x),
         "Py": int(sver.P.y),
@@ -26,7 +26,7 @@ def getSystem_Parameters(request):
 
 
 # Session key 交換 採用 ECDH
-def SessionKey_exchange(request):
+def sessionKey_exchange(request):
     # 我覺得需要公鑰去記得誰的Session Key是哪一把
     # 接收另一半 zP.x zP.y
     # 回傳 x^{-1} * P
@@ -42,7 +42,7 @@ def SessionKey_exchange(request):
 
 
 ## 簽名驗證
-def short_Receiver(request):
+def short_Receiver_Actions(request):
     data = json.loads(request.body.decode("utf-8"))
     msg = data.get('msg')
     r_plum = data.get('r')

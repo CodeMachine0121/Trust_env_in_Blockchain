@@ -58,7 +58,9 @@ class Client:
 
         return res.text
 
-
+    # 要執行的動作
+    def makeActions(action_msg):
+        pass
 
 client = Client('http://127.0.0.1:8000')
 print()

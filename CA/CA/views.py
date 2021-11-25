@@ -29,8 +29,7 @@ def getSystem_Parameters(request):
     ## 在RSA加密Func已經實作公鑰的字串轉物件
     clientPub = json.loads(request.body.decode())['PublicKey']
     
-    # Px,Py,k,q,Knx,Kny
-    #data = str(int(ver.P.x)) + ":" + int(ver.P.y) + ":" + str(ver.k) + ":" + str(ver.q) + ":" + str(int(ver.Kn.x)) + ":" + str(int(ver.Kn.y))
+    # Px,Py,k,q,Knx,Kny 
     
     en_Px = rsa.EncryptFunc(str(int(ver.P.x)), clientPub)
     en_Py = rsa.EncryptFunc(str(int(ver.P.y)), clientPub)
@@ -41,6 +40,7 @@ def getSystem_Parameters(request):
     en_Knx = rsa.EncryptFunc(str(int(ver.Kn.x)), clientPub)
     en_Kny = rsa.EncryptFunc(str(int(ver.Kn.y)), clientPub)
         
+
 
     return HttpResponse(
         json.dumps({

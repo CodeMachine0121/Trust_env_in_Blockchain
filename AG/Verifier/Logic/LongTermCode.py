@@ -7,15 +7,18 @@ class LongTermCode:
     def __init__(self):
         self.CA_Addr = 'http://127.0.0.1:9999/'
 
-        self.Px, self.Py, self.k, self.q = self.Get_System()
+        self.Px, self.Py, self.k, self.q = self.get_CA_System()
         self.CA_pubKeys = None
         self.lpart = LPart(self.Px, self.Py, self.k, self.q)
         self.kn = self.lpart.kn
+        
+        self.rsa
 
         pass
 
-    def Get_System(self):
+    def get_CA_System(self):
         # 向CA索取 System Parameters
+        # Needs rsa cipher to decrypt the msg
         res = requests.get(self.CA_Addr + 'Parameters/')
         data = json.loads(res.text)
         Px = data["Px"]
