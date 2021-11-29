@@ -59,9 +59,12 @@ class RSA_Library:
         msg = msg.encode()
         enContent = cipherRSA.encrypt(msg)
 
-        return enContent
+        return enContent.hex()
     
+
+
     def DecryptFunc(self, encrypted_msg):
+        encrypted_msg = bytes.fromhex(encrypted_msg)
         cipherRSA = PKCS1_OAEP.new(self.privateKey)
         encodedMsg = cipherRSA.decrypt(encrypted_msg)
         

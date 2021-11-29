@@ -3,7 +3,7 @@ import json
 from Lib.ChameleonShort.Participator import Participator
 from Crypto.Random.random import getrandbits
 from Crypto.PublicKey import ECC
-
+from Lib.RSA.rsa import RSA_Library
 
 class Client:
     def __init__(self, server):
@@ -39,21 +39,30 @@ class Client:
 
         ### 計算sk
         self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
+        return 
 #########################################################
 
-
+    def makeAction(commandMsg):
         ### 簽章
-        msg = "Back"
+        commandMsg = "Back"
+        en_commandMsg = rsa.EncryptFunc(commandMsg) 
         r = self.part.MakeSignature(msg, int(self.Public_AG.x))
+        publicKey = self.rsa.publicKey.export_key().decode().replace('-----BEGIN PUBLIC KEY-----\n','').replace('\n-----END PUBLIC KEY-----','')
+
+
         ### 送去審核
         res = requests.post("{}/AG/shortReceive/".format(self.server),
-                            data=json.dumps({"msg": msg,
+                            data=json.dumps({"msg": en_commandMsg,
                                              "r": r,
                                              "Knx": int(self.part.Kn.x),
                                              "Kny": int(self.part.Kn.y),
+                                             "publicKey": publicKey
                                              }))
         response = json.loads(res.text)
-        result = self.part.VerifySignature(response.get('msg'), response.get('signature'), int(self.Public_AG.x), int(self.Public_AG.y))
+        AG_public = response.get('publicKey')
+        decrypt_resultMsg =rsa.DecryptFunc(response.get('msg'), AG_public)
+
+        result = self.part.VerifySignature(decrypt_resultMsg, response.get('signature'), int(self.Public_AG.x), int(self.Public_AG.y))
         print("[*] Result: ", result)
 
         return res.text
