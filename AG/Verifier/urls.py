@@ -19,8 +19,8 @@ from . import views
 
 
 urlpatterns = [
-    path("Parameters/", views.getSystem_Parameters),
-    path("SessionKey/", views.SessionKey_exchange),
-    path("shortReceive/", views.short_Receiver),
+    path("Parameters/", views.get_shortTerm_SystemParameters),
+    path("SessionKey/", views.sessionKey_exchange),
+    path("shortReceive/", views.short_Receiver_Actions),
     #path('TxnRequest/')
 ]
