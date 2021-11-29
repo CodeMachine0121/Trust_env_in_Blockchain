@@ -5,7 +5,7 @@ import sys
 
 from .Logic.LongTermCode import LongTermCode as LPart
 from .Logic.ChameleonShort.Verifier import Verifier as SVer
-from .Logic.RSA.rsa improt RSA_Library
+from .Logic.RSA.rsa import RSA_Library
 # 變色龍雜湊
 lpart = LPart()
 sver = SVer()

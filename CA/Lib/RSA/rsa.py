@@ -13,11 +13,13 @@ class RSA_Library:
                 os.mkdir('keystore') # create folder to save rsa keys
             except:
                 pass
+            ## create key pair
             # private key
             self.privateKey = RSA.generate(2048)
             # public key
             self.publicKey = self.privateKey.publickey()
             self.BackupKey()
+
 
         else:
             self.privateKey, self.publicKey = self.ImportKey()
@@ -49,6 +51,7 @@ class RSA_Library:
     def EncryptFunc(self,msg, publicKey):
         
         ##  匯入接收方公鑰
+        
         strpub = '-----BEGIN PUBLIC KEY-----\n'+publicKey+'\n-----END PUBLIC KEY-----'
         public = RSA.import_key(strpub.encode('utf-8'))
 
@@ -56,9 +59,12 @@ class RSA_Library:
         msg = msg.encode()
         enContent = cipherRSA.encrypt(msg)
 
-        return enContent
+        return enContent.hex()
     
+
+
     def DecryptFunc(self, encrypted_msg):
+        encrypted_msg = bytes.fromhex(encrypted_msg)
         cipherRSA = PKCS1_OAEP.new(self.privateKey)
         encodedMsg = cipherRSA.decrypt(encrypted_msg)
         
