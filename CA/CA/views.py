@@ -43,12 +43,12 @@ def getSystem_Parameters(request):
 
     return HttpResponse(
         json.dumps({
-            'Px': en_Px.hex(),
-            'Py': en_Py.hex(),
-            'k': en_k.hex(),
-            'q': en_q.hex(),
-            'Knx':en_Knx.hex(),
-            'Kny':en_Kny.hex(),
+            'Px': en_Px,
+            'Py': en_Py,
+            'k': en_k,
+            'q': en_q,
+            'Knx':en_Knx,
+            'Kny':en_Kny,
         }),
         content_type='application/json'
     )

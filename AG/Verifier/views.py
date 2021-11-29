@@ -5,11 +5,11 @@ import sys
 
 from .Logic.LongTermCode import LongTermCode as LPart
 from .Logic.ChameleonShort.Verifier import Verifier as SVer
-
+from .Logic.RSA.rsa improt RSA_Library
 # 變色龍雜湊
 lpart = LPart()
 sver = SVer()
-
+rsa = RSA_Library()
 
 # --------------------------------------------------------- #
 
@@ -41,19 +41,35 @@ def sessionKey_exchange(request):
     return HttpResponse(json.dumps({"xPX": xpX, "xPY": xpY}), content_type="application/json")
 
 
-## 簽名驗證
+## 接收執行 Client 的指令
 def short_Receiver_Actions(request):
+    """
+        參數:{
+            encrypted_msg
+            Knx, Kny
+            r_plum
+            Client PublicKey
+        }
+        輸出: 指令結果(加密)
+    """
+    # use rsa algorithm to en/decrypt message
+    # cipher will present as hex string 
     data = json.loads(request.body.decode("utf-8"))
-    msg = data.get('msg')
+    msg = rsa.DecryptFunc(bytes.fromhex(data.get('msg')))
     r_plum = data.get('r')
     Knx = data.get("Knx")
     Kny = data.get("Kny")
+    
+    # rsa public key
+    cliPublic = data.get('publicKey')
 
     result = sver.VerifySignature(msg, r_plum, Knx, Kny)
 
     print("[*] Result: {}".format(result))
 
-    m = "return"  # 依照上面的指令做完後的回傳直
+    
+    # 加密訊息
+    m = rsa.EncryptFunc("return", cliPublic)  # 依照上面的指令做完後的回傳直
     r = sver.MakeSignature(m, Knx)
 
     return HttpResponse(

@@ -29,14 +29,14 @@ class LongTermCode:
         data = json.loads(res.text)
         
 
-        # these are cipherText, need to be decrypted 
-        Px = self.rsa.DecryptFunc( bytes.fromhex(data["Px"]))
-        Py = self.rsa.DecryptFunc( bytes.fromhex(data["Py"]))
-        k = self.rsa.DecryptFunc(  bytes.fromhex(data["k"]))
-        q = self.rsa.DecryptFunc(  bytes.fromhex(data["q"]))
+        # these are cipherText, need to be decrypted
+        # the cipherText is hex string
+        Px = self.rsa.DecryptFunc( data["Px"])
+        Py = self.rsa.DecryptFunc( data["Py"])
+        k = self.rsa.DecryptFunc(  data["k"])
+        q = self.rsa.DecryptFunc(  data["q"])
         
         
-
         #self.CA_pubKeys = (data["Knx"], data["Kny"])
         return Px, Py, k, q
 
