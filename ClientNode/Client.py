@@ -71,5 +71,5 @@ class Client:
     def makeActions(action_msg):
         pass
 
-client = Client('http://127.0.0.1:8000')
+client = Client('http://127.0.0.1:9999')
 print()
