@@ -22,7 +22,8 @@ def get_shortTerm_SystemParameters(request):
         "Py": int(sver.P.y),
         "q": sver.q,
         "Knx": int(sver.Kn.x),
-        "Kny": int(sver.Kn.y)}), content_type='application/json')
+        "Kny": int(sver.Kn.y),
+        "RSA_PublicKey": rsa.OutputPublic()}), content_type='application/json')
 
 
 # Session key 交換 採用 ECDH
@@ -36,48 +37,49 @@ def sessionKey_exchange(request):
     zpX = data.get('zpX')
     zpY = data.get('zpY')
     KnX = data.get("KnX")
-    sver.set_SessionKey(zpX, zpY, KnX)  # 這邊就會初始化變色龍雜湊
+    address = data.get("address")
+
+    print("[*] New session key exchanging: {}".format(address))
+
+    sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
 
     return HttpResponse(json.dumps({"xPX": xpX, "xPY": xpY}), content_type="application/json")
 
 
-## 接收執行 Client 的指令
-def short_Receiver_Actions(request):
-    """
-        參數:{
-            encrypted_msg
-            Knx, Kny
-            r_plum
-            Client PublicKey
-        }
-        輸出: 指令結果(加密)
-    """
+## 執行 Client 的指令前要做的事情
+def short_Receiver_Actions(data):
     # use rsa algorithm to en/decrypt message
-    # cipher will present as hex string 
-    data = json.loads(request.body.decode("utf-8"))
-    msg = rsa.DecryptFunc(bytes.fromhex(data.get('msg')))
+    # cipher will present as hex string
+    print("[Debug]: {}".format(type(data.get('msg'))))
+    msg = rsa.DecryptFunc(data.get('msg'))
     r_plum = data.get('r')
     Knx = data.get("Knx")
     Kny = data.get("Kny")
     
     # rsa public key
-    cliPublic = data.get('publicKey')
+    cliPublic = data.get('RSA_publicKey')
+    address = data.get('chainAddress')
+    result = sver.VerifySignature(msg, r_plum, Knx, Kny, address)
 
-    result = sver.VerifySignature(msg, r_plum, Knx, Kny)
+    print("[*] Initialize Result: {}".format(result))
 
-    print("[*] Result: {}".format(result))
+    return result    
 
-    
-    # 加密訊息
-    m = rsa.EncryptFunc("return", cliPublic)  # 依照上面的指令做完後的回傳直
-    r = sver.MakeSignature(m, Knx)
+## 查詢使用者是否在此AG管轄範圍
+def find_Client_available(request):
+    data = json.loads(request.body.decode("utf-8"))
+    if not short_Receiver_Actions(data):
+        return HttpResponse('Authentication Failed', status=401)
 
-    return HttpResponse(
-        json.dumps(
-            {
-                "result": result,
-                "signature": r,
-                "msg": m
-            }), content_type="application/json")
+    result = data.get('Target_address') in list(sver.sessionKeys.keys())
+    return HttpResponse(str(result), status=200)
 
-# Local Function (沒有放在API的Function)
+## 使用者要求離開AG管轄範圍
+def quit_this_AG(request):
+    data = json.loads(request.body.decode('utf-8'))
+    if not short_Receiver_Actions(data):
+        return HttpResponse('Authentication Failed', status=401)
+    # 字典內刪除該項目
+    del sver.sessionKeys[data.get('chainAddress')]
+    return HttpResponse('Done', status=200) 
+

@@ -7,10 +7,10 @@ from os.path import join
 class RSA_Library:
     def __init__(self):
         # check if keyfile exist
-        if 'keystore'  not in os.listdir() or len(os.listdir('keystore'))==0:
+        if 'RSA_keystore'  not in os.listdir() or len(os.listdir('RSA_keystore'))==0:
             
             try:
-                os.mkdir('keystore') # create folder to save rsa keys
+                os.mkdir('RSA_keystore') # create folder to save rsa keys
             except:
                 pass
             ## create key pair
@@ -30,7 +30,7 @@ class RSA_Library:
         private = self.privateKey.export_key(passphrase=secretCode, pkcs=8, protection="scryptAndAES128-CBC")
         
         #  寫入文件
-        path = join('.','keystore')
+        path = join('.','RSA_keystore')
         with open(join(path,"private.pem"), "wb") as f:
             f.write(private)
         
@@ -39,7 +39,7 @@ class RSA_Library:
     def ImportKey(self):
         secretCode = 'codeToreadKey'
         # 讀取金鑰文件i
-        path = join('.','keystore')
+        path = join('.','RSA_keystore')
         encodedKey = open(join(path,'private.pem'), 'rb').read()
 
         privateKey = RSA.import_key(encodedKey, passphrase=secretCode)
@@ -73,7 +73,8 @@ class RSA_Library:
 
 
 
-
+    def OutputPublic(self):
+        return self.publicKey.export_key().decode().replace('-----BEGIN PUBLIC KEY-----\n','').replace('\n-----END PUBLIC KEY-----','')
     
 
 

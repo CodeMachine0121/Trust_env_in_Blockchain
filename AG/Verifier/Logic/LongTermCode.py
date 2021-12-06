@@ -7,7 +7,7 @@ import json
 
 class LongTermCode:
     def __init__(self):
-        self.CA_Addr = 'http://127.0.0.1:8000/'
+        self.CA_Addr = 'http://127.0.0.1:8848/'
         self.rsa = RSA_Library()
 
         self.Px, self.Py, self.k, self.q = self.get_CA_System()

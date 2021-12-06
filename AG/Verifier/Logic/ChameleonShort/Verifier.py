@@ -22,7 +22,7 @@ class Verifier:
         xP = self.P.__mul__(self.x)
         return int(xP.x), int(xP.y)
 
-    def set_SessionKey(self, zpx, zpy, cli_PubX):
+    def set_SessionKey(self, zpx, zpy, cli_PubX, chain_Address):
         zP = ECC.EccPoint(zpx, zpy, curve='P-384')
         sk = int(zP.__mul__(self.x).x)
 
@@ -30,8 +30,9 @@ class Verifier:
         Chash = self.init_CHash(sk)
         print("[Line 34] CH: ", Chash[0])
         print("[Line 35] SK: ", sk)
-        # 用公鑰x值紀錄
-        self.sessionKeys[cli_PubX] = {
+        # 用區塊鏈位址紀錄
+        self.sessionKeys[chain_Address] = {
+            "cliPub":cli_PubX,
             "sk": sk,
             "Chash": Chash,
             'times': 10
@@ -49,7 +50,7 @@ class Verifier:
         Chash = hKn.__add__(rP)
         return int(Chash.x), int(Chash.y)
 
-    def VerifySignature(self, msg, r_plum, Knx, Kny):
+    def VerifySignature(self, msg, r_plum, Knx, Kny, address):
         # 建立 ECC obj
         cliPub = ECC.EccPoint(Knx, Kny, curve='P-384')
         # 建立 msg hash
@@ -63,9 +64,10 @@ class Verifier:
         rP = self.P.__mul__(r_plum)
         chash = hKn.__add__(rP)
         chash = (int(chash.x), int(chash.y))
+        
 
-        result = chash == self.sessionKeys[Knx]['Chash']
-        print("[Line 67] CH: ", self.sessionKeys[Knx]['Chash'][0])
+        result = chash == self.sessionKeys[address]['Chash']
+        print("[Line 67] CH: ", self.sessionKeys[address]['Chash'][0])
         print("[Line 68] CH(1): ", chash[0])
         print("[Line 69] Kn: ", Knx)
         print("[Line 70] hKn: ", int(hKn.x))
@@ -73,11 +75,11 @@ class Verifier:
         print("[Line 72] hm: ", hm)
         return result
 
-    def MakeSignature(self, msg, Knx):
+    def MakeSignature(self, msg, Knx, address):
         # Hash function obj
         H1 = HMAC.new(b'', digestmod=SHA256)
         # calculate r
-        sk = self.sessionKeys[Knx]['sk']
+        sk = self.sessionKeys[address]['sk']
         H1.update(msg.encode())
         hm = int(H1.hexdigest(), 16)
         r = sk - hm * self.kn
