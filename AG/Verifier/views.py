@@ -3,30 +3,15 @@ from django.http import HttpResponse
 import json
 import sys
 import requests
-from .Logic.ChameleonLong.Participator import Participator
 from .Logic.ChameleonShort.Verifier import Verifier
 from .Logic.RSA.rsa import RSA_Library
-
-
-def get_Obj0fLongChameleon(rsa_obj):
-    print("[+] Register to CA")
-    data = {"PublicKey":rsa_obj.publicKey}
-    res = requests.post('http://127.0.0.1:8000/Parameters/',data=data)
-
-    CA_Knx = data.get("Knx")
-    CA_Kny = data.get("Kny")
-    CA_k = data.get("k")
-    lpart = Participator(CA_k, CA_Knx, CA_Kny)
-    return lpart
+from .Logic.longMiddleware import longMiddleware
 
 # 變色龍雜湊
 rsa = RSA_Library()
-lpart = get_Obj0fLongChameleon(rsa)
-sver = Verifier(lpart.k)
+lpart = longMiddleware()
+sver = Verifier(lpart.CA_k)
 
-
-
-# --------------------------------------------------------- #
 
 
 
@@ -55,7 +40,7 @@ def sessionKey_exchange(request):
     KnX = data.get("KnX")
     address = data.get("address")
 
-    print("[*] New session key exchanging: {}".format(address))
+    print("[+] New session key exchanging: {}".format(address))
 
     sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
 

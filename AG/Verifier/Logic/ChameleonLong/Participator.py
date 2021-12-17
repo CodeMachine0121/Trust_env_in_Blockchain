@@ -5,7 +5,7 @@ from Crypto.Random.random import getrandbits
 
 
 class Participator:
-    def __init__(self, k, Knx, Kny):
+    def __init__(self, k):
         print("[+] generating System parameters")
         self.P = S256.G
         self.Px = self.P.x
@@ -24,10 +24,6 @@ class Participator:
         # calculate chameleon Hash
         self.CHash = self.init_Hash()
 
-        # set CA's Kn
-        self.CA_Kn = Point(Knx, Kny, curve=S256)
-
-
     def init_Hash(self):
         print("[+] Initializing Chameleon Hash")
         msg = b'inittailize'
@@ -37,7 +33,7 @@ class Participator:
         r = (self.k - (hm*self.kn))
         return ((hm*self.Kn) + (r * self.P))
     
-    def Signing(self, msg:str):
+    def Signing(self, msg:str ):
         H1 = HMAC.new(b'', digestmod=SHA256)
         H1.update(msg.encode())
         
