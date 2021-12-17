@@ -2,16 +2,32 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import json
 import sys
-
-from .Logic.LongTermCode import LongTermCode as LPart
-from .Logic.ChameleonShort.Verifier import Verifier as SVer
+import requests
+from .Logic.ChameleonLong.Participator import Participator
+from .Logic.ChameleonShort.Verifier import Verifier
 from .Logic.RSA.rsa import RSA_Library
+
+
+def get_Obj0fLongChameleon(rsa_obj):
+    print("[+] Register to CA")
+    data = {"PublicKey":rsa_obj.publicKey}
+    res = requests.post('http://127.0.0.1:8000/Parameters/',data=data)
+
+    CA_Knx = data.get("Knx")
+    CA_Kny = data.get("Kny")
+    CA_k = data.get("k")
+    lpart = Participator(CA_k, CA_Knx, CA_Kny)
+    return lpart
+
 # 變色龍雜湊
-lpart = LPart()
-sver = SVer()
 rsa = RSA_Library()
+lpart = get_Obj0fLongChameleon(rsa)
+sver = Verifier(lpart.k)
+
+
 
 # --------------------------------------------------------- #
+
 
 
 # API Function
@@ -50,8 +66,9 @@ def sessionKey_exchange(request):
 def short_Receiver_Actions(data):
     # use rsa algorithm to en/decrypt message
     # cipher will present as hex string
-    print("[Debug]: {}".format(type(data.get('msg'))))
+    print("[+] Decryptign message")
     msg = rsa.DecryptFunc(data.get('msg'))
+    print("[+] Get message: {}".format(msg))
     r_plum = data.get('r')
     Knx = data.get("Knx")
     Kny = data.get("Kny")
@@ -59,7 +76,7 @@ def short_Receiver_Actions(data):
     # rsa public key
     cliPublic = data.get('RSA_publicKey')
     address = data.get('chainAddress')
-    result = sver.VerifySignature(msg, r_plum, Knx, Kny, address)
+    result = sver.Verifying(msg, r_plum, Knx, Kny, address)
 
     print("[*] Initialize Result: {}".format(result))
 

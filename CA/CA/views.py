@@ -31,33 +31,20 @@ def getSystem_Parameters(request):
     #print(clientPub)
 
     # Px,Py,k,q,Knx,Kny     
-    en_Px = rsa.EncryptFunc(str(int(ver.P.x)), clientPub)
-    en_Py = rsa.EncryptFunc(str(int(ver.P.y)), clientPub)
-    
-    en_k = rsa.EncryptFunc(str(ver.k), clientPub)
-    en_q = rsa.EncryptFunc(str(ver.q), clientPub)
-
-    en_Knx = rsa.EncryptFunc(str(int(ver.Kn.x)), clientPub)
-    en_Kny = rsa.EncryptFunc(str(int(ver.Kn.y)), clientPub)
+    #en_k = rsa.EncryptFunc(str(ver.k), clientPub)
+    # encrypt k in fucture
         
 
     return HttpResponse(
         json.dumps({
-            'Px': en_Px,
-            'Py': en_Py,
-            'k': en_k,
-            'q': en_q,
-            'Knx':en_Knx,
-            'Kny':en_Kny,
+            'k': ver.k,
+            'Knx':ver.Kn.x,
+            'Kny':ver.Kn.y,
         }),
         content_type='application/json'
     )
 
 
-### AG 會來要求變色龍雜湊
-def get_Chameleon_Hash(request):
-    return HttpResponse(json.dumps({'result': ver.CHash}),
-                        content_type='application/json')
 
 
 ## Client 會來要求給合約簽章
@@ -72,7 +59,7 @@ def get_Contract_Certificate(request):
     ), content_type='application/json')
 
 
-## AG 申請註冊
+## AG 申請註冊 要確認得到的k是否正確
 def AG_Register(request):
     # TK key 透過其他管道進行傳輸
     upload = json.loads(request.body.decode("utf-8"))
@@ -84,4 +71,4 @@ def AG_Register(request):
 
     result = ver.Verifying(msg, signature, Knx, Kny)
 
-    return HttpResponse(json.dumps({'result': result}))
+    return HttpResponse( result)

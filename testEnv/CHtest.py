@@ -1,8 +1,7 @@
 from ecc.curve import secp256k1 as s256
 from ecc.curve import Point
-import hashlib
+import hashlib, random, string
 from Crypto.Random.random import getrandbits
-
 
 P = s256.G
 print("[+]P: \n\tx: {}\n\ty: {}".format(P.x,P.y))
@@ -30,18 +29,19 @@ CH = hm*Kn+rn*P
 print("[+]CH1: \n\tx: {}\n\ty: {}".format(CH.x,CH.y))
 
 print("#######################################################")
-m2 = "World"
-print("[+]msg2: ",m2)
-hm2 = int(hashlib.sha256(m2.encode()).hexdigest(), 16)
-print("[+]H(m2): \n\t{}".format(hm2))
+end_correct = 0
+for i in range(0,100):
+    m2 = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(10))
+    hm2 = int(hashlib.sha256(m2.encode()).hexdigest(), 16)
 
-dn = (hm2*kn)
-rn2 = (k-dn)
-print("[+]rn2: \n\t{}".format(rn2))
-CH2 = hm2*Kn+rn2*P
-print("[+]CH2: \n\tx: {}\n\ty: {}".format(CH2.x,CH2.y))
+    dn = (hm2*kn)
+    rn2 = (k-dn)
+    CH2 = hm2*Kn+rn2*P
+    
+    if CH2 == CH:
+        end_correct+=1
 
-print("[+] CH1 == CH2: ", CH==CH2)
+print("[+] correct / times = {}/{} = {}%".format(end_correct, 100, end_correct))
 
 
 

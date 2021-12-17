@@ -2,8 +2,8 @@ import requests
 import json
 from Lib.ChameleonShort.Participator import Participator
 from Crypto.Random.random import getrandbits
-from Crypto.PublicKey import ECC
 from Lib.RSA.rsa import RSA_Library
+from ecc.curve import Point, secp256k1
 
 class Client:
     def __init__(self, server):
@@ -12,9 +12,9 @@ class Client:
         res = requests.get('{}/AG/Parameters/'.format(server))
         Jsystem = json.loads(res.text)
         
-        self.Public_AG = ECC.EccPoint(Jsystem.get("Knx"), Jsystem.get("Kny"), curve='P-384')
+        self.Public_AG = Point(Jsystem.get("Knx"), Jsystem.get("Kny"), curve=secp256k1)
         
-        self.part = Participator(Jsystem.get('Px'), Jsystem.get('Py'), Jsystem.get('q'))
+        self.part = Participator()
         
         self.chainAddress = "will be down with web3"
 
@@ -35,8 +35,8 @@ class Client:
         ## Session key Exchange
         ### 計算 zP
         z = int(getrandbits(128))
-        zpX = int(self.part.P.__mul__(z).x)
-        zpY = int(self.part.P.__mul__(z).y)
+        zpX = (self.part.P*z).x
+        zpY = (self.part.P*z).y
 
         res = requests.post('{}/AG/SessionKey/'.format(self.server),
                             data=json.dumps({
@@ -82,14 +82,14 @@ class Client:
             
         res = requests.post("{}/AG/clientAvailability/".format(self.server), data=json.dumps(data))
 
-        print("[*]The result for the search: {}".format(res.text))
+        print("[+]The result for the search: {}".format(res.text))
         
         return 
     
     def quit_current_AG(self):
         data = self.beforeAction()
         res = requests.post("{}/AG/quit_AG/".format(self.server), data=json.dumps(data))
-        print("[*] Quitting current AG: {}".format(res.text))
+        print("[+] Quitting current AG: {}".format(res.text))
         
         return 
 

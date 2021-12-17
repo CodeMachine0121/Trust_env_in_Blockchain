@@ -1,50 +1,65 @@
+from ecc.curve import Point
+from ecc.curve import secp256k1 as S256
 from Crypto.Hash import HMAC, SHA256
 from Crypto.Random.random import getrandbits
-from Crypto.PublicKey import ECC
 
 
 class Participator:
+    def __init__(self, k, Knx, Kny):
+        print("[+] generating System parameters")
+        self.P = S256.G
+        self.Px = self.P.x
+        self.Py = self.P.y
+        
+        self.q = S256.p # order number
 
-    def __init__(self, Px, Py, k, q,):
-        ## 變色龍金鑰產生
-        self.P = ECC.EccPoint(Px, Py, 'P-384')
-        self.q = q  # 一定要是質數
+        # secret values
+        #self.k = int(getrandbits(2048))
         self.k = k
+        self.kn = int(getrandbits(2048)) 
 
-        ## key pair
-        self.kn = int(getrandbits(64))
-        self.Kn = self.P.__mul__(self.kn)
+        # public value (向量點乘)
+        self.Kn = self.kn * self.P
+        
+        # calculate chameleon Hash
+        self.CHash = self.init_Hash()
+
+        # set CA's Kn
+        self.CA_Kn = Point(Knx, Kny, curve=S256)
 
 
-        ## 變色龍雜湊
-        self.CHash = self.init_Hash('This is Address')
-
-    def init_Hash(self, msg):
-        # Hash function obj
+    def init_Hash(self):
+        print("[+] Initializing Chameleon Hash")
+        msg = b'inittailize'
+        H1 = HMAC.new(b'', digestmod = SHA256)
+        H1.update(msg)
+        hm = int(H1.hexdigest(), 16)
+        r = (self.k - (hm*self.kn))
+        return ((hm*self.Kn) + (r * self.P))
+    
+    def Signing(self, msg:str):
         H1 = HMAC.new(b'', digestmod=SHA256)
         H1.update(msg.encode())
-        hm = int(H1.hexdigest(), 16) % self.q
-        r = (self.k - (hm*self.kn) % self.q) % self.q
-        rP = self.P.__mul__(r)
-        CH = self.Kn.__mul__(hm).__add__(rP)
-        return int(CH.x), int(CH.y)
-
-    def Signing(self, msg):
-        # Hash function obj
-        H1 = HMAC.new(b'', digestmod=SHA256)
-        H1.update(msg.encode())
-        hm = int(H1.hexdigest(), 16) % self.q
-        r = (self.k - (hm * self.kn) % self.q) % self.q
+        
+        hm = int(H1.hexdigest(), 16)
+        r = (self.k - (hm * self.kn))
+        print("[+] Calculate Signature: \n\t{}".format(r))
         return r
-
-    def Verifying(self, msg, r_plum, Knx, Kny):
-        Kn = ECC.EccPoint(Knx, Kny, 'P-384')
-        # Hash function obj
+    
+    def Verifying(self, msg, r_plum):
+        # restore Signer's PublicKey
+        Kn = self.CA_Kn
+        
+        # calculate Hash value
         H1 = HMAC.new(b'', digestmod=SHA256)
         H1.update(msg.encode())
-        hm = int(H1.hexdigest(), 16) % self.q
-        rP = self.P.__mul__(r_plum)
-        CH = Kn.__mul__(hm).__add__(rP)
-        CH = (CH.x, CH.y)
-        return self.CHash == CH
+        hm = int(H1.hexdigest(), 16)
 
+        # calculate r value
+        rP = self.P * r_plum
+        CH = Kn * hm + rP
+
+        print("[+] Calculate Hash: \n\tx:{}\n\ty:{}".format(CH.x, CH.y) )
+        return self.CHash == CH
+        
+    
