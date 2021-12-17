@@ -62,6 +62,7 @@ def get_Contract_Certificate(request):
 ## AG 申請註冊 要確認得到的k是否正確
 def AG_Register(request):
     # TK key 透過其他管道進行傳輸
+    print(request.body)
     upload = json.loads(request.body.decode("utf-8"))
     ## 請對於訊息進行加密
     msg = upload.get('msg')
@@ -71,4 +72,4 @@ def AG_Register(request):
 
     result = ver.Verifying(msg, signature, Knx, Kny)
 
-    return HttpResponse( result)
+    return HttpResponse(result)
