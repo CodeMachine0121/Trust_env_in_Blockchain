@@ -85,3 +85,22 @@ def quit_this_AG(request):
     del sver.sessionKeys[data.get('chainAddress')]
     return HttpResponse('Done', status=200) 
 
+## 遞送交易訊息
+def Make_Transaction(request):
+    data = json.loads(request.body.decode('utf-8'))
+    if not short_Receiver_Actions(data):
+        return HttpResponse("Authentication Failed", status=401)
+
+    print("[+] Receive Transaction requests from: ", data["from"])
+
+    # get transaction data
+    from_addr = data["from"]
+    to_addr =  data["to"]
+    balance = data["balance"]
+    gas = data["gas"]
+
+    # 交易結果
+    result = True
+    return HttpResponse(result, status=200)
+
+
