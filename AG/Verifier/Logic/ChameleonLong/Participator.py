@@ -11,8 +11,10 @@ class Participator:
         self.Px = self.P.x
         self.Py = self.P.y
         
-        self.q = S256.p # order number
-
+        self.q = S256.p # 曲線計算的模數
+        # order number
+        self.order = 115792089237316195423570985008687907852837564279074904382605163141518161494337
+       
         # secret values
         #self.k = int(getrandbits(2048))
         self.k = k
@@ -24,13 +26,15 @@ class Participator:
         # calculate chameleon Hash
         self.CHash = self.init_Hash()
 
+
+
     def init_Hash(self):
         print("[+] Initializing Chameleon Hash")
         msg = b'inittailize'
         H1 = HMAC.new(b'', digestmod = SHA256)
         H1.update(msg)
         hm = int(H1.hexdigest(), 16)
-        r = (self.k - (hm*self.kn))
+        r = (self.k - (hm*self.kn)) % self.order
         return ((hm*self.Kn) + (r * self.P))
     
     def Signing(self, msg:str ):
@@ -38,13 +42,13 @@ class Participator:
         H1.update(msg.encode())
         
         hm = int(H1.hexdigest(), 16)
-        r = (self.k - (hm * self.kn))
+        r = (self.k - (hm * self.kn)) % self.order
         print("[+] Calculate Signature: \n\t{}".format(r))
         return r
     
-    def Verifying(self, msg, r_plum):
+    def Verifying(self, msg, r_plum, CA_Knx, CA_Kny):
         # restore Signer's PublicKey
-        Kn = self.CA_Kn
+        Kn = Point(CA_Knx, CA_Kny, curve=S256)
         
         # calculate Hash value
         H1 = HMAC.new(b'', digestmod=SHA256)

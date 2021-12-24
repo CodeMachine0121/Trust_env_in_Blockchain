@@ -11,7 +11,10 @@ class Verifier:
         self.Px = self.P.x
         self.Py = self.P.y
         
-        self.q = S256.p # order number
+        self.q = S256.p # 曲線計算的模數
+        
+        # Order number
+        self.order = 115792089237316195423570985008687907852837564279074904382605163141518161494337
 
         self.x = int(getrandbits(2048))
         self.xP = self.P*self.x
@@ -23,7 +26,7 @@ class Verifier:
         
         # 紀錄多個使用者資訊
         self.sessionKeys = dict()
- 
+        
     
     def start_SessionKey(self):
         return int(self.xP.x), int(self.xP.y)
@@ -54,7 +57,7 @@ class Verifier:
         H1 = HMAC.new(b'', digestmod = SHA256)
         H1.update(msg)
         hm = int(H1.hexdigest(), 16)
-        r = (sk - (hm*self.kn))
+        r = (sk - (hm*self.kn)) % self.order
         return ((hm*self.Kn) + (r * self.P))
     
 
@@ -66,7 +69,7 @@ class Verifier:
         hm = int(H1.hexdigest(), 16)
         
         sk = self.sessionKeys[address]["sk"]
-        r = (sk - (hm * self.kn))
+        r = (sk - (hm * self.kn)) % self.order
         print("[+] Calculate Signature: \n\t{}".format(r))
         return r
     

@@ -41,4 +41,4 @@ class longMiddleware:
         return self.Participator.Signing(msg)
 
     def Verifing(self, msg, r_plum) -> bool:
-        return self.Participator.Verifying(msg, r_plum)
+        return self.Participator.Verifying(msg, r_plum, self.CA_Knx, self.CA_kny)

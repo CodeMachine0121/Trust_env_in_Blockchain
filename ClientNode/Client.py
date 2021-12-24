@@ -82,7 +82,7 @@ class Client:
             
         res = requests.post("{}/AG/clientAvailability/".format(self.server), data=json.dumps(data))
 
-        print("[+]The result for the search: {}".format(res.text))
+        print("[+] The result for the search: {}".format(res.text))
         
         return 
     

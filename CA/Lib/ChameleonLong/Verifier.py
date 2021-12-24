@@ -11,7 +11,9 @@ class Verifier:
         self.Px = self.P.x
         self.Py = self.P.y
         
-        self.q = S256.p # order number
+        self.q = S256.p  # 橢圓計算用模數
+        # order number
+        self.order = 115792089237316195423570985008687907852837564279074904382605163141518161494337 
 
         # secret values
         self.k = int(getrandbits(2048))
@@ -29,7 +31,7 @@ class Verifier:
         H1 = HMAC.new(b'', digestmod = SHA256)
         H1.update(msg)
         hm = int(H1.hexdigest(), 16)
-        r = (self.k - (hm*self.kn))
+        r = (self.k - (hm*self.kn)) % self.order
         return ((hm*self.Kn) + (r * self.P))
     
     def Signing(self, msg:str):
@@ -37,7 +39,7 @@ class Verifier:
         H1.update(msg.encode())
         
         hm = int(H1.hexdigest(), 16)
-        r = (self.k - (hm * self.kn))
+        r = (self.k - (hm * self.kn)) %self.order
         print("[+] Calculate Signature: \n\t{}".format(r))
         return r
     
