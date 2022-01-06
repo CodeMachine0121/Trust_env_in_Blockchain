@@ -33,6 +33,10 @@ print("[+]CH1: \n\tx: {}\n\ty: {}".format(CH.x,CH.y))
 
 print("#######################################################")
 end_correct = 0
+
+####################
+#
+####################
 for i in range(0,100):
     m2 = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(10))
     hm2 = int(hashlib.sha256(m2.encode()).hexdigest(), 16)
@@ -43,7 +47,9 @@ for i in range(0,100):
     
     if CH2 == CH:
         end_correct+=1
-
+###########################
+#
+###########################
 print("[+] correct / times = {}/{} = {}%".format(end_correct, 100, end_correct))
 
 
