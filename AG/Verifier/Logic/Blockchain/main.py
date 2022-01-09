@@ -1,46 +1,39 @@
-from web3 import HTTPProvider, Web3
-from web3.auto import w3
+from web3 import Web3
 
 
 class Ethereum:
     def __init__(self):
-        self.server = '192.168.1.184:8545'
-        self.privateKey = ""
-        self.Node = None
+        self.blockchain_address = '192.168.1.184:8545'
+        self.web3 = Web3(Web3.HTTPProvider(self.blockchain_address))
+        
+        self.acct = self.web3.eth.account.privateKeyToAccount(
+                self.getKey())
 
-    def make_Connection_to_Node(self):
-        self.Node = HTTPProvider("http://{}".format(self.server))
-        return self.Node
-
-    def Import_Keyfile(self, path, password):
-        with open(path) as keyfile:
-            encrypted_key = keyfile.read()
-            self.privateKey = w3.eth.account.decrypt(encrypted_key, password)
-        return self.privateKey
-
-    def make_rawTransaction(self, txnInfo):
-        """
-        :param txnInfo:
-        {
-             'from':
-             'to': '0xF0109fC8DF283027b6285cc889F5aA624EaC1F55',
-             'data': "Hello world"
-             'value': 1000000000,
-             'gas': 2000000,
-             'gasPrice': 234567897654321,
-             'nonce': 0,
-             'chainId': 1
-        }
-        """
-        ## 發送方需要跟keyfile裡的私鑰一致
-        signed_txn = w3.eth.account.sign_transaction(txnInfo, self.privateKey)
-
-        rawTxn = signed_txn.rawTransaction
-
-        tmp = w3.eth.sendRawTransaction(rawTxn.hex())
-
-        return rawTxn.hex()
+        self.contract = None
+        self.address = self.web3.toCheckSumAddress(self.acct.address)
 
 
-def Get_addressFormat(address):
-    return w3.toChecksumAddress(address)
+    def getKey(self):
+        keystore_path = './keystore/UTC--2021-09-16T16-22-54.487772200Z--366d4d1400847084035d2e45c12447a86966d9dc'
+        
+        with open(keystore_path) as file:
+            encrypted_key = file.read()
+            private_key = self.web3.eth.account.decrypt(
+                    encrypted_key,'mcuite')
+
+        return private_key
+
+    def setContract(self, abi, address):
+        self.contract = self.web3.eht.contract(abi=abi, address=address)
+        return 
+
+    def setAgreements(self, agreement):
+        if self.contract == None: 
+            print("[!] Contract has not been set")
+        self.contract.functions.setAgreements(agreement).transact({
+            'from': self.address
+            })
+        return 
+    
+     
+        
