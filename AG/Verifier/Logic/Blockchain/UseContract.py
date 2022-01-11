@@ -1,7 +1,9 @@
 from web3 import Web3
+import requests
 
 
-class Ethereum:
+
+class TransactionContract:
     def __init__(self):
         self.blockchain_address = '192.168.1.184:8545'
         self.web3 = Web3(Web3.HTTPProvider(self.blockchain_address))
@@ -10,7 +12,7 @@ class Ethereum:
                 self.getKey())
 
         self.contract = None
-        self.address = self.web3.toCheckSumAddress(self.acct.address)
+        self.address = self.web3.toChecksumAddress(self.acct.address)
 
 
     def getKey(self):
@@ -35,5 +37,24 @@ class Ethereum:
             })
         return 
     
-     
-        
+    def checkStep(self,):
+        if self.contract == None:
+            print("[!] Contract has not been set")
+        setp = self.contract.functions.checkStep().call()
+        return setp
+    
+    def Payment(self, fromAddr, toAddr, balance):
+        self.contract.functions.Payment(
+                fromAddr, toAddr, balance).transact({
+                    'from': self.address
+                    })
+        return 
+
+    ############# need request CA
+    def createTransaction(self,fromAddr, toAddr, balance):
+        # calculate signature
+        return 
+
+    def endContract(self,):
+        # send request to CA
+        return 

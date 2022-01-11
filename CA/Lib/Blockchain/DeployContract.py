@@ -1,5 +1,4 @@
 from web3 import Web3
-#from web3.gas_strategies.time_based import *
 import json
 
 class TransactionContract:  
@@ -37,7 +36,6 @@ class TransactionContract:
         contract_json = self.getContract_data()
         
         nonce = self.web3.eth.getTransactionCount(self.acct.address) 
-
 
         print("[+] nonce: {}".format(nonce))
         contract_ = self.web3.eth.contract(

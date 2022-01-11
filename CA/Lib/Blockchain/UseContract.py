@@ -1,6 +1,13 @@
 from web3 import Web3
-from web3.gas_strategies.time_based import fast_gas_price_strategy
-from DeployContract import TransactionContract
+from .DeployContract import TransactionContract
+
+class ContractStructure:
+    def __init__(self, abi, address, from_address,to_address,IsDeployed ):
+        self.abi = abi
+        self.address = address
+        self.from_address = from_address
+        self.to_address = to_address
+        self.IsDeployed = IsDeployed
 
 
 
@@ -15,57 +22,103 @@ class Contract:
         self.address = self.deploy.web3.toChecksumAddress(self.deploy.acct.address)
         ## how to control deploy or not
         #self.contract_address, abi = self.deploy.deploy()
-        self.isContractDeploy = False
+        self.isDeployed = False
         self.contract_address = ""
-        self.contract = None
-        #self.contract = self.deploy.web3.eth.contract(abi = abi, address = self.contract_address)
-       
-        return 
+        
+        # 以發送端位址為 index
+        self.contractList = dict()
 
-    def deployContract(self,):
-        self.contract_address,abi =  self.deploy.deploy()
-        self.isContractDeploy=True
-        try:
-            self.contract = self.deploy.web3.eth.contract(abi = abi, address = self.contract_address)
-        except ConnectionError:
-            self.isContractDeploy = False
-            print("[!] Connection refused")
+        return 
+    
+    def deployContract(self, from_address,to_address):
+        if from_address in self.contractList.keys():
+            print("[!] Contract is already deployed")
+
+        # 存放合約資料
+        contract_address,abi =  self.deploy.deploy()
+        
+        contract = ContractStructure(abi, contract_address, from_address, to_address, True)
+
+        self.contractList[from_address] =dict()
+        self.contractList[from_address][to_address] = contract
         return ;
 
 
-    def getAGs(self,):
-        if not self.isContractDeploy:
-            print("Contract hasn't been deployed'")
-            return None
-        address = self.contract.functions.getAGs().call()
-        return address
-
-
-    def setAG(self, AG1_address, AG2_address):
-        if not self.isContractDeploy:
-            print("Contract hasn't been deployed'")
+    def getAGs(self,from_address, to_address):
+        if from_address in self.contractList.keys():
+            print("[!] Contract is not been created yet")
             return None
 
+        if not self.contractList[from_address].IsDeployed:
+            print("[!] Contract hasn't been deployed'")
+            return None
+        contract = self.deploy.web3.eth.contract(
+                adddress=self.contractList[from_address][to_address].address, 
+                abi = self.contractList[from_address][to_address].abi)
+        
+
+        AG_address = contract.functions.getAGs().call()
+        return AG_address
+
+    def setAG(self,from_address,to_address, AG1_address, AG2_address):
+        if from_address in self.contractList.keys():
+            print("[!] Contract is not been created yet")
+            return None
+
+
+        if not self.contractList[from_address][to_address].IsDeployed:
+            print("[!] Contract hasn't been deployed'")
+            return None
+        
+        contract = self.deploy.web3.eth.contract(
+                address = self.contractList[from_address][to_address].address,
+                abi = self.contractList[from_address][to_address].abi
+                )
+        
         AG1_address = self.deploy.web3.toChecksumAddress(AG1_address)
         AG2_address = self.deploy.web3.toChecksumAddress(AG2_address)
 
-        self.contract.functions.setAGs(AG1_address,AG2_address).transact({'from':self.address})
+        contract.functions.setAGs(AG1_address,AG2_address).transact({'from':self.address})
         return
     
 
     def createTransaction(self,fromAddr, toAddr, balance, signature):
-        if not self.isContractDeploy:
-            print("Contract hasn't been deployed'")
+        # fromAddr = from_address
+        if not fromAddr in self.contractList.keys():
+            print("[!] Contract is not been created yet")
+            return None
+        if not toAddr in self.contractList[fromAddr].keys():
+            print("[!] Contract is not yet created yet")
             return None
 
+
+
+        if not self.contractList[fromAddr][toAddr].IsDeployed:
+            print("[!] Contract hasn't been deployed'")
+            return None
+        contract = self.deploy.web3.eth.contract(
+                address = self.contractList[fromAddr][toAddr].address,
+                abi = self.contractList[fromAddr][toAddr].abi
+                )
         fromAddr = self.deploy.web3.toChecksumAddress(fromAddr)
         toAddr = self.deploy.web3.toChecksumAddress(toAddr)
-        self.contract.functions.createTransaction(fromAddr, toAddr, balance, signature).transact({'from':self.address})
+        contract.functions.createTransaction(fromAddr, toAddr, balance, signature).transact({'from':self.address})
         return 
 
-    def endContract(self, ):
-        if not self.isContractDeploy:
-            print("Contract hasn't been deployed'")
+    def endContract(self,from_address, to_address ):
+        if from_address in self.contractList.keys():
+            print("[!] Contract is not created yet")
             return None
+        elif to_address in self.contractList[from_address][to_address].keys():
+            print("[!] Contract is not created yet")
+            return None
+        if not self.contractList[from_address][to_address].IsDeployed:
+            print("[!] Contract hasn't been deployed'")
+            return None
+        contract = self.deploy.web3.eth.contract(
+                address= self.contractList[from_address][to_address].address,
+                abi = self.contractList[from_address][to_address].abi
+                )
+        contract.functions.endContract().transact({'from':self.address})
 
-        self.contract.functions.endContract().transact({'from':self.address})
+        return

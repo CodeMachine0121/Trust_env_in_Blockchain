@@ -51,7 +51,7 @@ for i in range(0,100):
 #
 ###########################
 print("[+] correct / times = {}/{} = {}%".format(end_correct, 100, end_correct))
-
+print("fdasfsadfas")
 
 
 
