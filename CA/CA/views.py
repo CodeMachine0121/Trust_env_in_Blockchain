@@ -66,20 +66,24 @@ def AG_Register(request):
 
 ## Blockchain Function
 ### 由CA部屬交易合約，再交由給AG
+### CA 部屬合約後要去判定那些AGs負責
 def deployContract(request):
 #
     jsonData = json.loads(request.body.decode())
     from_address = jsonData['fromAddress']
     to_address = jsonData['toAddress']
-    balance = jsonData['balance']
-    
+    AG1 = jsonData['AG1Address']
+    AG2 = jsonData['AG2Address']
+
     # 部屬合約
     contract.deployContract(from_address, to_address)
+    contract.setAG(from_address,to_address, AG1,AG2)
 
     return HttpResponse("Deploy Contract Successfully")
 
+
 ### 確定好雙方AG的同意後就可以開啟交易
-def open_TransactionChannel(request):
+def  open_TransactionChannel(request):
 #
     jsonData = json.loads(request.body.decode())
     from_address = jsonData["fromAddress"]
@@ -96,7 +100,7 @@ def open_TransactionChannel(request):
 
 
 
-
+### 取得合約的位址跟ABI
 def getContract(request):
   #
     jsonData = json.loads(request.body.decode())
@@ -114,4 +118,16 @@ def getContract(request):
         }),
         content_type='application/json'
     )
+
+
+
+### 結束合約
+def closeContract(request):
+    jsonData = json.loads(request.body.decode())    
+    from_address = jsonData['fromAddress']
+    to_address = jsonData['toAddress']
+    contract.endContract(from_address, to_address)
+    return HttpResponse("Contract has been destroyed")
+###   
+
 

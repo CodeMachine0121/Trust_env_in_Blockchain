@@ -6,8 +6,7 @@ from .ChameleonLong.Participator import Participator
 
 class longMiddleware:
     def __init__(self):
-
-        self.CA = 'http://127.0.0.1:8000'
+        self.CA = 'http://140.125.32.10:8000'
         self.rsa = RSA_Library()
 
         data = json.dumps({"PublicKey": self.rsa.OutputPublic()})
