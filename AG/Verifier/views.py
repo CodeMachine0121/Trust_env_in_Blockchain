@@ -97,7 +97,7 @@ def Make_Transaction(request):
     from_addr = data["from"]
     to_addr =  data["to"]
     balance = data["balance"]
-    gas = data["gas"]
+    # 要透過 To_addr 取找他所屬的AG的位址
 
     # 交易結果
     result = True
