@@ -24,4 +24,6 @@ urlpatterns = [
     path("TxnContract/",views.getContract),
     path("NewTxnChannel/", views.open_TransactionChannel),
     path("EndContract/", views.closeContract),
+
+    path("RecordContract/", views.registerAG_for_RecordContract)
     ]

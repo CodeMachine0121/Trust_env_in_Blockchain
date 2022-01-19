@@ -6,12 +6,17 @@ import requests
 from .Logic.ChameleonShort.Verifier import Verifier
 from .Logic.RSA.rsa import RSA_Library
 from .Logic.longMiddleware import longMiddleware
+from .Logic.Blockchain.UseContract import RecordContract
+from .Logic.Blockchain.UseContract import TransactionContract
 
 # 變色龍雜湊
 rsa = RSA_Library()
 lpart = longMiddleware()
 sver = Verifier(lpart.CA_k)
 
+## Blockchain
+RContract = RecordContract()
+TContract = TransactionContract()
 
 
 
@@ -32,6 +37,8 @@ def sessionKey_exchange(request):
     # 我覺得需要公鑰去記得誰的Session Key是哪一把
     # 接收另一半 zP.x zP.y
     # 回傳 x^{-1} * P
+    # 在此階段將Client紀錄在智能合約中
+
     data = json.loads(request.body.decode("utf-8"))
     xpX, xpY = sver.start_SessionKey()
 
@@ -39,8 +46,11 @@ def sessionKey_exchange(request):
     zpY = data.get('zpY')
     KnX = data.get("KnX")
     address = data.get("address")
-
+    
     print("[+] New session key exchanging: {}".format(address))
+    print("[+] Adding Client to Record Contract list")
+    
+    RContract.registerClient(address)
 
     sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
 
@@ -97,7 +107,10 @@ def Make_Transaction(request):
     from_addr = data["from"]
     to_addr =  data["to"]
     balance = data["balance"]
-    # 要透過 To_addr 取找他所屬的AG的位址
+   
+   # 要透過 To_addr 取找他所屬的AG的位址
+    toAG = RContract.findAGviaAddress(to_addr)
+    
 
     # 交易結果
     result = True

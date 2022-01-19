@@ -5,8 +5,9 @@ import os
 
 def getKey(web3):
     # privatekey hard code problem
-    for file in os.listdir('./keystore'):
-        keystore_path = os.path.join('./keystore', file)
+    path="./Lib/Blockchain/keystore"
+    for file in os.listdir(path):
+        keystore_path = os.path.join(path, file)
         
     with open(keystore_path) as file:
         encrypted_key = file.read()
@@ -14,7 +15,7 @@ def getKey(web3):
     return  private_key
 
 def getChainNodeAddress():
-    with open("./server.json") as file:
+    with open("./Lib/Blockchain/server.json") as file:
         JData = json.loads(file.read())
     return JData["nodeAddress"]
 
@@ -23,12 +24,14 @@ class RecordContract:
         self.blockchain_address = getChainNodeAddress()
         self.web3 = Web3(Web3.HTTPProvider(self.blockchain_address))
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3)) 
-        self.abi, self.contractAddress = self.deploy()
+        
+        self.contractAddress, self.abi = self.deploy()
+
         self.contract = self.web3.eth.contract(abi=self.abi,address=self.contractAddress)
 
 
     def getContract_data(self):
-        compiled_contract_path = 'build/contracts/RecordContract.json'
+        compiled_contract_path = './Lib/Blockchain/build/contracts/RecordContract.json'
         with open(compiled_contract_path) as file:
             contract_json = json.loads(file.read())
         return contract_json

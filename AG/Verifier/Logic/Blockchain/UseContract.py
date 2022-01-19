@@ -5,15 +5,16 @@ import os
 
 def getServerAddress():
 # 設定 Blockchain Node server
-    path = './server'
+    path = './Verifier/Logic/Blockchain/server.json'
     with open(path) as file:
         JData = json.loads(file.read())
     return JData['CAHost'], JData['NodeServer']
 
 def getKey(web3):
 # 取得區塊鏈金鑰
-    for file in os.listdir('keystore'):
-        keystore_path = os.path.join('keystore', file)
+    path = './Verifier/Logic/Blockchain/keystore/'
+    for file in os.listdir(path):
+        keystore_path = os.path.join(path, file)
         
     with open(keystore_path) as file:
         encrypted_key = file.read()
@@ -40,25 +41,37 @@ class RecordContract:
         self.web3 = Web3(Web3.HTTPProvider(self.blockchain_address))
         
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3))
-        self.address = self.acct
-        self.contract= self.setContract()
+        self.address = self.acct.address
+        
+        self.Domain = "This is AG1"
+        self.contract= self.setContract(self.Domain)
 
         return 
     
-    def setContract(self):
+
+    def setContract(self, Domain):
         # set contract
-
+        # 也會同步向CA註冊合約上的AG
         print("[+] Setting Record Contract.....")
+        print("[+] Registering to CA ")
+        
         API = "{}RecordContract/".format(self.CAHost)
+        
+        JData = json.dumps({
+            'Address': self.address,
+            'Domain': self.Domain
+            })
 
-        res =requests.get(API)
+        res =requests.post(API, data=JData)
+        
         JData = json.loads(res.text)
 
         abi = JData['abi']
         address = JData['address']
         
         return self.web3.eth.contract(address = address, abi=abi)
-         
+    
+
     
     def  registerClient(self, cli_address):
         # 登記註冊的Client
@@ -66,7 +79,7 @@ class RecordContract:
         return 
 
     def findAGviaAddress(self, cli_address):
-        return self.contract.functions.findAGviaAddress(cli_address)
+        return self.contract.functions.findAGviaAddress(cli_address).call()
         
 
 class TransactionContract:

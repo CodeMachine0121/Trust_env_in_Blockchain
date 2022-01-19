@@ -93,7 +93,7 @@ class Client:
         
         return 
 
-client = Client('http://127.0.0.1:9999')
+client = Client('http://140.125.32.10:8888')
 client.ask_for_Client_available(client.chainAddress)
 client.quit_current_AG()
 print()

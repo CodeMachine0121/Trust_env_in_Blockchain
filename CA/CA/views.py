@@ -2,19 +2,24 @@ from django.shortcuts import render
 from django.http import HttpResponse
 import json
 import sys
+"""
 
+CA's code
+
+"""
 # 變色龍雜湊
 sys.path.append('..')
 from Lib.ChameleonLong.Verifier import Verifier
 from Lib.RSA.rsa import RSA_Library
 from Lib.Blockchain.UseContract import Contract
+from Lib.Blockchain.DeployContract import RecordContract
 
 ## 變色龍相關宣告
 ver = Verifier()
 
 ## 區塊練相關宣告
 contract = Contract()
-
+Rcontract = RecordContract()
 
 
 ## RSA 加密
@@ -65,10 +70,29 @@ def AG_Register(request):
 
 
 ## Blockchain Function
+### 由CA部屬紀錄合約
+### AG需要向CA註冊成為AG 
+### 接收每個client的註冊請求
+
+def registerAG_for_RecordContract(request):
+    
+    # 像合約註冊AG
+    postData = json.loads(request.body.decode())
+
+    Rcontract.registerAG(postData['Address'], postData['Domain'])
+    
+    JData = json.dumps({
+        'address': Rcontract.contractAddress,
+        'abi': Rcontract.abi
+        })
+    return HttpResponse(JData, content_type='application/json')
+
+
+
 ### 由CA部屬交易合約，再交由給AG
 ### CA 部屬合約後要去判定那些AGs負責
 def deployContract(request):
-#
+# 交易合約
     jsonData = json.loads(request.body.decode())
     from_address = jsonData['fromAddress']
     to_address = jsonData['toAddress']
@@ -84,7 +108,7 @@ def deployContract(request):
 
 ### 確定好雙方AG的同意後就可以開啟交易
 def  open_TransactionChannel(request):
-#
+# 交易合約
     jsonData = json.loads(request.body.decode())
     from_address = jsonData["fromAddress"]
     to_address = jsonData["toAddress"]
@@ -102,7 +126,7 @@ def  open_TransactionChannel(request):
 
 ### 取得合約的位址跟ABI
 def getContract(request):
-  #
+  # 交易合約
     jsonData = json.loads(request.body.decode())
     from_address = jsonData["fromAddress"]
     to_address = jsonData["toAddress"]
@@ -119,10 +143,9 @@ def getContract(request):
         content_type='application/json'
     )
 
-
-
 ### 結束合約
 def closeContract(request):
+    # 交易合約
     jsonData = json.loads(request.body.decode())    
     from_address = jsonData['fromAddress']
     to_address = jsonData['toAddress']
