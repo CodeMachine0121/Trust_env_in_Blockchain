@@ -19,5 +19,11 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('Parameters/', views.getSystem_Parameters),
-    path('Contract_Address/', views.get_Contract_Certificate),
-]
+    path("AG_Register/", views.AG_Register),    
+    path("TxnDeploy/",views.deployContract),
+    path("TxnContract/",views.getContract),
+    path("NewTxnChannel/", views.open_TransactionChannel),
+    path("EndContract/", views.closeContract),
+
+    path("RecordContract/", views.registerAG_for_RecordContract)
+    ]
