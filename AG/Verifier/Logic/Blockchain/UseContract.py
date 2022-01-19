@@ -79,8 +79,9 @@ class RecordContract:
         return 
 
     def findAGviaAddress(self, cli_address):
-        return self.contract.functions.findAGviaAddress(cli_address).call()
-        
+        agAddr = self.contract.functions.findAGviaAddress(cli_address).call()
+        print("[Debug] AG: {}".format(agAddr))
+        return agAddr
 
 class TransactionContract:
     def __init__(self):
@@ -108,7 +109,7 @@ class TransactionContract:
             }))
         
         print('[+] {}'.format(res.text))
-        return 
+        return True 
         #
 
     def setContract(self, from_address,  to_address, balance):

@@ -97,7 +97,7 @@ class TransactionContract:
    
 
     def getContract_data(self):
-        compiled_contract_path = 'build/contracts/TransferContract.json'
+        compiled_contract_path = './Lib/Blockchain/build/contracts/TransferContract.json'
         with open(compiled_contract_path) as file:
             contract_json = json.loads(file.read())
             # contract_abi = contract_josn['abi']

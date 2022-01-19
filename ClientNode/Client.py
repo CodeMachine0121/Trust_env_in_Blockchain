@@ -1,9 +1,24 @@
 import requests
+import os
 import json
+from web3 import Web3
+
 from Lib.ChameleonShort.Participator import Participator
 from Crypto.Random.random import getrandbits
 from Lib.RSA.rsa import RSA_Library
 from ecc.curve import Point, secp256k1
+
+
+def getAddress():
+    w3 = Web3()
+    for file in os.listdir("./keystore"):
+        path = os.path.join('./keystore',file)
+
+    with open(path) as f:
+        priv = w3.eth.account.decrypt(f.read(), "mcuite")
+    
+    acct = w3.eth.account.privateKeyToAccount(priv)
+    return acct.address
 
 class Client:
     def __init__(self, server):
@@ -16,7 +31,7 @@ class Client:
         
         self.part = Participator()
         
-        self.chainAddress = "will be down with web3"
+        self.address = getAddress() 
 
 
         self.RegisterAG()
@@ -24,7 +39,8 @@ class Client:
 
         self.AG_RSA_PublicKey = Jsystem.get('RSA_PublicKey')
 
-        self.chainAddress = "will be down with web3"
+
+
 
     ## 更換server
     def Refresh_AG(self, server):
@@ -32,7 +48,7 @@ class Client:
 
     ## 設定 Session Key
     def RegisterAG(self):
-        ## Session key Exchange
+    ##Session key Exchange
         ### 計算 zP
         z = int(getrandbits(128))
         zpX = (self.part.P*z).x
@@ -43,7 +59,7 @@ class Client:
                                 'zpX': zpX,
                                 'zpY': zpY,
                                 'KnX': int(self.part.Kn.x),
-                                'address': self.chainAddress
+                                'address': self.address
                             }))
 
         xpX = json.loads(res.text).get('xPX')
@@ -52,7 +68,6 @@ class Client:
         ### 計算sk
         self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
         return 
-#########################################################
 
     def beforeAction(self ):
         ### 簽章驗證
@@ -67,7 +82,7 @@ class Client:
                 "Knx": int(self.part.Kn.x),
                 "Kny": int(self.part.Kn.y),
                 "RSA_publicKey": publicKey,
-                "chainAddress": self.chainAddress,
+                "chainAddress": self.address,
             }
         
         return data
@@ -93,7 +108,19 @@ class Client:
         
         return 
 
+    def askTransaction(self, from_address, to_address, balance):
+        print("[+] Sending transaction request to AG server")
+        data = self.beforeAction()
+        data["from_address"] = from_address
+        data["to_address"] = to_address
+        data["balance"] = balance
+
+        res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
+        
+
+
 client = Client('http://140.125.32.10:8888')
-client.ask_for_Client_available(client.chainAddress)
+client.ask_for_Client_available(client.address)
+client.askTransaction(client.address, client.address ,10)
 client.quit_current_AG()
 print()

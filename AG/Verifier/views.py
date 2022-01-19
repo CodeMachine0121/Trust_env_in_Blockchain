@@ -3,6 +3,7 @@ from django.http import HttpResponse
 import json
 import sys
 import requests
+
 from .Logic.ChameleonShort.Verifier import Verifier
 from .Logic.RSA.rsa import RSA_Library
 from .Logic.longMiddleware import longMiddleware
@@ -73,12 +74,12 @@ def short_Receiver_Actions(data):
     address = data.get('chainAddress')
     result = sver.Verifying(msg, r_plum, Knx, Kny, address)
 
-    print("[*] Initialize Result: {}".format(result))
+    print("[+] Initialize Result: {}".format(result))
 
     return result    
 
 ## 查詢使用者是否在此AG管轄範圍
-def find_Client_available(request):
+def find_Client_available(request): 
     data = json.loads(request.body.decode("utf-8"))
     if not short_Receiver_Actions(data):
         return HttpResponse('Authentication Failed', status=401)
@@ -101,19 +102,24 @@ def Make_Transaction(request):
     if not short_Receiver_Actions(data):
         return HttpResponse("Authentication Failed", status=401)
 
-    print("[+] Receive Transaction requests from: ", data["from"])
+    print("[+] Receive Transaction requests from: ", data["from_address"])
 
     # get transaction data
-    from_addr = data["from"]
-    to_addr =  data["to"]
+    from_addr = RContract.web3.toChecksumAddress(data["from_address"])
+    to_addr =  RContract.web3.toChecksumAddress(data["to_address"])
     balance = data["balance"]
    
    # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
-    
+    print("[+] Receiver Transaction request:")
+    print("\t[-] Sender: [{}]".format(from_addr))
+    print("\t[-] Receiver: [{}]".format(to_addr))
+    print("\t[-] AG of Receiver: [{}]".format(toAG))
+    print("\t[-] Balance: [{}]".format(balance))
 
-    # 交易結果
-    result = True
+    result = TContract.ask_for_DeployContraction(TContract.address, toAG, from_addr, to_addr)
+
+    # 開啟交易通道結果
     return HttpResponse(result, status=200)
 
 
