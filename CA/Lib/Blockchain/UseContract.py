@@ -88,7 +88,7 @@ class Contract:
             print("[!] Contract is not been created yet")
             return None
         if not toAddr in self.contractList[fromAddr].keys():
-            print("[!] Contract is not yet created yet")
+            print("[!] CContract is not yet created yet")
             return None
 
 

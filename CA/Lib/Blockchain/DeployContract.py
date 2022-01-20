@@ -37,6 +37,7 @@ class RecordContract:
         return contract_json
     
     def deploy(self):
+        print("[+] Deploying RecordContract ...")
         print("[+] account's address: {}".format(self.acct.address))       
         contract_json = self.getContract_data()
         
@@ -55,7 +56,6 @@ class RecordContract:
         
 
         construct_txn = contract_.constructor().buildTransaction(txn_body)
-
         signed = self.acct.signTransaction(construct_txn)
         tx_hash = self.web3.toHex(self.web3.keccak(signed.rawTransaction))
 
@@ -68,7 +68,8 @@ class RecordContract:
             contractAddress = tx_recipt.contractAddress
             print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
             print("[+] contract address: [{}]".format(contractAddress))
-
+            
+            return contractAddress, contract_json['abi']
         except IndexError:
             print("[!] Balance is not enough")
         except Exception as e:
@@ -76,7 +77,7 @@ class RecordContract:
         
 
 
-        return contractAddress, contract_json['abi']
+        return
     
 
 
@@ -107,6 +108,7 @@ class TransactionContract:
 
 
     def deploy(self):
+        print("[+] Deploying TransactionContract ...")
         print("[+] account's address: {}".format(self.acct.address))       
         contract_json = self.getContract_data()
         
@@ -139,15 +141,14 @@ class TransactionContract:
             contractAddress = tx_recipt.contractAddress
             print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
             print("[+] contract address: [{}]".format(contractAddress))
+            return contractAddress, contract_json['abi']
 
         except IndexError:
             print("[!] Balance is not enough")
         except Exception as e:
             print("[!] other error occurred:\n\t{}".format(repr(e)))
         
-
-
-        return contractAddress, contract_json['abi']
+        return 
 
 
 

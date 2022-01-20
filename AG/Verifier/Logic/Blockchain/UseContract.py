@@ -80,7 +80,12 @@ class RecordContract:
 
     def findAGviaAddress(self, cli_address):
         agAddr = self.contract.functions.findAGviaAddress(cli_address).call()
-        print("[Debug] AG: {}".format(agAddr))
+        if int(agAddr,16) == 0:
+            print("[!] [{}] have no AG, please try again.".format(cli_address))
+            return 0
+
+        print("[+] Find AG of : [{}]".format(cli_address))
+        print("\t[-] AG: [{}]".format(agAddr))
         return agAddr
 
 class TransactionContract:
@@ -98,7 +103,7 @@ class TransactionContract:
    
 
     def ask_for_DeployContraction(self,AG1, AG2, from_address, to_address):
-        #
+        # 開啟交易通道
         print("[+] Asking for contract deployment: to[{}] ".format(to_address))
         API = self.CAHost+"TxnDeploy/"
         res = requests.post(API, data=json.dumps({

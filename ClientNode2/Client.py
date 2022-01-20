@@ -34,7 +34,7 @@ class Client:
         self.address = getAddress() 
 
 
-        self.RegisterAG()
+#        self.RegisterAG()
         self.rsa = RSA_Library()
 
         self.AG_RSA_PublicKey = Jsystem.get('RSA_PublicKey')
@@ -120,7 +120,11 @@ class Client:
 
 
 client = Client('http://140.125.32.10:8888')
-client.ask_for_Client_available(client.address)
+
+#client.ask_for_Client_available(client.address)
+client.RegisterAG()
 #client.askTransaction(client.address, client.address ,10)
+
 #client.quit_current_AG()
+#client.ask_for_Client_available(client.address)
 print()
