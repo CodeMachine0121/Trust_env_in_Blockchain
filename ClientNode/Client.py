@@ -34,7 +34,7 @@ class Client:
         self.address = getAddress() 
 
 
-        self.RegisterAG()
+        #self.RegisterAG()
         self.rsa = RSA_Library()
 
         self.AG_RSA_PublicKey = Jsystem.get('RSA_PublicKey')
@@ -116,11 +116,18 @@ class Client:
         data["balance"] = balance
 
         res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
-        
+        print("[+] {}".format(res.text))
+        return res.text
+
+    def payment(self, from_address, to_address, balance):
+        print("[+] Sending payment request to AG server")
+        data = self.beforeAction()
+        data["from_address"] = from_address
+        data["to_address"] = to_address
+        data["balance"] = balance
+
+        res = requests.post("{}/AG/payment/".format(self.server), data = json.dumps(data))
+        print("[+] {}".format(res.text))
+        return res.text
 
 
-client = Client('http://140.125.32.10:8888')
-client.ask_for_Client_available(client.address)
-#client.askTransaction(client.address, client.address ,10)
-#client.quit_current_AG()
-print()

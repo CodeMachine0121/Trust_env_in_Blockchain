@@ -11,14 +11,14 @@ CA's code
 sys.path.append('..')
 from Lib.ChameleonLong.Verifier import Verifier
 from Lib.RSA.rsa import RSA_Library
-from Lib.Blockchain.UseContract import Contract
+from Lib.Blockchain.UseContract import usingTransactionsContract
 from Lib.Blockchain.DeployContract import RecordContract
 
 ## 變色龍相關宣告
 ver = Verifier()
 
 ## 區塊練相關宣告
-contract = Contract()
+Tcontract = usingTransactionsContract()
 Rcontract = RecordContract()
 
 
@@ -75,10 +75,10 @@ def AG_Register(request):
 ### 接收每個client的註冊請求
 
 def registerAG_for_RecordContract(request):
-    
-    # 像合約註冊AG
+    # 向RecordContract合約註冊AG
     postData = json.loads(request.body.decode())
-
+    
+    print("[+] Recording AG[{}] to RecordContract".format(postData['Address'])) 
     Rcontract.registerAG(postData['Address'], postData['Domain'])
     
     JData = json.dumps({
@@ -91,48 +91,61 @@ def registerAG_for_RecordContract(request):
 
 ### 由CA部屬交易合約，再交由給AG
 ### CA 部屬合約後要去判定那些AGs負責
-def deployContract(request):
+def deployTransactionContract(request):
 # 交易合約
     jsonData = json.loads(request.body.decode())
     from_address = jsonData['fromAddress']
     to_address = jsonData['toAddress']
+    balance = jsonData['balance']
     AG1 = jsonData['AG1Address']
     AG2 = jsonData['AG2Address']
 
     # 部屬合約
-    contract.deployContract(from_address, to_address)
-    contract.setAG(from_address,to_address, AG1,AG2)
-
-    return HttpResponse("Deploy Contract Successfully")
-
-
-### 確定好雙方AG的同意後就可以開啟交易
-def  open_TransactionChannel(request):
-# 交易合約
-    jsonData = json.loads(request.body.decode())
-    from_address = jsonData["fromAddress"]
-    to_address = jsonData["toAddress"]
-    balance = jsonData["balance"]
+    print("[+] Deploying Transaction Contract for AG:[{}] ".format(AG1))
+    result = Tcontract.deployContract(AG1,from_address, to_address, Rcontract.nonce)
     
-    # 計算合約簽章
-    r = ver.Signing(from_address+ to_address+ str(balance))
-    # 開啟交易通道
-    contract.createTransaction(from_address, to_address, balance,r)
+    if not result:
+        print("[!] Deploy Transaction Contract Failed")
+        return HttpResponse(str(False))
+    else:
+        Rcontract.nonce+=1
+
+
+    if not Tcontract.setAG(from_address,to_address, AG1,AG2, Rcontract.nonce):
+        print("[!] error occured <deployTransactionContract>")
+        return HttpResponse(str(False)) 
+    else:
+        Rcontract.nonce+=1
+   
+   # 開啟交易
+    print("[+] Creating Transaction Channel")
+    r = ver.Signing(from_address+to_address+str(balance))
+    result = Tcontract.createTransaction(AG1,from_address, to_address, balance, r, Rcontract.nonce)
     
-    return HttpResponse("Transaction channel open successfully")
+    if result:
+        Rcontract.nonce+=1
+    
+    return HttpResponse( json.dumps({
+            'abi': Tcontract.contractList[AG1][from_address][to_address].abi,
+            'contractAddress':Tcontract.contractList[AG1][from_address][to_address].address,
+           'result': result,
+           "r": r
+        }), content_type='application/json' )
+
 
 
 
 
 ### 取得合約的位址跟ABI
-def getContract(request):
+def getTransactionContract(request): 
   # 交易合約
+    print("[+] Importing Transaction Contract")
     jsonData = json.loads(request.body.decode())
     from_address = jsonData["fromAddress"]
     to_address = jsonData["toAddress"]
     
-    abi = contract.contractList[from_address][to_address].abi
-    address = contract.contractList[from_address][to_address].address
+    abi = Tcontract.contractList[from_address][to_address].abi
+    address = Tcontract.contractList[from_address][to_address].address
 
 
     return HttpResponse(
@@ -144,12 +157,14 @@ def getContract(request):
     )
 
 ### 結束合約
-def closeContract(request):
+def closeTransactionContract(request):
     # 交易合約
     jsonData = json.loads(request.body.decode())    
     from_address = jsonData['fromAddress']
     to_address = jsonData['toAddress']
-    contract.endContract(from_address, to_address)
+    ag_address = jsonData['agAddress']
+    Tcontract.endContract(ag_address, from_address, to_address, Rcontract.nonce)
+    Rcontract.nonce+=1
     return HttpResponse("Contract has been destroyed")
 ###   
 

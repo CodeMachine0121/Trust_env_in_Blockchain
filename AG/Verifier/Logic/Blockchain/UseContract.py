@@ -45,6 +45,8 @@ class RecordContract:
         
         self.Domain = "This is AG1"
         self.contract= self.setContract(self.Domain)
+        
+        self.nonce = self.web3.eth.getTransactionCount(self.address)
 
         return 
     
@@ -61,24 +63,33 @@ class RecordContract:
             'Address': self.address,
             'Domain': self.Domain
             })
-
+        # 註冊RecordContract 並索取合約資訊
         res =requests.post(API, data=JData)
-        
         JData = json.loads(res.text)
-
         abi = JData['abi']
         address = JData['address']
         
+
         return self.web3.eth.contract(address = address, abi=abi)
     
 
     
     def  registerClient(self, cli_address):
         # 登記註冊的Client
-        self.contract.functions.registerClient(cli_address).transact({'from':self.address})
-        return 
+        print("[+] Client [{}] register to RecordContract".format(cli_address))
+        try:
+            self.contract.functions.registerClient(cli_address).transact({
+                'from':self.address,
+                #'gasPrice': self.web3.eth.gasPrice,
+                'nonce': self.nonce
+                })
+            self.nonce+=1
+            return True
+        except:
+            return False
 
     def findAGviaAddress(self, cli_address):
+        # 透過client address 搜尋  AG位址
         agAddr = self.contract.functions.findAGviaAddress(cli_address).call()
         if int(agAddr,16) == 0:
             print("[!] [{}] have no AG, please try again.".format(cli_address))
@@ -99,24 +110,44 @@ class TransactionContract:
         #self.address = self.web3.eth.accounts[0]
         self.contractList = dict()
         
+    def addContract(self,abi,contractAddress, from_address, to_address, balance):
+        contract = ContractStructure(abi, contractAddress, from_address, to_address, balance)
+        if from_address in self.contractList.keys():
+            self.contractList[from_address][to_address] = contract
+        else:
+            self.contractList[from_address] = dict()
+            self.contractList[from_address][to_address] = contract
 
-   
+        return 
 
-    def ask_for_DeployContraction(self,AG1, AG2, from_address, to_address):
+    def ask_for_DeployContraction(self,AG1, AG2, from_address, to_address, balance):
         # 開啟交易通道
+        if from_address in self.contractList.keys():
+            if to_address in self.contractList[from_address].keys():
+                print("[!] Transaction is already in exist")
+                return False
+
+
         print("[+] Asking for contract deployment: to[{}] ".format(to_address))
         API = self.CAHost+"TxnDeploy/"
         res = requests.post(API, data=json.dumps({
             'fromAddress': from_address,
             'toAddress': to_address,
+            'balance': balance,
             'AG1Address':AG1,
             "AG2Address":AG2,
             }))
         
-        print('[+] {}'.format(res.text))
-        return True 
-        #
+        Jres = json.loads(res.text)
+        print('\t[-] Result: {}'.format(Jres['result']))
+        
+        # 實作合約並加入合約表中
+        self.addContract(Jres['abi'], Jres['contractAddress'], from_address, to_address, balance)
+        
+        
+        return res.text
 
+ 
     def setContract(self, from_address,  to_address, balance):
         # 建立合約物件，再把他加入合約字典中 
         print("[+] Setting Transaction Contract: to:[{}]".format(to_address))
@@ -136,7 +167,7 @@ class TransactionContract:
         self.contractList[from_address][to_address] = contract
         return 
 
-    def setAgreements(self,from_address , to_address, agreement):
+    def setAgreements(self,from_address , to_address, agreement, nonce):
        # AG 自行使用 確認是否同意交易
         if not from_address in self.contractList.keys(): 
             print("[!] Contract has not been deployed yet!")
@@ -147,17 +178,21 @@ class TransactionContract:
                 abi = self.contractList[from_address][to_address].abi,
                 address = self.contractList[from_address][to_address].address
                 )
-        print("Sending agreement to contract: [{}]".format(self.contractList[from_address][to_address].address))
+        print("[+] Sending agreement to contract: [{}]".format(self.contractList[from_address][to_address].address))
         # agreement = True or False
-        
-        nonce = self.web3.eth.getTransactionCount(self.address)
-        contract.functions.setAgreements(agreement).transact({
-            'from': self.address,
-            'gasPrice': self.web3.eth.gasPrice,
-            'nonce': nonce
-            })
-        return
-    
+        try:
+            contract.functions.setAgreements(agreement).transact({
+                'from': self.address,
+                'gasPrice': self.web3.eth.gasPrice,
+                'nonce': nonce
+                })
+            return True
+        except Exception as e:
+            print("[!] Error occur: [{}]".format(repr(e)))
+            
+            return False
+
+
     def checkStep(self,from_address, to_address):
         #
         if not from_address in self.contractList.keys(): 
@@ -175,7 +210,8 @@ class TransactionContract:
         #
 
 
-    def Payment(self, fromAddr, toAddr, balance):  
+    # 單次付款
+    def Payment(self, fromAddr, toAddr, balance, nonce):  
         #
         if not fromAddr in self.contractList.keys(): 
             print("[!] Contract has not been deployed yet!")
@@ -186,37 +222,16 @@ class TransactionContract:
                 abi = self.contractList[fromAddr][toAddr].abi,
                 address = self.contractList[fromAddr][toAddr].address
                 )
-
+        
         contract.functions.Payment(
                 fromAddr, toAddr, balance).transact({
-                    'from': self.address
+                    'from': self.address,
+                    'gasPrice': self.web3.eth.gasPrice,
+                    'nonce': nonce
                     })
-        return 
-
-
-
-
-
-    # 開啟交易通道
-    def createTransaction(self,fromAddr, toAddr, balance):
-        # calculate signature
-        if not fromAddr in self.contractList.keys(): 
-
-            print("[!] Contract has not been deployed yet!")
-        elif not toAddr in self.contractList[fromAddr].keys():
-            print("[!] Contract has not been deployed yet!")
-        
-        API = self.CAHost+"NewTxnChannel/"
-        # 在CA那邊會計算交易的變色龍雜湊值
-        res = requests.post(API, data = json.dumps({
-            'fromAddress': fromAddr,
-            'toAddress': toAddr,
-            'balance': balance
-            }))
-        if "successfully" not in res.text:
-            print("[!] Transaction created failed!")
-        return 
-
+            
+        return True
+    
 
     # 關閉合約
     def  endContract(self,from_address, to_address):

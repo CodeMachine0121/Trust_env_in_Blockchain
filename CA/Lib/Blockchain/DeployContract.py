@@ -1,4 +1,5 @@
-from web3 import Web3
+from web3 import Web3, middleware
+from web3.gas_strategies.time_based import medium_gas_price_strategy
 import json
 import os
 
@@ -24,11 +25,12 @@ class RecordContract:
         self.blockchain_address = getChainNodeAddress()
         self.web3 = Web3(Web3.HTTPProvider(self.blockchain_address))
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3)) 
-        
+        # 紀錄交易次數
+        self.nonce = self.web3.eth.getTransactionCount(self.acct.address)
         self.contractAddress, self.abi = self.deploy()
 
         self.contract = self.web3.eth.contract(abi=self.abi,address=self.contractAddress)
-
+        
 
     def getContract_data(self):
         compiled_contract_path = './Lib/Blockchain/build/contracts/RecordContract.json'
@@ -38,22 +40,24 @@ class RecordContract:
     
     def deploy(self):
         print("[+] Deploying RecordContract ...")
-        print("[+] account's address: {}".format(self.acct.address))       
+        print("[+] deployer's address: {}".format(self.acct.address))       
         contract_json = self.getContract_data()
         
-        nonce = self.web3.eth.getTransactionCount(self.acct.address) 
-
-        print("[+] account's nonce: {}".format(nonce))
+        
+        print("[+] account's nonce: {}".format(self.nonce))
         contract_ = self.web3.eth.contract(
                 abi=contract_json['abi'],
                 bytecode=contract_json['bytecode']
         )
+
         txn_body = {
             'from': self.acct.address,
+            #'gas': 300000,
             'gasPrice': self.web3.eth.gasPrice,
-            'nonce': nonce
+            'nonce': self.nonce
         }
         
+        self.nonce += 1
 
         construct_txn = contract_.constructor().buildTransaction(txn_body)
         signed = self.acct.signTransaction(construct_txn)
@@ -62,13 +66,19 @@ class RecordContract:
         # throw IndexError if balance is out of band
         try:
             self.web3.eth.sendRawTransaction(signed.rawTransaction)
-            print("[+] Deploy contract: [{}]".format(tx_hash))
+            print("[+] RecordContract txn: [{}]".format(tx_hash))
             
             tx_recipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
             contractAddress = tx_recipt.contractAddress
             print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
-            print("[+] contract address: [{}]".format(contractAddress))
-            
+            print("[+] RecordContract address: [{}]".format(contractAddress))
+            """
+                實驗記錄用 額外儲存ABI
+            """ 
+            with open("./RABI", 'w') as file:
+                file.write(str(contract_json["abi"]))
+                file.close()
+
             return contractAddress, contract_json['abi']
         except IndexError:
             print("[!] Balance is not enough")
@@ -83,16 +93,23 @@ class RecordContract:
 
     def registerAG(self, agAddress, domain):
         self.contract.functions.registerAG(agAddress, domain).transact({'from':self.acct.address})
+        
+        self.nonce+=1
         return 
     
 
 class TransactionContract:  
     def __init__(self):
+        """
+            由於Record會優先被使用，所以 nonce就由Record物件紀錄
+        """
         self.blockchain_address = getChainNodeAddress()
         self.web3 = Web3(Web3.HTTPProvider(self.blockchain_address))
         #self.web3.eth.set_gas_price_strategy(fast_gas_price_strategy)
  #       self.web3.eth.set_gas_price_strategy(medium_gas_price_strategy)
-        
+        self.web3.eth.set_gas_price_strategy(medium_gas_price_strategy)
+
+        self.web3.middleware_onion.add(middleware.time_based_cache_middleware) 
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3))
         return 
    
@@ -107,12 +124,11 @@ class TransactionContract:
 
 
 
-    def deploy(self):
+    def deploy(self, nonce):
         print("[+] Deploying TransactionContract ...")
         print("[+] account's address: {}".format(self.acct.address))       
         contract_json = self.getContract_data()
         
-        nonce = self.web3.eth.getTransactionCount(self.acct.address) 
 
         print("[+] account's nonce: {}".format(nonce))
         contract_ = self.web3.eth.contract(
@@ -121,6 +137,7 @@ class TransactionContract:
         )
         txn_body = {
             'from': self.acct.address,
+            'gas': 300000,
             'gasPrice': self.web3.eth.gasPrice,
             'nonce': nonce
         }

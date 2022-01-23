@@ -24,5 +24,6 @@ urlpatterns = [
     path("clientAvailability/", views.find_Client_available),
     path("quit_AG/", views.quit_this_AG),
     #path("shortReceive/", views.short_Receiver_Actions),
-    path('askTransactions/', views.Make_Transaction)
+    path('askTransactions/', views.Make_Transaction),
+    path("payment/", views.makePayment),
 ]
