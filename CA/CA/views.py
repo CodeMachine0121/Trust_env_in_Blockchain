@@ -102,7 +102,10 @@ def deployTransactionContract(request):
 
     # 部屬合約
     print("[+] Deploying Transaction Contract for AG:[{}] ".format(AG1))
-    result = Tcontract.deployContract(AG1,from_address, to_address, Rcontract.nonce)
+    # msg: from+to+AG1+AG2
+    msg = str(from_address)+str(to_address)+str(AG1)+str(AG2)
+    r = ver.Signing(msg)
+    result = Tcontract.deployContract(AG1, AG2, from_address, to_address, r, Rcontract.nonce)
     
     if not result:
         print("[!] Deploy Transaction Contract Failed")
@@ -111,13 +114,8 @@ def deployTransactionContract(request):
         Rcontract.nonce+=1
 
 
-    if not Tcontract.setAG(from_address,to_address, AG1,AG2, Rcontract.nonce):
-        print("[!] error occured <deployTransactionContract>")
-        return HttpResponse(str(False)) 
-    else:
-        Rcontract.nonce+=1
    
-   # 開啟交易
+    # 開啟交易
     print("[+] Creating Transaction Channel")
     r = ver.Signing(from_address+to_address+str(balance))
     result = Tcontract.createTransaction(AG1,from_address, to_address, balance, r, Rcontract.nonce)

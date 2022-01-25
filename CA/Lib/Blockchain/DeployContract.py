@@ -124,39 +124,47 @@ class TransactionContract:
 
 
 
-    def deploy(self, nonce):
+    def deploy(self,fromAG, toAG, from_address, to_address, r, nonce):
+
         print("[+] Deploying TransactionContract ...")
         print("[+] account's address: {}".format(self.acct.address))       
         contract_json = self.getContract_data()
-        
 
+        # 統一格式
+        fromAG = self.web3.toChecksumAddress(fromAG)
+        toAG = self.web3.toChecksumAddress(toAG)
+        from_address = self.web3.toChecksumAddress(from_address)
+        to_address = self.web3.toChecksumAddress(to_address)
+
+        
         print("[+] account's nonce: {}".format(nonce))
         contract_ = self.web3.eth.contract(
                 abi=contract_json['abi'],
                 bytecode=contract_json['bytecode']
         )
+        contractConstruct = contract_.constructor(fromAG, toAG, from_address, to_address)
+
         txn_body = {
             'from': self.acct.address,
-            'gas': 300000,
+            'gas': contractConstruct.estimateGas(),
             'gasPrice': self.web3.eth.gasPrice,
-            'nonce': nonce
+            'nonce': nonce,
         }
         
 
 
-        construct_txn = contract_.constructor().buildTransaction(txn_body)
-
-        signed = self.acct.signTransaction(construct_txn)
-        tx_hash = self.web3.toHex(self.web3.keccak(signed.rawTransaction))
 
         # throw IndexError if balance is out of band
         try:
-            self.web3.eth.sendRawTransaction(signed.rawTransaction)
-            print("[+] Deploy contract: [{}]".format(tx_hash))
+            construct_txn = contractConstruct.transact(txn_body)
+            #signed = self.acct.signTransaction(construct_txn)
+            #tx_hash = self.web3.toHex(self.web3.keccak(signed.rawTransaction))
+            #self.web3.eth.sendRawTransaction(signed.rawTransaction)
+            print("[+] Deploy Transaction contract for sender: [{}]".format(from_address))
             
-            tx_recipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
-            contractAddress = tx_recipt.contractAddress
-            print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
+            tx_recipt = self.web3.eth.wait_for_transaction_receipt(construct_txn)
+            contractAddress = tx_recipt["contractAddress"]
+            #print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
             print("[+] contract address: [{}]".format(contractAddress))
             return contractAddress, contract_json['abi']
 

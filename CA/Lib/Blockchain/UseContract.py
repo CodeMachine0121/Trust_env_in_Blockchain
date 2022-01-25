@@ -79,30 +79,30 @@ class usingTransactionsContract:
             return False
 
     # CA 發布交易合約
-    def deployContract(self, ag_address, from_address,to_address, nonce):
+    def deployContract(self, fromAG, toAG,  from_address, to_address, r, nonce):
         
         # 確認合約是否已經被部屬過或是未過期
-        if ag_address in self.contractList.keys():
-            if from_address in self.contractList[ag_address].keys():
-                if to_address in self.contractList[ag_address][from_address].keys():
+        if fromAG in self.contractList.keys():
+            if from_address in self.contractList[fromAG].keys():
+                if to_address in self.contractList[fromAG][from_address].keys():
                     print("[!] Contract has been created ")
 
 
 
         # 存放合約資料
         try:
-            contract_address,abi =  self.deploy.deploy(nonce)
+            contract_address,abi =  self.deploy.deploy(fromAG, toAG, from_address, to_address, r, nonce)
             
 
-            contract = ContractStructure(abi, contract_address, ag_address ,from_address, to_address, True)
+            contract = ContractStructure(abi, contract_address, fromAG ,from_address, to_address, True)
        
             '''
                 為了記錄交易合約屬於誰
                 以三個索引值作為key: agAddress, fromAddress, toAddress
             '''
-            self.contractList[ag_address] = dict()
-            self.contractList[ag_address][from_address] =dict()
-            self.contractList[ag_address][from_address][to_address] = contract
+            self.contractList[fromAG] = dict()
+            self.contractList[fromAG][from_address] =dict()
+            self.contractList[fromAG][from_address][to_address] = contract
             
             """
                 實驗記錄用: 額外儲存ABI
@@ -137,7 +137,7 @@ class usingTransactionsContract:
                 abi = contractobj.abi
                 )
         # <要在看對R做甚麼事情>
-            contract.functions.createTransaction(from_address, to_address, balance,signature).transact({
+            contract.functions.createTransaction(from_address, to_address, balance, signature).transact({
                 'from': self.address,
                 'nonce': nonce
             })

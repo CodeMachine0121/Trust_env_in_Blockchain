@@ -119,6 +119,11 @@ def Make_Transaction(request):
     
    # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
+    if toAG == int("0",16):
+        print("[!] Receiver AG is not ready, please try again.")
+        return HttpResponse("Receiver AG is not ready, please try again", status=401)
+
+
     print("[+] Receiver Transaction request:")
     print("\t[-] Sender: [{}]".format(from_addr))
     print("\t[-] Receiver: [{}]".format(to_addr))
