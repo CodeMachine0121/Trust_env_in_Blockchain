@@ -9,7 +9,7 @@ client = Client('http://140.125.32.10:8888')
 client.RegisterAG()
 client.ask_for_Client_available(client.address)
 client.askTransaction(client.address,acc,10)
-#client.payment(client.address, acc, 1)
+client.payment(client.address, acc, 1)
 
 #client.quit_current_AG()
 print()   

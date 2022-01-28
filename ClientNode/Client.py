@@ -69,9 +69,8 @@ class Client:
         self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
         return 
 
-    def beforeAction(self ):
+    def beforeAction(self, msg):
         ### 簽章驗證
-        msg = "Back"
         en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
         r = self.part.MakeSignature(msg, int(self.Public_AG.x))
         publicKey = self.rsa.OutputPublic()
@@ -92,7 +91,7 @@ class Client:
     def ask_for_Client_available(self, address):
         
        
-        data = self.beforeAction()
+        data = self.beforeAction(str(address))
         data["Target_address"] = address
             
         res = requests.post("{}/AG/clientAvailability/".format(self.server), data=json.dumps(data))
@@ -102,7 +101,7 @@ class Client:
         return 
     
     def quit_current_AG(self):
-        data = self.beforeAction()
+        data = self.beforeAction(str(self.address)+ str(self.part.sk))
         res = requests.post("{}/AG/quit_AG/".format(self.server), data=json.dumps(data))
         print("[+] Quitting current AG: {}".format(res.text))
         
@@ -110,7 +109,8 @@ class Client:
 
     def askTransaction(self, from_address, to_address, balance):
         print("[+] Sending transaction request to AG server")
-        data = self.beforeAction()
+        data = self.beforeAction(str(from_address)+str(to_address)+str(balance))
+
         data["from_address"] = from_address
         data["to_address"] = to_address
         data["balance"] = balance
@@ -121,7 +121,7 @@ class Client:
 
     def payment(self, from_address, to_address, balance):
         print("[+] Sending payment request to AG server")
-        data = self.beforeAction()
+        data = self.beforeAction(str(from_address)+str(to_address)+str(balance))
         data["from_address"] = from_address
         data["to_address"] = to_address
         data["balance"] = balance

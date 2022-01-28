@@ -211,7 +211,7 @@ class TransactionContract:
 
 
     # 單次付款
-    def Payment(self, fromAddr, toAddr, balance, nonce):  
+    def Payment(self, fromAddr, toAddr, balance, r, nonce):  
         #
         if not fromAddr in self.contractList.keys(): 
             print("[!] Contract has not been deployed yet!")
@@ -224,7 +224,7 @@ class TransactionContract:
                 )
         
         contract.functions.Payment(
-                fromAddr, toAddr, balance).transact({
+                fromAddr, toAddr, balance, r).transact({
                     'from': self.address,
                     'gasPrice': self.web3.eth.gasPrice,
                     'nonce': nonce

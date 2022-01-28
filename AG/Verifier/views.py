@@ -1,8 +1,10 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from Crypto.Random.random import getrandbits
 import json
 import sys
 import requests
+
 
 from .Logic.ChameleonShort.Verifier import Verifier
 from .Logic.RSA.rsa import RSA_Library
@@ -116,7 +118,23 @@ def Make_Transaction(request):
     from_addr = RContract.web3.toChecksumAddress(data["from_address"])
     to_addr =  RContract.web3.toChecksumAddress(data["to_address"])
     balance = data["balance"]
-    
+    r = data["r"]
+    Knx = data["Knx"]
+    Kny = data["Kny"]
+
+
+    # 驗證Client簽章
+    #seed = int(getrandbits(256)) # 在未來可以加入隨機種子
+    msg = str(from_addr)+str(to_addr)+str(balance)
+    verifyResult = sver.Verifying(msg, r, Knx, Kny, from_addr)
+    if verifyResult ==False:
+        print("[!] Client Verifying: Error")
+        return HttpResponse("ChameleonShort Verifying Error", status=401)
+    else:
+        print("[+] Client Verifying: Pass ")
+ 
+
+
    # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
     if toAG == int("0",16):
@@ -165,6 +183,20 @@ def makePayment(request):
     from_addr = RContract.web3.toChecksumAddress(data["from_address"])
     to_addr =  RContract.web3.toChecksumAddress(data["to_address"])
     balance = data["balance"]
+    rFromClient = data["r"]
+    Knx =  data["Knx"]
+    Kny = data["Kny"]
+
+    # 驗證客戶端的簽證
+
+    msg = str(from_addr)+str(to_addr)+str(balance)
+    verifyResult = sver.Verifying(msg, rFromClient, Knx, Kny, from_addr)
+    
+    if verifyResult == False:
+        print("[!] Client Verifying: Error")
+        return HttpResponse("ChameleonShort Verifying Error", status=401)
+    else:
+        print("[+] Client Verifying: Pass ")
     
    # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
@@ -177,7 +209,8 @@ def makePayment(request):
     print("\t[-] Balance: [{}]".format(balance))
     
     try:
-        res = TContract.Payment(from_addr, to_addr, balance, RContract.nonce)
+        r = sver.Signing(msg, from_addr)
+        res = TContract.Payment(from_addr, to_addr, balance, r, RContract.nonce)
         RContract.nonce += 1
     except Exception as e:
         print("[!] Erroe occured: [{}]".format(repr(e)))
