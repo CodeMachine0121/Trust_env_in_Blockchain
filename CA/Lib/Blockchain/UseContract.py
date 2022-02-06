@@ -100,10 +100,15 @@ class usingTransactionsContract:
                 為了記錄交易合約屬於誰
                 以三個索引值作為key: agAddress, fromAddress, toAddress
             '''
-            self.contractList[fromAG] = dict()
-            self.contractList[fromAG][from_address] =dict()
+            if fromAG not in self.contractList.keys():
+                self.contractList[fromAG]=dict()
+
+            if from_address not in self.contractList[fromAG].keys():
+                self.contractList[fromAG][from_address] = dict()
+
             self.contractList[fromAG][from_address][to_address] = contract
-            
+           
+
             """
                 實驗記錄用: 額外儲存ABI
             """
@@ -119,6 +124,26 @@ class usingTransactionsContract:
             return False
 
         return True
+
+    # CA 設定合約參數
+    def setArguments(self, fromAG, toAG, from_address, to_address, nonce):
+        print("[+] Setting contract arguments...")
+        contractobj = self.contractList[fromAG][from_address][to_address]
+        con = self.deploy.web3.eth.contract(
+            address = contractobj.address,
+            abi = contractobj.abi,
+        )
+        txn = con.functions.setArguments(fromAG,toAG,from_address,to_address).transact({
+            'from': self.address,
+            'nonce':nonce
+        })
+
+        self.deploy.web3.eth.wait_for_transaction_receipt(txn)
+
+        return True
+     
+
+
 
     # CA 開啟交易通道
     def createTransaction(self, ag_address, from_address, to_address, balance, signature, nonce):

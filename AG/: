@@ -172,7 +172,7 @@ def makePayment(request):
         ip = x_forwarded_for.split(',')[0]
     else:
         ip = request.META.get('REMOTE_ADDR') 
-    print("[+] Receive Payment requests from: ".format(ip))
+    print("[+] Receive Payment requests from: ", data["from_address"])
 
     from_addr = RContract.web3.toChecksumAddress(data["from_address"])
     to_addr =  RContract.web3.toChecksumAddress(data["to_address"])
@@ -210,25 +210,11 @@ def makePayment(request):
 
     
 def getContractBalance(request):
-    # show ip of requesters
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR') 
-    print("[+] Receive Balance requests from: {}".format(ip))
-
-
     Jdata = json.loads(request.body.decode("utf-8"))
     fromAddr = Jdata["fromAddr"]
     toAddr = Jdata["toAddr"]
 
-    totalAmount, currnetAmount = TContract.getContractBalance(fromAddr, toAddr)
-    data = json.dumps({
-        "totalAmount":totalAmount,
-        "currentAmount": currnetAmount
-        })
-    
-    return  HttpResponse(data, content_type='application/json', status=200)
+    balance = TContract.getContractBalance(fromAddr, toAddr)
+    return  HttpResponse(balance, status=200)
  
 

@@ -111,72 +111,63 @@ class TransactionContract:
 
         self.web3.middleware_onion.add(middleware.time_based_cache_middleware) 
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3))
+        self.contractList = dict()
         return 
    
+    # 取得合約 abi, bytecode
+    def getContractData(self):
+        with open("./Lib/Blockchain/build/contracts/TransferContract.json") as file:
+            Jdata =  json.loads(file.read())
+        
+        abi = Jdata["abi"]
+        bytecode = Jdata["bytecode"]
+        return abi, bytecode
 
-    def getContract_data(self):
-        compiled_contract_path = './Lib/Blockchain/build/contracts/TransferContract.json'
-        with open(compiled_contract_path) as file:
-            contract_json = json.loads(file.read())
-            # contract_abi = contract_josn['abi']
-        return contract_json
-
-
-
-
-    def deploy(self,fromAG, toAG, from_address, to_address, r, nonce):
+    def deploy(self,fromAG, nonce):
 
         print("[+] Deploying TransactionContract ...")
         print("[+] account's address: {}".format(self.acct.address))       
-        contract_json = self.getContract_data()
+        abi, bytecode = self.getContractData()
 
         # 統一格式
         fromAG = self.web3.toChecksumAddress(fromAG)
-        toAG = self.web3.toChecksumAddress(toAG)
-        from_address = self.web3.toChecksumAddress(from_address)
-        to_address = self.web3.toChecksumAddress(to_address)
-
-        
-        print("[+] account's nonce: {}".format(nonce))
-        contract_ = self.web3.eth.contract(
-                abi=contract_json['abi'],
-                bytecode=contract_json['bytecode']
-        )
-        contractConstruct = contract_.constructor(fromAG, toAG, from_address, to_address)
-
-        txn_body = {
-            'from': self.acct.address,
-            'gas': contractConstruct.estimateGas(),
-            'gasPrice': self.web3.eth.gasPrice,
-            'nonce': nonce,
-        }
-        
-
-
 
         # throw IndexError if balance is out of band
+        
         try:
-            construct_txn = contractConstruct.transact(txn_body)
-            #signed = self.acct.signTransaction(construct_txn)
-            #tx_hash = self.web3.toHex(self.web3.keccak(signed.rawTransaction))
-            #self.web3.eth.sendRawTransaction(signed.rawTransaction)
-            print("[+] Deploy Transaction contract for sender: [{}]".format(from_address))
-            
-            tx_recipt = self.web3.eth.wait_for_transaction_receipt(construct_txn)
-            contractAddress = tx_recipt["contractAddress"]
-            #print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
-            print("[+] contract address: [{}]".format(contractAddress))
-            return contractAddress, contract_json['abi']
 
-        except IndexError:
+            print("[+] account's nonce: {}".format(nonce))
+            contractConstruct = self.web3.eth.contract(
+                abi=abi,
+                bytecode=str(bytecode)
+            ).constructor(self.web3.eth.coinbase, fromAG)
+            
+
+            txn_body = {
+                'from': self.acct.address,
+                'gas': contractConstruct.estimateGas(),
+                'gasPrice': self.web3.eth.gasPrice,
+                'nonce': nonce}
+            result = contractConstruct.transact(txn_body)
+            tx_receipt = self.web3.eth.wait_for_transaction_receipt(result)
+
+            # store the contract information
+            self.contractList[fromAG]=dict()
+            self.contractList[fromAG]["abi"] = abi
+            self.contractList[fromAG]["address"] = tx_receipt.contractAddress
+
+            contractAddress = tx_receipt.contractAddress
+            print("[+] contract address: [{}]".format(contractAddress))
+            print("[+] Deploy contract test: ")
+            contract = self.web3.eth.contract(address=contractAddress, abi=abi)
+            print("\t[-] CA: [{}]".format(contract.functions.getCA().call()))
+            print("\t[-] Owner: [{}]".format(contract.functions.getOwner().call()))
+            
+            return contractAddress , abi
+
+        except IndexError as e:
             print("[!] Balance is not enough")
+            return repr(e), None
         except Exception as e:
             print("[!] other error occurred:\n\t{}".format(repr(e)))
-        
-        return 
-
-
-
-
-
-
+            return repr(e), None

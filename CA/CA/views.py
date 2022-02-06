@@ -11,16 +11,15 @@ CA's code
 sys.path.append('..')
 from Lib.ChameleonLong.Verifier import Verifier
 from Lib.RSA.rsa import RSA_Library
-from Lib.Blockchain.UseContract import usingTransactionsContract
-from Lib.Blockchain.DeployContract import RecordContract
+from Lib.Blockchain.DeployContract import RecordContract, TransactionContract
 
 ## 變色龍相關宣告
 ver = Verifier()
 
 ## 區塊練相關宣告
-Tcontract = usingTransactionsContract()
+Tcontract = ()
 Rcontract = RecordContract()
-
+Tcontract = TransactionContract()
 
 ## RSA 加密
 rsa = RSA_Library()
@@ -94,44 +93,22 @@ def registerAG_for_RecordContract(request):
 def deployTransactionContract(request):
 # 交易合約
     jsonData = json.loads(request.body.decode())
-    from_address = jsonData['fromAddress']
-    to_address = jsonData['toAddress']
-    balance = jsonData['balance']
-    AG1 = jsonData['AG1Address']
-    AG2 = jsonData['AG2Address']
-
-    # 部屬合約
-    print("[+] Deploying Transaction Contract for AG:[{}] ".format(AG1))
-    # msg: from+to+AG1+AG2
-    msg = str(from_address)+str(to_address)+str(AG1)+str(AG2)
-    r = ver.Signing(msg)
-    result = Tcontract.deployContract(AG1, AG2, from_address, to_address, r, Rcontract.nonce)
+    address = jsonData['address']
+    nonce = Rcontract.nonce
     
-    if not result:
-        print("[!] Deploy Transaction Contract Failed")
-        return HttpResponse(str(False))
+    
+    contractAddress, abi = Tcontract.deploy(address, nonce)
+    if abi == None: # 此時contractAddress 會是異常訊息
+        return HttpResponse(contractAddress, status=501)
     else:
-        Rcontract.nonce+=1
-
-
-   
-    # 開啟交易
-    print("[+] Creating Transaction Channel")
-    r = ver.Signing(from_address+to_address+str(balance))
-    result = Tcontract.createTransaction(AG1,from_address, to_address, balance, r, Rcontract.nonce)
+        Rcontract.nonce += 1
     
-    if result:
-        Rcontract.nonce+=1
-    
-    return HttpResponse( json.dumps({
-            'abi': Tcontract.contractList[AG1][from_address][to_address].abi,
-            'contractAddress':Tcontract.contractList[AG1][from_address][to_address].address,
-           'result': result,
-           "r": r
-        }), content_type='application/json' )
-
-
-
+        
+    return HttpResponse(json.dumps({
+        'address': contractAddress,
+        "abi": abi,
+        "result": True
+        }), status=200)
 
 
 ### 取得合約的位址跟ABI
@@ -139,11 +116,10 @@ def getTransactionContract(request):
   # 交易合約
     print("[+] Importing Transaction Contract")
     jsonData = json.loads(request.body.decode())
-    from_address = jsonData["fromAddress"]
-    to_address = jsonData["toAddress"]
+    address = jsonData["address"]
     
-    abi = Tcontract.contractList[from_address][to_address].abi
-    address = Tcontract.contractList[from_address][to_address].address
+    abi = Tcontract.contractList[address]['abi']
+    address = Tcontract.contractList[address]["address"]
 
 
     return HttpResponse(
@@ -154,16 +130,5 @@ def getTransactionContract(request):
         content_type='application/json'
     )
 
-### 結束合約
-def closeTransactionContract(request):
-    # 交易合約
-    jsonData = json.loads(request.body.decode())    
-    from_address = jsonData['fromAddress']
-    to_address = jsonData['toAddress']
-    ag_address = jsonData['agAddress']
-    Tcontract.endContract(ag_address, from_address, to_address, Rcontract.nonce)
-    Rcontract.nonce+=1
-    return HttpResponse("Contract has been destroyed")
-###   
 
 

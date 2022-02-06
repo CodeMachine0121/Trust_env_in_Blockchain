@@ -2,7 +2,6 @@ import requests
 import os
 import json
 from web3 import Web3
-
 from Lib.ChameleonShort.Participator import Participator
 from Crypto.Random.random import getrandbits
 from Lib.RSA.rsa import RSA_Library
@@ -38,8 +37,9 @@ class Client:
         self.rsa = RSA_Library()
 
         self.AG_RSA_PublicKey = Jsystem.get('RSA_PublicKey')
-
-
+        
+        self.contract = None
+        
 
 
     ## 更換server
@@ -130,4 +130,15 @@ class Client:
         print("[+] {}".format(res.text))
         return res.text
 
+    def getContractBalance(self, from_address, to_address):
+    
+        data = self.beforeAction(str(from_address)+str(to_address))    
+        data["fromAddr"] = from_address
+        data["toAddr"] = to_address
+
+
+        res = requests.post("{}/AG/getContractBalance/".format(self.server),data=json.dumps(data))
+        res = json.loads(res.text)
+
+        return res["totalAmount"], res["currentAmount"]
 
