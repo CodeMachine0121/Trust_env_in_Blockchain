@@ -62,6 +62,7 @@ def sessionKey_exchange(request):
     
     # 向合約登記此client在他的管轄內
     result = RContract.registerClient(address)
+    TContract.setBalanceRecord(address)
     sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
 
     return HttpResponse(json.dumps({"xPX": xpX, "xPY": xpY}), content_type="application/json")
@@ -102,7 +103,10 @@ def quit_this_AG(request):
     if not short_Receiver_Actions(data):
         return HttpResponse('Authentication Failed', status=401)
     # 字典內刪除該項目
+    print("[+] Deleting account: [{}]".format(data.get("chainAddress")))
     del sver.sessionKeys[data.get('chainAddress')]
+    # 刪除紀錄合約上的紀錄
+    RContract.removeClient(data.get("chainAddress"))
     return HttpResponse('Done', status=200) 
 
 

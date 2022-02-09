@@ -23,15 +23,12 @@ def getKey(web3):
     return private_key
 
 
+# 交易物件
+class Transaction():
+    def __init__(self):
+        self.totalAmount=0
+        self.currentAmount = 0
 
-class ContractStructure:
-    def __init__(self, abi, address, from_address, to_address, balance):
-        self.abi = abi
-        self.address = address
-        self.from_address = from_address
-        self.to_address = to_address
-        self.balance = balance
- 
 
 
 class RecordContract:
@@ -74,15 +71,16 @@ class RecordContract:
     
 
     
-    def  registerClient(self, cli_address):
+    def  registerClient(self, cli_address): 
         # 登記註冊的Client
         print("[+] Client [{}] register to RecordContract".format(cli_address))
         try:
-            self.contract.functions.registerClient(cli_address).transact({
+            txn = self.contract.functions.registerClient(cli_address).transact({
                 'from':self.address,
                 #'gasPrice': self.web3.eth.gasPrice,
                 'nonce': self.nonce
                 })
+            self.web3.eth.wait_for_transaction_receipt(txn)
             self.nonce+=1
             return True
         except:
@@ -99,6 +97,21 @@ class RecordContract:
         print("\t[-] AG: [{}]".format(agAddr))
         return agAddr
 
+    def removeClient(self, cli_address):
+        # 移除已註冊過的Client
+        print("[+] Removing Cleint: [{}]".format(cli_address))
+        try:
+            self.contract.functions.removeClient(cli_address).transact({
+                "from": self.address,
+                "nonce": self.nonce
+                })
+            self.nonce+=1
+            return True
+        except Exception as e:
+            print("[!] Erroe occurred: {}".format(repr(e)))
+            return False
+
+
 class TransactionContract:
     def __init__(self):
         #
@@ -112,8 +125,14 @@ class TransactionContract:
         self.contractAddress = None
        
         self.ask_for_DeployContraction()
+        
+        self.balanceRecord = dict()
         return 
-
+    
+    
+    def setBalanceRecord(self, cliAddr):
+        # Client 註冊時啟動
+        self.balanceRecord[cliAddr] = dict()
 
     def ask_for_DeployContraction(self):
         # 要求ca開啟合約給ag
@@ -136,13 +155,18 @@ class TransactionContract:
         if self.contractABI==None or self.contractAddress==None:
             print( "[!] Contract is not available")
             return False
-        
+        if not fromAddr in self.balanceRecord.keys():
+            print("[!] Client [{}] has not registered".format(fromAddr))
+            return False
+
         print("[+] Create new Transaction to Tcontract:")
         print("\t[-] Sender: {}".format(fromAddr))
         print("\t[-] Receiver: {}".format(toAddr))
         print("\t[-] Balance: {}".format(balance))
         print("\t [-] Signature: {}".format(r))
-        
+       
+        self.balanceRecord[fromAddr][toAddr] = Transaction() # 初始化交易物件
+
         contract = self.web3.eth.contract(abi=self.contractABI, address = self.contractAddress)
         contract.functions.createTransaction(fromAddr, toAddr, toAG, balance, r).transact({
             'from':self.address,
