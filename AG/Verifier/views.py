@@ -227,10 +227,10 @@ def getContractBalance(request):
     fromAddr = Jdata["fromAddr"]
     toAddr = Jdata["toAddr"]
 
-    totalAmount, currnetAmount = TContract.getContractBalance(fromAddr, toAddr)
+    contractAmount, agAmount = TContract.getContractBalance(fromAddr, toAddr)
     data = json.dumps({
-        "totalAmount":totalAmount,
-        "currentAmount": currnetAmount
+        "contractAmount":contractAmount,
+        "agAmount": agAmount
         })
     
     return  HttpResponse(data, content_type='application/json', status=200)

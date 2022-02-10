@@ -20,12 +20,10 @@ while True:
     elif command == "balance":
         print("[+] Getting Balance information: ")
         acc = input("\t[-]Receiver: ")
-        totalAmount, currentAmount = client.getContractBalance(client.address, acc)
-        print("\t[-] TotalAMount: {}".format(totalAmount))
-        print("\t[-] CurrentAmount: {}".format(currentAmount))
+        client.getContractBalance(client.address, acc)
     elif command == "transaction":
         acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-        amount = int(input("Balance: "))
+        amount = int(input("\t[-]Balance: "))
         client.askTransaction(client.address,acc,amount)
     elif command == "payment":
         acc = w3.toChecksumAddress(input("\t[-] Receiver: "))

@@ -25,12 +25,17 @@ def getKey(web3):
 
 # 交易物件
 class Transaction():
-    def __init__(self):
-        self.totalAmount=0
+    def __init__(self, totalAmount):
+        self.totalAmount=totalAmount
         self.currentAmount = 0
+        
+        self.history = list()
 
-
-
+    def setPayment(self, balance):
+        self.totalAmount-=balance
+        self.currentAmount+=balance
+        self.history.append(balance)
+    
 class RecordContract:
     def __init__(self):
         #
@@ -165,7 +170,7 @@ class TransactionContract:
         print("\t[-] Balance: {}".format(balance))
         print("\t [-] Signature: {}".format(r))
        
-        self.balanceRecord[fromAddr][toAddr] = Transaction() # 初始化交易物件
+        self.balanceRecord[fromAddr][toAddr] = Transaction(balance) # 初始化交易物件
 
         contract = self.web3.eth.contract(abi=self.contractABI, address = self.contractAddress)
         contract.functions.createTransaction(fromAddr, toAddr, toAG, balance, r).transact({
@@ -181,6 +186,12 @@ class TransactionContract:
         if self.contractABI == None or self.contractAddress ==None:   
             print( "[!] Contract is not available")
             return False
+        if not fromAddr in self.balanceRecord.keys():
+            print("[!] Client [{}] has not registered".format(fromAddr))
+            return False
+        if balance >= self.balanceRecord[fromAddr][toAddr].totalAmount:
+            print("[!] Payment value cannot greater than total Amount!")
+            return False
 
         print("[+] Adding new Payment to Tcontract: ")
         print("\t[-] Sender: {}".format(fromAddr))
@@ -188,6 +199,7 @@ class TransactionContract:
         print("\t[-] Balance: {}".format(balance))
         print("\t [-] Signature: {}".format(r))
 
+        self.balanceRecord[fromAddr][toAddr].setPayment(balance)
         contract = self.web3.eth.contract(abi=self.contractABI, address=self.contractAddress)
         contract.functions.makePayment(fromAddr, toAddr, toAG, balance, r).transact({
             'from':self.address,
@@ -203,23 +215,35 @@ class TransactionContract:
         if self.contractABI == None or self.contractAddress == None:
             print("[!] Contract is no available")
             return False
+        if not fromAddr in self.balanceRecord.keys():
+            print("[!] Client [{}] has not registered".format(fromAddr))
+            return False
 
-        print("[+] Getting the balanc of the contract")
+        print("[+] Getting the balanc")
+        print("\t[+] Record on contract")
         print("\t[-] Sender: {}".format(fromAddr))
-        print("\t[-] Receiver: {}".format(toAddr))
-
         contract = self.web3.eth.contract(
                 abi = self.contractABI,
                 address = self.contractAddress
         )
 
+        print("[-] Receiver: {}".format(toAddr))
         totalAmount = contract.functions.getTotalAmount(fromAddr,toAddr).call()
         currentAmount = contract.functions.getCurrentAmount(fromAddr, toAddr).call()
-
+        contractBalance = (totalAmount, currentAmount)
         print("\t[-] totalAmount: {}".format(totalAmount))
         print("\t[-] currentAmount: {}".format(currentAmount))
-
-        return totalAmount, currentAmount
+        print("##################################")
+        
+        print("[+] Getting the balance from the AG record")
+        totalAmount = self.balanceRecord[fromAddr][toAddr].totalAmount
+        currentAmount = self.balanceRecord[fromAddr][toAddr].currentAmount 
+        agBalance = (totalAmount, currentAmount)
+        print("\t[-] totalAmount: {}".format(self.balanceRecord[fromAddr][toAddr].totalAmount))
+        print("\t[-] currentAmount: {}".format(self.balanceRecord[fromAddr][toAddr].currentAmount))
+        
+ 
+        return contractBalance, agBalance
     
     # 取得自己的交易合約資訊
     def getContract(self):

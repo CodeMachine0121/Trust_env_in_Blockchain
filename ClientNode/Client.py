@@ -100,7 +100,7 @@ class Client:
         
         return 
     
-    def quit_current_AG(self):
+    def quit_current_AG(self): 
         data = self.beforeAction(str(self.address)+ str(self.part.sk))
         res = requests.post("{}/AG/quit_AG/".format(self.server), data=json.dumps(data))
         print("[+] Quitting current AG: {}".format(res.text))
@@ -131,7 +131,7 @@ class Client:
         return res.text
 
     def getContractBalance(self, from_address, to_address):
-    
+        print("[+] Getting Balance information:")
         data = self.beforeAction(str(from_address)+str(to_address))    
         data["fromAddr"] = from_address
         data["toAddr"] = to_address
@@ -140,5 +140,14 @@ class Client:
         res = requests.post("{}/AG/getContractBalance/".format(self.server),data=json.dumps(data))
         res = json.loads(res.text)
 
-        return res["totalAmount"], res["currentAmount"]
+        contractAmount = res["contractAmount"] 
+        agAmount = res["agAmount"]
+        
+        print("\t[+] on Contract")
+        print("\t\t[-] Total Amount: {}".format(contractAmount[0]))
+        print("\t\t[-] Current Amount: {}".format(contractAmount[1]))
+        print("\t[+] on AG")
+        print("\t\t[-]Total Amount: {}".format(agAmount[0]))
+        print("\t\t[-]Current Amount: {}".format(agAmount[1]))
 
+        return 
