@@ -3,10 +3,16 @@ import json
 import os
 from .RSA.rsa import RSA_Library
 from .ChameleonLong.Participator import Participator
+def setServer():
+    with open("server.json") as file :
+        server  = json.loads(file.read())["NodeServer"]
+        return server
 
 class longMiddleware:
     def __init__(self):
-        self.CA = 'http://140.125.32.10:8000'
+        #self.CA = 'http://140.125.32.10:8000'
+        self.CA = setServer()
+        print(self.CA)
         self.rsa = RSA_Library()
 
         data = json.dumps({"PublicKey": self.rsa.OutputPublic()})
