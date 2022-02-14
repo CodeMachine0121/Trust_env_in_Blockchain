@@ -29,6 +29,10 @@ while True:
         acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
         amount = int(input("\t[-] Balance: "))
         client.payment(client.address, acc, amount)
+    elif command == "setContract":
+        acc = w3.toChecksumAddress(input("\t[-] Sender: "))
+        client.setTransactionContract(acc)
+
     elif command == "terminateTransaction":
         acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
         client.terminateTransaction(client.address, acc)

@@ -78,6 +78,7 @@ class RecordContract:
     
     def  registerClient(self, cli_address): 
         # 登記註冊的Client
+        print("[Debug] Nonce: {}".format(self.nonce))
         print("[+] Client [{}] register to RecordContract".format(cli_address))
         try:
             txn = self.contract.functions.registerClient(cli_address).transact({
@@ -257,8 +258,8 @@ class TransactionContract:
             return False
 
         # address為from的address
-        API = self.CAHost+"/TxnContract"
-        res = requests.post(API, data = json.loads({
+        API = self.CAHost+"TxnContract/"
+        res = requests.post(API, data = json.dumps({
             "address": agAddress    
         }))
         

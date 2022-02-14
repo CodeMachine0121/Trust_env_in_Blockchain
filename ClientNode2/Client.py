@@ -123,8 +123,8 @@ class Client:
     def setTransactionContract(self, from_address):
         print("[+] Setting transaction contract...")
         data = self.beforeAction(str(from_address))
-        data["address"] = from_address
-        res = requests.post("{}/AG/setSenderAGContract/".format(self.server), data=data)
+        data["from_address"] = from_address
+        res = requests.post("{}/AG/setSenderAGContract/".format(self.server), data=json.dumps(data))
         return res.text
 
     def terminateTransaction(self, from_address, to_address):
@@ -134,9 +134,10 @@ class Client:
         data["from_address"] = from_address
         data["to_address"] = to_address
 
-        res = requests.post("{}/AG/terminateTransaction/".format(self.server), data=data)
+        res = requests.post("{}/AG/terminateTransaction/".format(self.server), data=json.dumps(data))
         return res.text
-
+    
+    
 
 
     def payment(self, from_address, to_address, balance):

@@ -29,4 +29,5 @@ urlpatterns = [
     path("payment/", views.makePayment),
     path("getContractBalance/", views.getContractBalance),
     path("setSenderAGContract/", views.setSenderAG_Contract),
+
 ]

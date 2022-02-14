@@ -250,7 +250,7 @@ def setSenderAG_Contract(request):
         return HttpResponse(True, status=200)
     except Exception as e:
         print("[!] getSenderAG_Contract occured problem: [{}]".format(repr(e)))
-
+        return HttpResponse(False, status=401)
 
 # 關閉合約
 def endContract(request):
