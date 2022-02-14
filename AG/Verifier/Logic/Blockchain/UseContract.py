@@ -132,6 +132,7 @@ class TransactionContract:
         self.ask_for_DeployContraction()
         
         self.balanceRecord = dict()
+        self.TCList = dict()
         return 
     
     
@@ -249,16 +250,41 @@ class TransactionContract:
     def getContract(self):
         return self.contractABI, self.contractAddress
     
+    # 取得發送方的交易合約
+    def setSenderAG_Contract(self, agAddress):
+        if agAddress in self.TCList.keys():
+            print("[!] AG address is already in the list")
+            return False
+
+        # address為from的address
+        API = self.CAHost+"/TxnContract"
+        res = requests.post(API, data = json.loads({
+            "address": agAddress    
+        }))
+        
+        rdata = json.loads(res.text)
+
+        # 存放此TC的資訊 發送方AG:TC
+        self.TCList[agAddress] = rdata["address"]
+        return True
+
 
 
     # 關閉合約
-    def  endContract(self,from_address, to_address):
-         # send request to CA
-        API = self.CAHost+"/EndContract"
-        res = requests.post(API,data=json.dumps({
-            'fromAddress': from_address,
-            'toAddress': to_address
-            }))
-        print("[+] Contract has been destroyed")
+    def  endContract(self,fromAddr, toAddr, fromAG, r, nonce):
+        # 由 Client 驗證完畢後觸發
+        # 僅由接收方觸發
 
-        return 
+        print("[+] Endding the Transaction: ")
+        print("\t[-] Sender: {}".format(fromAddr))
+        print("\t[-] Receiver: {}".format(toAddr))
+        
+        # address 需要用到接收方AG的TC
+        contract = self.web3.eth.contract(abi=self.contractABI, address=self.TCList[fromAG])
+        contract.functions.terminateTransaction(fromAddr, toAddr,r).transact({
+            'from':self.address,
+            'nonce': nonce
+            })
+        
+
+

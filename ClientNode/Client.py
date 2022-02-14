@@ -117,7 +117,27 @@ class Client:
 
         res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
         print("[+] {}".format(res.text))
+
         return res.text
+    
+    def setTransactionContract(self, from_address):
+        print("[+] Setting transaction contract...")
+        data = self.beforeAction(str(from_address))
+        data["address"] = from_address
+        res = requests.post("{}/AG/setSenderAGContract/".format(self.server), data=data)
+        return res.text
+
+    def terminateTransaction(self, from_address, to_address):
+        print("[+] Endding transaction contract...")
+        data = self.beforeAction(str(from_address)+str(to_address))
+        # 發送方
+        data["from_address"] = from_address
+        data["to_address"] = to_address
+
+        res = requests.post("{}/AG/terminateTransaction/".format(self.server), data=data)
+        return res.text
+
+
 
     def payment(self, from_address, to_address, balance):
         print("[+] Sending payment request to AG server")

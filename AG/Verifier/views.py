@@ -236,3 +236,37 @@ def getContractBalance(request):
     return  HttpResponse(data, content_type='application/json', status=200)
  
 
+# 取得發送發AG的TC資訊
+def setSenderAG_Contract(request):
+    data = json.loads(request.body.decode('utf-8'))
+    if not short_Receiver_Actions(data):
+        return HttpResponse("Authentication Failed", status=401)
+    
+    from_address = data["from_address"]
+    try:
+        # 找尋這個Client的AG
+        agAddress = RContract.findAGviaAddress(from_address)
+        TContract.setSenderAG_Contract(agAddress)
+        return HttpResponse(True, status=200)
+    except Exception as e:
+        print("[!] getSenderAG_Contract occured problem: [{}]".format(repr(e)))
+
+
+# 關閉合約
+def endContract(request):
+    data = json.loads(request.body.decode('utf-8'))
+    if not short_Receiver_Actions(data):
+        return HttpResponse(False, content_type='application/json')
+    
+    fromAddr = data["from_address"]
+    toAddr = data["to_address"]
+    fromAG = RContract.findAGviaAddress(fromAddr)
+    # 簽章
+    msg = str(fromAddr)+str(toAddr)+str(fromAG)
+    r = sver.Signing(msg, toAddr)
+    TContract.endContract(fromAddr, toAddr, fromAG, r, RContract.nonce)
+    RContract.nonce+=1
+
+    return HttpResponse(True, status=200)
+
+

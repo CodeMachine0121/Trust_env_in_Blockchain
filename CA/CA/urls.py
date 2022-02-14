@@ -24,6 +24,6 @@ urlpatterns = [
     # Blockchain API
     path("TxnDeploy/",views.deployTransactionContract),
     path("TxnContract/",views.getTransactionContract),
-    path("RecordContract/", views.registerAG_for_RecordContract)
+    path("RecordContract/", views.registerAG_for_RecordContract),
     
-    ]
+]
