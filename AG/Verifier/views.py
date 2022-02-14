@@ -241,7 +241,7 @@ def setSenderAG_Contract(request):
     data = json.loads(request.body.decode('utf-8'))
     if not short_Receiver_Actions(data):
         return HttpResponse("Authentication Failed", status=401)
-    
+    # 發送方的address 
     from_address = data["from_address"]
     try:
         # 找尋這個Client的AG

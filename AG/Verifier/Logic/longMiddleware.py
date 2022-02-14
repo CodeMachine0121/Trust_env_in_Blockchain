@@ -4,8 +4,8 @@ import os
 from .RSA.rsa import RSA_Library
 from .ChameleonLong.Participator import Participator
 def setServer():
-    with open("server.json") as file :
-        server  = json.loads(file.read())["NodeServer"]
+    with open("./Verifier/Logic/server.json") as file :
+        server  = json.loads(file.read())["CAHost"]
         return server
 
 class longMiddleware:
