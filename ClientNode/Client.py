@@ -185,11 +185,16 @@ class Client:
         # 宣告合約物件
         w3 = Web3(Web3.HTTPProvider(nodeServer))
         tc = w3.eth.contract(abi=abi, address = tcAddr)
-        
+
+        # 從TC取得交易簽章並驗證
+        signatures = tc.function.getSignatures(from_address, to_address).call()
+        verifyResult = self.verifyTransactionSignature(signatures)
+
+
         # 計算簽章 (以往的簽章都會是AG的簽章 只有最後一筆的簽章是 receiver的)
         msg = str(from_address)+str(to_address)
         r = self.part.MakeSignature(msg)
-        
+       
         # 呼叫合約上的 terminateTransaction
         ### 接收方需要有自己的 Ethereum Console
         txn = tc.functions.terminateTransaction(from_address, to_address, r).transact({
@@ -198,4 +203,8 @@ class Client:
         })
         
         return 
-
+    
+    def verifyTransactionSignature(self,):
+        # 用來驗證TC內的簽章
+        
+        return True
