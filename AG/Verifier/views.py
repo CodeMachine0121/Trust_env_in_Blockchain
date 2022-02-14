@@ -247,26 +247,23 @@ def setSenderAG_Contract(request):
         # 找尋這個Client的AG
         agAddress = RContract.findAGviaAddress(from_address)
         TContract.setSenderAG_Contract(agAddress)
-        return HttpResponse(True, status=200)
+        return HttpResponse(json.dumps({"agAddress":agAddress}), status=200)
     except Exception as e:
         print("[!] getSenderAG_Contract occured problem: [{}]".format(repr(e)))
         return HttpResponse(False, status=401)
 
-# 關閉合約
-def endContract(request):
+# 取得合約
+def getTContract(request):
+    print("[+] Asking for TC address")
     data = json.loads(request.body.decode('utf-8'))
     if not short_Receiver_Actions(data):
         return HttpResponse(False, content_type='application/json')
-    
-    fromAddr = data["from_address"]
-    toAddr = data["to_address"]
-    fromAG = RContract.findAGviaAddress(fromAddr)
-    # 簽章
-    msg = str(fromAddr)+str(toAddr)+str(fromAG)
-    r = sver.Signing(msg, toAddr)
-    TContract.endContract(fromAddr, toAddr, fromAG, r, RContract.nonce)
-    RContract.nonce+=1
 
-    return HttpResponse(True, status=200)
+    fromAG = data["fromAG"]
+    print("\t[-] TC: {}".format(fromAG))
+    data = json.dumps({
+        "tcAddress": TContract.TCList[fromAG]
+    })
+    return HttpResponse(data, content_type='application/json', status=200)
 
 

@@ -72,7 +72,7 @@ class Client:
     def beforeAction(self, msg):
         ### 簽章驗證
         en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
-        r = self.part.MakeSignature(msg, int(self.Public_AG.x))
+        r = self.part.MakeSignature(msg)
         publicKey = self.rsa.OutputPublic()
         #print("[Debug]: {}".format(en_msg))
         data = {
@@ -120,24 +120,7 @@ class Client:
 
         return res.text
     
-    def setTransactionContract(self, from_address):
-        print("[+] Setting transaction contract...")
-        data = self.beforeAction(str(from_address))
-        data["from_address"] = from_address
-        res = requests.post("{}/AG/setSenderAGContract/".format(self.server), data=json.dumps(data))
-        return res.text
-
-    def terminateTransaction(self, from_address, to_address):
-        print("[+] Endding transaction contract...")
-        data = self.beforeAction(str(from_address)+str(to_address))
-        # 發送方
-        data["from_address"] = from_address
-        data["to_address"] = to_address
-
-        res = requests.post("{}/AG/terminateTransaction/".format(self.server), data=json.dumps(data))
-        return res.text
-    
-    
+            
 
 
     def payment(self, from_address, to_address, balance):
@@ -171,4 +154,48 @@ class Client:
         print("\t\t[-]Total Amount: {}".format(agAmount[0]))
         print("\t\t[-]Current Amount: {}".format(agAmount[1]))
 
+        return
+    
+    # 向AG設置發送方的TC位址
+    def setTransactionContract(self, from_address):
+        print("[+] Setting transaction contract...")
+        data = self.beforeAction(str(from_address))
+        data["from_address"] = from_address
+        res = requests.post("{}/AG/setSenderAGContract/".format(self.server), data=json.dumps(data))
+        
+        fromAG = json.loads(res.text)["agAddress"]
+        print("[+] Get fromAG: [{}]".format(fromAG)) 
+        return fromAG
+
+
+    def terminateTransaction(self, fromAG ,from_address, to_address):
+        print("[+] Endding transaction contract...")
+        print("\t[-] Getting TC's address: ")
+        data = self.beforeAction(str(from_address)+str(to_address))
+        data["fromAG"] = fromAG
+        res = requests.post("{}/AG/getTContract/".format(self.server), json.dumps(data))
+        tcAddr = json.loads(res.text)["tcAddress"]
+        print("\t[-] Get TC: [{}]".format(tcAddr))
+
+        # 讀取 server.json: 上面記錄用戶節點的URL
+        with open("./Lib/Blockchain/server.json") as file:
+            nodeServer = json.loads(file.read())["nodeServer"]
+        with open("./Lib/Blockchain/TC.json") as file:
+            abi = json.loads(file.read())["abi"]
+        # 宣告合約物件
+        w3 = Web3(Web3.HTTPProvider(nodeServer))
+        tc = w3.eth.contract(abi=abi, address = tcAddr)
+        
+        # 計算簽章 (以往的簽章都會是AG的簽章 只有最後一筆的簽章是 receiver的)
+        msg = str(from_address)+str(to_address)
+        r = self.part.MakeSignature(msg)
+        
+        # 呼叫合約上的 terminateTransaction
+        ### 接收方需要有自己的 Ethereum Console
+        txn = tc.functions.terminateTransaction(from_address, to_address, r).transact({
+                "nonce": w3.eth.getTransactionCount(w3.eth.coinbase),
+                "from": w3.eth.coinbase
+        })
+        
         return 
+

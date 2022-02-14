@@ -9,7 +9,7 @@ client = Client('http://0.0.0.0:8888')
 
 #client.ask_for_Client_available(client.address)
 #client.askTransaction(client.address,acc,10)
-
+fromAG = ""
 while True:
     command = input("command: ")
 
@@ -31,11 +31,11 @@ while True:
         client.payment(client.address, acc, amount)
     elif command == "setContract":
         acc = w3.toChecksumAddress(input("\t[-] Sender: "))
-        client.setTransactionContract(acc)
+        fromAG = client.setTransactionContract(acc)
 
     elif command == "terminateTransaction":
-        acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-        client.terminateTransaction(client.address, acc)
+        acc = w3.toChecksumAddress(input("\t[-] Sender: "))
+        client.terminateTransaction(fromAG, client.address, acc)
     elif command == "quit":
         client.quit_current_AG()
 #client.quit_current_AG()

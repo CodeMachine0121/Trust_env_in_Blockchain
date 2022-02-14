@@ -51,7 +51,7 @@ class Participator:
         result = chash == self.Chash
         return result
 
-    def MakeSignature(self, msg, servPubX):
+    def MakeSignature(self, msg):
         # Hash function obj
         H1 = HMAC.new(b'', digestmod=SHA256)
 
