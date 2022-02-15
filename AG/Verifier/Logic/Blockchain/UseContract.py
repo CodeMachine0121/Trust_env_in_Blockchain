@@ -102,6 +102,12 @@ class RecordContract:
         print("[+] Find AG of : [{}]".format(cli_address))
         print("\t[-] AG: [{}]".format(agAddr))
         return agAddr
+    
+    def getAGPublicKey(self, ag_address):
+        # 透過AG address尋找對應的公鑰
+        publicKey = self.contract.functions.getAGPublicKey(ag_address).call()
+        return publicKey
+        
 
     def removeClient(self, cli_address):
         # 移除已註冊過的Client
@@ -116,7 +122,7 @@ class RecordContract:
         except Exception as e:
             print("[!] Erroe occurred: {}".format(repr(e)))
             return False
-
+    
 
 class TransactionContract:
     def __init__(self):

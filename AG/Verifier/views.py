@@ -267,3 +267,19 @@ def getTContract(request):
     return HttpResponse(data, content_type='application/json', status=200)
 
 
+def getPubKeyFromRContract(request):
+    print("[+] Getting Public Key of AG")
+    data = json.loads(request.body.decode('utf-8'))
+
+    pubKey = RContract.getAGPublicKey(data["agAddress"])
+
+    data = {
+        "x": pubKey[0],
+        "y": pubKey[1]
+    }
+
+    return HttpResponse(json.dumps(data), content_type='application/json', status=200)
+
+
+
+

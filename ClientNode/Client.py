@@ -188,7 +188,7 @@ class Client:
 
         # 從TC取得交易簽章並驗證
         signatures = tc.function.getSignatures(from_address, to_address).call()
-        verifyResult = self.verifyTransactionSignature(signatures)
+        verifyResult = self.verifyTransactionSignature(fromAG, signatures)
 
 
         # 計算簽章 (以往的簽章都會是AG的簽章 只有最後一筆的簽章是 receiver的)
@@ -204,7 +204,19 @@ class Client:
         
         return 
     
-    def verifyTransactionSignature(self,):
+    def verifyTransactionSignature(self,fromAG, signatures):
         # 用來驗證TC內的簽章
-        
+        ## 需要先取得fromAG的公鑰 Knx, Kny，變色龍 (從RC取得) -> 向AG請求
+        print("[+] Getting Public Key of sender AG")
+        res = requests.post("{}/AG/getPublicKey/".format(self.server), data=json.dumps({
+            "agAddress": fromAG
+            }))
+        data = json.loads(res.text)
+        Knx = data["x"]
+        Kny = data["y"]
+        print("\t[-] x: ", Knx)
+        print("\t[-] y: ", Kny)
+
+
+
         return True
