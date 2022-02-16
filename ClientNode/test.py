@@ -35,7 +35,7 @@ while True:
 
     elif command == "terminateTransaction":
         acc = w3.toChecksumAddress(input("\t[-] Sender: "))
-        client.terminateTransaction(fromAG, client.address, acc)
+        client.terminateTransaction(fromAG, acc, client.address)
     elif command == "quit":
         client.quit_current_AG()
 #client.quit_current_AG()

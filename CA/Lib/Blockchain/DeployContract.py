@@ -91,8 +91,8 @@ class RecordContract:
     
 
 
-    def registerAG(self, agAddress, domain):
-        self.contract.functions.registerAG(agAddress, domain).transact({'from':self.acct.address})
+    def registerAG(self, agAddress, domain, Knx, Kny):
+        self.contract.functions.registerAG(agAddress, domain, Knx, Kny).transact({'from':self.acct.address})
         
         self.nonce+=1
         return 

@@ -18,7 +18,7 @@ lpart = longMiddleware()
 sver = Verifier(lpart.CA_k)
 
 ## Blockchain
-RContract = RecordContract()
+RContract = RecordContract(lpart.Participator.Kn.x, lpart.Participator.Kn.y)
 
 TContract = TransactionContract()
 
@@ -33,7 +33,8 @@ def get_shortTerm_SystemParameters(request):
         "q": sver.q,
         "Knx": int(sver.Kn.x),
         "Kny": int(sver.Kn.y),
-        "RSA_PublicKey": rsa.OutputPublic()}), content_type='application/json')
+        "RSA_PublicKey": rsa.OutputPublic(),
+        "Address": TContract.address}), content_type='application/json')
 
 
 # Session key 交換 採用 ECDH
@@ -152,7 +153,8 @@ def createTransaction(request):
 
     try:
         nonce = RContract.nonce
-        res = TContract.createTransaction(from_addr, to_addr, toAG, balance, r, nonce)
+
+        res = TContract.createTransaction(from_addr, to_addr, toAG, balance, r, data["txnHash"] ,nonce)
         if res == False:
             return HttpResponse("Transaction is already existed",status =401)
         

@@ -37,7 +37,7 @@ class Transaction():
         self.history.append(balance)
     
 class RecordContract:
-    def __init__(self):
+    def __init__(self, Knx, Kny):
         #
         self.CAHost, self.blockchain_address = getServerAddress()
         self.web3 = Web3(Web3.HTTPProvider(self.blockchain_address))
@@ -46,14 +46,15 @@ class RecordContract:
         self.address = self.acct.address
         
         self.Domain = "This is AG1"
-        self.contract= self.setContract(self.Domain)
+        self.contract= self.setContract(self.Domain,Knx,Kny)
+        
         
         self.nonce = self.web3.eth.getTransactionCount(self.address)
 
         return 
     
 
-    def setContract(self, Domain):
+    def setContract(self, Domain, Knx, Kny):
         # set contract
         # 也會同步向CA註冊合約上的AG
         print("[+] Setting Record Contract.....")
@@ -63,7 +64,9 @@ class RecordContract:
         
         JData = json.dumps({
             'Address': self.address,
-            'Domain': self.Domain
+            'Domain': self.Domain,
+            "Knx": Knx,
+            "Kny": Kny
             })
         # 註冊RecordContract 並索取合約資訊
         res =requests.post(API, data=JData)
@@ -163,7 +166,7 @@ class TransactionContract:
         return res.text
 
        
-    def createTransaction(self, fromAddr, toAddr, toAG, balance, r, nonce):
+    def createTransaction(self, fromAddr, toAddr, toAG, balance, r, txnHash, nonce):
         # 開啟交易
         if self.contractABI==None or self.contractAddress==None:
             print( "[!] Contract is not available")
@@ -181,9 +184,10 @@ class TransactionContract:
         self.balanceRecord[fromAddr][toAddr] = Transaction(balance) # 初始化交易物件
 
         contract = self.web3.eth.contract(abi=self.contractABI, address = self.contractAddress)
-        contract.functions.createTransaction(fromAddr, toAddr, toAG, balance, r).transact({
+        contract.functions.createTransaction(fromAddr, toAddr, toAG, balance, r, txnHash).transact({
             'from':self.address,
-            'nonce':nonce
+            'nonce':nonce,
+            'value': balance
             })
         
         return True

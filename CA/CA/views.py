@@ -78,7 +78,11 @@ def registerAG_for_RecordContract(request):
     postData = json.loads(request.body.decode())
     
     print("[+] Recording AG[{}] to RecordContract".format(postData['Address'])) 
-    Rcontract.registerAG(postData['Address'], postData['Domain'])
+    
+    Knx = postData["Knx"]
+    Kny = postData["Kny"]
+    Rcontract.registerAG(postData['Address'], postData['Domain'],Knx, Kny)
+    
     
     JData = json.dumps({
         'address': Rcontract.contractAddress,

@@ -7,6 +7,21 @@ from Crypto.Random.random import getrandbits
 from Lib.RSA.rsa import RSA_Library
 from ecc.curve import Point, secp256k1
 
+def getPrivateKey(web3):
+
+    keyfile = os.listdir("./Lib/Blockchain/keystore")[0]
+    with open(os.path.join("./Lib/Blockchain/keystore", keyfile)) as file:
+        encrypted_key = file.read()
+        privateKey = web3.eth.account.decrypt(encrypted_key,"mcuite")        
+    return privateKey
+
+
+def getServerAddress():
+    # 讀取 server.json: 上面記錄用戶節點的URL
+    with open("./Lib/Blockchain/server.json") as file:
+        nodeServer = json.loads(file.read())["nodeServer"]
+    return nodeServer
+
 
 def getAddress():
     w3 = Web3()
@@ -37,11 +52,13 @@ class Client:
         self.rsa = RSA_Library()
 
         self.AG_RSA_PublicKey = Jsystem.get('RSA_PublicKey')
-        
+        self.agAddr = None
         self.contract = None
+        self.nodeServer = getServerAddress()
+
+        self.w3 = Web3(Web3.HTTPProvider(self.nodeServer))
+        self.nonce = self.w3.eth.getTransactionCount(self.w3.eth.coinbase)
         
-
-
     ## 更換server
     def Refresh_AG(self, server):
         self.__init__(server)
@@ -64,6 +81,8 @@ class Client:
 
         xpX = json.loads(res.text).get('xPX')
         xpY = json.loads(res.text).get('xPY')
+
+        self.agAddr = json.loads(res.text).get("Address")
 
         ### 計算sk
         self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
@@ -114,6 +133,21 @@ class Client:
         data["from_address"] = from_address
         data["to_address"] = to_address
         data["balance"] = balance
+        
+        # 這邊需要先轉錢給AG
+        tx = {
+            "nonce": self.nonce,
+            "to":self.agAddr,
+            "value": balance,
+            "gas": 200000,
+            "gasPrice": self.w3.eth.gasPrice
+        }
+        privateKey = getPrivateKey(self.w3)
+        signed_tx = self.w3.eth.account.sign_transaction(tx, privateKey)
+        tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
+        self.nonce+=1
+
+        data["txnHash"] = str(tx_hash)
 
         res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
         print("[+] {}".format(res.text))
@@ -177,17 +211,13 @@ class Client:
         tcAddr = json.loads(res.text)["tcAddress"]
         print("\t[-] Get TC: [{}]".format(tcAddr))
 
-        # 讀取 server.json: 上面記錄用戶節點的URL
-        with open("./Lib/Blockchain/server.json") as file:
-            nodeServer = json.loads(file.read())["nodeServer"]
         with open("./Lib/Blockchain/TC.json") as file:
             abi = json.loads(file.read())["abi"]
         # 宣告合約物件
-        w3 = Web3(Web3.HTTPProvider(nodeServer))
-        tc = w3.eth.contract(abi=abi, address = tcAddr)
+        tc = self.w3.eth.contract(abi=abi, address = tcAddr)
 
         # 從TC取得交易簽章並驗證
-        signatures = tc.function.getSignatures(from_address, to_address).call()
+        signatures = tc.functions.getSignatures(from_address, to_address).call()
         verifyResult = self.verifyTransactionSignature(fromAG, signatures)
 
 
@@ -198,10 +228,10 @@ class Client:
         # 呼叫合約上的 terminateTransaction
         ### 接收方需要有自己的 Ethereum Console
         txn = tc.functions.terminateTransaction(from_address, to_address, r).transact({
-                "nonce": w3.eth.getTransactionCount(w3.eth.coinbase),
-                "from": w3.eth.coinbase
+                "nonce": self.nonce,
+                "from": self.w3.eth.coinbase
         })
-        
+        self.nonce+=1 
         return 
     
     def verifyTransactionSignature(self,fromAG, signatures):
@@ -217,6 +247,7 @@ class Client:
         print("\t[-] x: ", Knx)
         print("\t[-] y: ", Kny)
 
-
+        print("[+] Now Verifying Signatures")
+        print("[Debug] signatures: \n\t{}".format(signatures))
 
         return True
