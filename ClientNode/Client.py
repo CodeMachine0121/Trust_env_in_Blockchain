@@ -82,7 +82,7 @@ class Client:
         xpX = json.loads(res.text).get('xPX')
         xpY = json.loads(res.text).get('xPY')
 
-        self.agAddr = json.loads(res.text).get("Address")
+        self.agAddr = json.loads(res.text).get("address")
 
         ### 計算sk
         self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
@@ -128,6 +128,10 @@ class Client:
 
     def askTransaction(self, from_address, to_address, balance):
         print("[+] Sending transaction request to AG server")
+        if self.agAddr == None:
+            print("[!] AG not Found!")
+            return 
+        print("\t[-] AG: [{}]".format(self.agAddr))
         data = self.beforeAction(str(from_address)+str(to_address)+str(balance))
 
         data["from_address"] = from_address

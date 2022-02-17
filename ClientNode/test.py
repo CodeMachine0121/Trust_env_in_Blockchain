@@ -19,15 +19,15 @@ while True:
         client.ask_for_Client_available(client.address)
     elif command == "balance":
         print("[+] Getting Balance information: ")
-        acc = input("\t[-]Receiver: ")
+        acc = w3.toChecksumAddress(input("\t[-]Receiver: "))
         client.getContractBalance(client.address, acc)
     elif command == "transaction":
         acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-        amount = int(input("\t[-]Balance: "))
+        amount = w3.toWei(int(input("\t[-]Balance: ")), 'ether')
         client.askTransaction(client.address,acc,amount)
     elif command == "payment":
         acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-        amount = int(input("\t[-] Balance: "))
+        amount = w3.toWei(int(input("\t[-] Balance: ")),'ether')
         client.payment(client.address, acc, amount)
     elif command == "setContract":
         acc = w3.toChecksumAddress(input("\t[-] Sender: "))

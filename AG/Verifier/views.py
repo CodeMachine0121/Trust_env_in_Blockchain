@@ -55,7 +55,7 @@ def sessionKey_exchange(request):
     # Client 已經註冊過了
     if address in sver.sessionKeys.keys():
         print("[!] Address has already registered")
-        return HttpResponse(json.dumps({"xPx":-1, "xPY":-1}), content_type='application/json')
+        return HttpResponse(json.dumps({"xPx":-1, "xPY":-1, 'address': TContract.address}), content_type='application/json')
 
 
     print("[+] New session key exchanging: {}".format(address))
@@ -66,7 +66,7 @@ def sessionKey_exchange(request):
     TContract.setBalanceRecord(address)
     sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
 
-    return HttpResponse(json.dumps({"xPX": xpX, "xPY": xpY}), content_type="application/json")
+    return HttpResponse(json.dumps({"xPX": xpX, "xPY": xpY, "address":TContract.address}), content_type="application/json")
 
 
 ## 執行 Client 的指令前要做的事情
