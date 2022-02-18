@@ -62,9 +62,10 @@ def sessionKey_exchange(request):
     print("[+] Adding Client to Record Contract list")
     
     # 向合約登記此client在他的管轄內
-    result = RContract.registerClient(address)
     TContract.setBalanceRecord(address)
     sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
+    result = RContract.registerClient(address, sver.sessionKeys[address]["Chash"])
+
 
     return HttpResponse(json.dumps({"xPX": xpX, "xPY": xpY, "address":TContract.address}), content_type="application/json")
 
@@ -268,7 +269,7 @@ def getTContract(request):
     })
     return HttpResponse(data, content_type='application/json', status=200)
 
-
+# 取得任一AG的公鑰
 def getPubKeyFromRContract(request):
     print("[+] Getting Public Key of AG")
     data = json.loads(request.body.decode('utf-8'))
@@ -282,6 +283,20 @@ def getPubKeyFromRContract(request):
 
     return HttpResponse(json.dumps(data), content_type='application/json', status=200)
 
+# 取得該特定AG跟client的short-tern變色龍雜湊值
+def getChameleonHash(request):
+    print("[+] Getting Chameleon Hash of AG")
+    clientAddr = json.loads(request.body.decode("utf-8"))["clientAddr"]
+    agAddr = json.loads(request.body.decode("utf-8"))["agAddr"]
+
+    
+    CHash = RContract.getChameleonHash(agAddr, clientAddr)
+    data = json.dumps({
+        "HashX": CHash[0],
+        "HashY": CHash[1]
+    })
+
+    return HttpResponse(data, content_type='application/json', status=200)
 
 
 

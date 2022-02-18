@@ -92,5 +92,3 @@ class Verifier:
         print("[+] Calculate Hash: \n\tx:{}\n\ty:{}".format(CH.x, CH.y) )
         print("[+] Verifying result: {}".format(CH2 == CH))
         return CH2 == CH
-        
-    

@@ -222,7 +222,7 @@ class Client:
 
         # 從TC取得交易簽章並驗證
         signatures = tc.functions.getSignatures(from_address, to_address).call()
-        verifyResult = self.verifyTransactionSignature(fromAG, signatures)
+        verifyResult = self.verifyTransactionSignature(fromAG, from_address, signatures)
 
 
         # 計算簽章 (以往的簽章都會是AG的簽章 只有最後一筆的簽章是 receiver的)
@@ -238,7 +238,7 @@ class Client:
         self.nonce+=1 
         return 
     
-    def verifyTransactionSignature(self,fromAG, signatures):
+    def verifyTransactionSignature(self, fromAG, fromAddr, signatures):
         # 用來驗證TC內的簽章
         ## 需要先取得fromAG的公鑰 Knx, Kny，變色龍 (從RC取得) -> 向AG請求
         print("[+] Getting Public Key of sender AG")
@@ -251,7 +251,18 @@ class Client:
         print("\t[-] x: ", Knx)
         print("\t[-] y: ", Kny)
 
-        print("[+] Now Verifying Signatures")
-        print("[Debug] signatures: \n\t{}".format(signatures))
+        print("\t[-] Now Verifying Signatures")
+        print("\t\t[-] signatures: \n\t{}".format(signatures))
+        print("\t[-] Getting Chameleon Hash of sender's AG")
+        
+        res = requests.post("{}/AG/getChameleonHash/".format(self.server),data=json.dumps({"clientAddr": fromAddr,"agAddr":fromAG}))
+        
+        CHashX = json.loads(res.text)["HashX"]
+        CHashY = json.loads(res.text)["HashY"]
+        print("\t\t({},{})".format(CHashX, CHashY))
 
+        
+        
+
+         
         return True

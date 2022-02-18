@@ -23,11 +23,11 @@ while True:
         client.getContractBalance(client.address, acc)
     elif command == "transaction":
         acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-        amount = w3.toWei(int(input("\t[-]Balance: ")), 'ether')
+        amount = w3.toWei(float(input("\t[-]Balance: ")), 'ether')
         client.askTransaction(client.address,acc,amount)
     elif command == "payment":
         acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-        amount = w3.toWei(int(input("\t[-] Balance: ")),'ether')
+        amount = w3.toWei(float(input("\t[-] Balance: ")),'ether')
         client.payment(client.address, acc, amount)
     elif command == "setContract":
         acc = w3.toChecksumAddress(input("\t[-] Sender: "))

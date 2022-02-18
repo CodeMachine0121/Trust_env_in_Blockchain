@@ -30,5 +30,6 @@ urlpatterns = [
     path("getContractBalance/", views.getContractBalance),
     path("setSenderAGContract/", views.setSenderAG_Contract),
     path("getTContract/", views.getTContract),
-    path("getPublicKey/", views.getPubKeyFromRContract)
+    path("getPublicKey/", views.getPubKeyFromRContract),
+    path("getChameleonHash/", views.getChameleonHash)
 ]

@@ -79,12 +79,12 @@ class RecordContract:
     
 
     
-    def  registerClient(self, cli_address): 
+    def  registerClient(self, cli_address, CHash): 
         # 登記註冊的Client
         print("[Debug] Nonce: {}".format(self.nonce))
         print("[+] Client [{}] register to RecordContract".format(cli_address))
         try:
-            txn = self.contract.functions.registerClient(cli_address).transact({
+            txn = self.contract.functions.registerClient(cli_address,CHash.x, CHash.y).transact({
                 'from':self.address,
                 #'gasPrice': self.web3.eth.gasPrice,
                 'nonce': self.nonce
@@ -110,7 +110,11 @@ class RecordContract:
         # 透過AG address尋找對應的公鑰
         publicKey = self.contract.functions.getAGPublicKey(ag_address).call()
         return publicKey
-        
+    
+    def getChameleonHash(self, ag_address, Client_address):
+        # 透過AG address, client address尋找對應的變色龍雜湊
+        chash = self.contract.functions.getClientCHameleonHash(ag_address, Client_address).call()
+        return chash
 
     def removeClient(self, cli_address):
         # 移除已註冊過的Client
