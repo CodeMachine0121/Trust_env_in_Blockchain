@@ -224,7 +224,12 @@ class Client:
         signatures = tc.functions.getSignatures(from_address, to_address).call()
         
         # 從AG取得特定AG的交易歷史
-        res = requests.post("{}/AG/getTransactionHistory_Others".format(self.server))
+        data = {
+            "fromAddr":from_address,
+            "toAddr":to_address,
+            "fromAG":fromAG
+        }
+        res = requests.post("{}/AG/getTransactionHistory_Others".format(self.server), data = json.dumps(data))
         print("[Debug]history: {}".format(json.loads(res.text)))
 
         verifyResult = self.verifyTransactionSignature(fromAG, from_address, signatures)

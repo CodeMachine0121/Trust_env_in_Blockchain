@@ -222,12 +222,15 @@ class Client:
 
         # 從TC取得交易簽章並驗證
         signatures = tc.functions.getSignatures(from_address, to_address).call()
-        
-        # 從AG取得特定AG的交易歷史
-        res = requests.post("{}/AG/getTransactionHistory_Others".format(self.server))
-        print("[Debug]history: {}".format(json.loads(res.text)))
-
-        verifyResult = self.verifyTransactionSignature(fromAG, from_address, signatures)
+        ## 從AG取得特定AG的交易歷史
+        data = {
+            "fromAddr":from_address,
+            "toAddr":to_address,
+            "fromAG":fromAG
+        }
+        res = requests.post("{}/AG/getTransactionHistory_Others".format(self.server), data = json.dumps(data))
+        transHistory = json.loads(res.text)
+        verifyResult = self.verifyTransactionSignature(fromAG, from_address, signatures, transHistory)
 
 
         # 計算簽章 (以往的簽章都會是AG的簽章 只有最後一筆的簽章是 receiver的)
@@ -243,7 +246,7 @@ class Client:
         self.nonce+=1 
         return 
     
-    def verifyTransactionSignature(self, fromAG, fromAddr, signatures):
+    def verifyTransactionSignature(self, fromAG, fromAddr, signatures, txnHistory):
         # 用來驗證TC內的簽章
         ## 需要先取得fromAG的公鑰 Knx, Kny，變色龍 (從RC取得) -> 向AG請求
         print("[+] Getting Public Key of sender AG")

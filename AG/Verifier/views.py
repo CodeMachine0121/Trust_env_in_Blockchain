@@ -301,11 +301,14 @@ def getTransactionHistory_Others(request):
     domain = RContract.getDomain(fromAG)
 
     # 取得該AG的交易紀錄
-    uri = "http://{}/AG/TransactionHistory/".format(domain)
-    res = requests.post(uri, data=json.dumps({
-        "fromAddr":fromAddr,
-        "toAddr":toAddr}
-    ))
+    if domain != RContract.Domain:
+        uri = "http://{}/AG/TransactionHistory/".format(domain)
+        res = requests.post(uri, data=json.dumps({
+            "fromAddr":fromAddr,
+            "toAddr":toAddr}
+        )).text
+    else:
+        res = TContract.getTransactionHistory(fromAddr, toAddr)
     return HttpResponse(res, content_type='application/json', status=200)
 
 

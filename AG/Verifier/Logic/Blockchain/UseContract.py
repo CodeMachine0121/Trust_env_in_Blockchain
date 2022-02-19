@@ -35,7 +35,6 @@ class Transaction():
     def setPayment(self, balance):
         self.totalAmount-=balance
         self.currentAmount+=balance
-        self.history.append(balance)
     
     def setRecord(self):
         self.history.append({"totalAmount": self.totalAmount, "currentAmount": self.currentAmount})
