@@ -222,6 +222,11 @@ class Client:
 
         # 從TC取得交易簽章並驗證
         signatures = tc.functions.getSignatures(from_address, to_address).call()
+        
+        # 從AG取得特定AG的交易歷史
+        res = requests.post("{}/AG/getTransactionHistory_Others".format(self.server))
+        print("[Debug]history: {}".format(json.loads(res.text)))
+
         verifyResult = self.verifyTransactionSignature(fromAG, from_address, signatures)
 
 
@@ -260,6 +265,8 @@ class Client:
         CHashX = json.loads(res.text)["HashX"]
         CHashY = json.loads(res.text)["HashY"]
         print("\t\t({},{})".format(CHashX, CHashY))
+        # 執行驗證程序 相關code寫在 SPart內
+
         
         
         

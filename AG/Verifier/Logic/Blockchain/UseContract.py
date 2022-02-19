@@ -30,12 +30,17 @@ class Transaction():
         self.currentAmount = 0
         
         self.history = list()
+        self.setRecord()
 
     def setPayment(self, balance):
         self.totalAmount-=balance
         self.currentAmount+=balance
         self.history.append(balance)
     
+    def setRecord(self):
+        self.history.append({"totalAmount": self.totalAmount, "currentAmount": self.currentAmount})
+
+
 class RecordContract:
     def __init__(self, Knx, Kny):
         #
@@ -45,7 +50,7 @@ class RecordContract:
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3))
         self.address = self.acct.address
         
-        self.Domain = "This is AG1"
+        self.Domain = "127.0.0.1:8888"
         self.contract= self.setContract(self.Domain,Knx,Kny)
         
         
@@ -115,6 +120,11 @@ class RecordContract:
         # 透過AG address, client address尋找對應的變色龍雜湊
         chash = self.contract.functions.getClientCHameleonHash(ag_address, Client_address).call()
         return chash
+
+
+    def getDomain(self, ag_address):
+        domain = self.contract.functions.getDomain(ag_address).call()
+        return domain
 
     def removeClient(self, cli_address):
         # 移除已註冊過的Client
@@ -214,8 +224,11 @@ class TransactionContract:
         print("\t[-] Receiver: {}".format(toAddr))
         print("\t[-] Balance: {}".format(balance))
         print("\t [-] Signature: {}".format(r))
-
+        
+        # 紀錄交易
         self.balanceRecord[fromAddr][toAddr].setPayment(balance)
+        self.balanceRecord[fromAddr][toAddr].setRecord()
+        # 實作合約物件
         contract = self.web3.eth.contract(abi=self.contractABI, address=self.contractAddress)
         contract.functions.makePayment(fromAddr, toAddr, toAG, balance, r).transact({
             'from':self.address,
@@ -283,7 +296,16 @@ class TransactionContract:
         self.TCList[agAddress] = rdata["address"]
         return True
 
+    # 取得交易歷史紀錄
+    def getTransactionHistory(self, fromAddr, toAddr):
+        tran = self.balanceRecord[fromAddr][toAddr]
+        history = tran.history ## list(dict())
 
+        data = dict()
+        for i in range(0, len(history)):
+            data[i] = history[i]
+
+        return json.dumps(data)
 
     # 關閉合約
     def  endContract(self,fromAddr, toAddr, fromAG, r, nonce):

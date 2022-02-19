@@ -131,20 +131,12 @@ def createTransaction(request):
     from_addr = RContract.web3.toChecksumAddress(data["from_address"])
     to_addr =  RContract.web3.toChecksumAddress(data["to_address"])
     balance = data["balance"]
-    r = data["r"]
-    Knx = data["Knx"]
-    Kny = data["Kny"]
 
-
-    # 驗證Client簽章
+    # AG對交易訊息簽章
     #seed = int(getrandbits(256)) # 在未來可以加入隨機種子
     msg = str(from_addr)+str(to_addr)+str(balance)
-    verifyResult = sver.Verifying(msg, r, Knx, Kny, from_addr)
-    if verifyResult ==False:
-        print("[!] Client Verifying: Error")
-        return HttpResponse("ChameleonShort Verifying Error", status=401)
-    else:
-        print("[+] Client Verifying: Pass ")
+    r = sver.Signing(msg, from_addr)
+    
 
    # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
@@ -184,27 +176,17 @@ def makePayment(request):
     from_addr = RContract.web3.toChecksumAddress(data["from_address"])
     to_addr =  RContract.web3.toChecksumAddress(data["to_address"])
     balance = data["balance"]
-    rFromClient = data["r"]
-    Knx =  data["Knx"]
-    Kny = data["Kny"]
 
-    # 驗證客戶端的簽證
+    # 對交易訊息做簽章
     msg = str(from_addr)+str(to_addr)+str(balance)
-    verifyResult = sver.Verifying(msg, rFromClient, Knx, Kny, from_addr)
-    
-    if verifyResult == False:
-        print("[!] Client Verifying: Error")
-        return HttpResponse("ChameleonShort Verifying Error", status=401)
-    else:
-        print("[+] Client Verifying: Pass ")
-    
-   # 要透過 To_addr 取找他所屬的AG的位址
+    r = sver.Signing(msg, from_addr)
+
+    # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
     if toAG == "0":
         return HttpResponse("AG of receiver is not ready") 
    
     try:
-        r = sver.Signing(msg, from_addr)
         res = TContract.Payment(from_addr, to_addr, toAG, balance, r, RContract.nonce)
         RContract.nonce += 1
         
@@ -298,5 +280,32 @@ def getChameleonHash(request):
 
     return HttpResponse(data, content_type='application/json', status=200)
 
+
+# 取得交易歷史紀錄(自己的)
+def getTransactionHistory(request):
+    print("[+] Getting Transaction History")
+    data = json.loads(request.body.decode("utf-8"))
+    fromAddr = data["fromAddr"]
+    toAddr = data["toAdd"]
+    return HttpResponse(TContract.getTransactionHistory(fromAddr, toAddr), content_type='application/json', status=200)
+
+def getTransactionHistory_Others(request):
+    print("[+] Getting Transaction From other AG")
+    data = json.loads(request.body.decode("utf-8"))
+    fromAddr = data["fromAddr"]
+    toAddr = data["toAddr"]
+    fromAG = data["fromAG"]
+
+    # 取得Domain
+    print("\t[-] Get Domain of [{}]".format(fromAG))
+    domain = RContract.getDomain(fromAG)
+
+    # 取得該AG的交易紀錄
+    uri = "http://{}/AG/TransactionHistory/".format(domain)
+    res = requests.post(uri, data=json.dumps({
+        "fromAddr":fromAddr,
+        "toAddr":toAddr}
+    ))
+    return HttpResponse(res, content_type='application/json', status=200)
 
 
