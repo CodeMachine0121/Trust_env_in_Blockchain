@@ -133,7 +133,6 @@ class Client:
             return 
         print("\t[-] AG: [{}]".format(self.agAddr))
         data = self.beforeAction(str(from_address)+str(to_address)+str(balance))
-
         data["from_address"] = from_address
         data["to_address"] = to_address
         data["balance"] = balance
@@ -154,12 +153,9 @@ class Client:
         data["txnHash"] = str(tx_hash)
 
         res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
-        print("[+] {}".format(res.text))
 
         return res.text
     
-            
-
 
     def payment(self, from_address, to_address, balance):
         print("[+] Sending payment request to AG server")
@@ -222,7 +218,7 @@ class Client:
 
         # 從TC取得交易簽章並驗證
         signatures = tc.functions.getSignatures(from_address, to_address).call()
-        ## 從AG取得特定AG的交易歷史
+        ## 從自身AG取得特定AG的交易歷史
         data = {
             "fromAddr":from_address,
             "toAddr":to_address,
@@ -230,10 +226,10 @@ class Client:
         }
         res = requests.post("{}/AG/getTransactionHistory_Others".format(self.server), data = json.dumps(data))
         transHistory = json.loads(res.text)
-        verifyResult = self.verifyTransactionSignature(fromAG, from_address, signatures, transHistory)
+        verifyResult = self.verifyTransactionSignature(fromAG, from_address, to_address, signatures, transHistory)
 
 
-        # 計算簽章 (以往的簽章都會是AG的簽章 只有最後一筆的簽章是 receiver的)
+        # 計算最後簽章 (以往的簽章都會是AG的簽章 只有最後一筆的簽章是 receiver的)
         msg = str(from_address)+str(to_address)
         r = self.part.MakeSignature(msg)
        
@@ -246,7 +242,7 @@ class Client:
         self.nonce+=1 
         return 
     
-    def verifyTransactionSignature(self, fromAG, fromAddr, signatures, txnHistory):
+    def verifyTransactionSignature(self, fromAG, fromAddr, toAddr, signatures, txnHistory):
         # 用來驗證TC內的簽章
         ## 需要先取得fromAG的公鑰 Knx, Kny，變色龍 (從RC取得) -> 向AG請求
         print("[+] Getting Public Key of sender AG")
@@ -256,24 +252,28 @@ class Client:
         data = json.loads(res.text)
         Knx = data["x"]
         Kny = data["y"]
-        print("\t[-] x: ", Knx)
-        print("\t[-] y: ", Kny)
+        #print("\t[-] x: ", Knx)
+        #print("\t[-] y: ", Kny)
 
         print("\t[-] Now Verifying Signatures")
-        print("\t\t[-] signatures: \n\t{}".format(signatures))
-        print("\t[-] Getting Chameleon Hash of sender's AG")
+        #print("\t\t[-] signatures: \n\t{}".format(signatures))
+        print("\t[-] Getting Chameleon Hash of sender: [{}]".format(fromAddr))
         
         res = requests.post("{}/AG/getChameleonHash/".format(self.server),data=json.dumps({"clientAddr": fromAddr,"agAddr":fromAG}))
         
         CHashX = json.loads(res.text)["HashX"]
         CHashY = json.loads(res.text)["HashY"]
-        print("\t\t({},{})".format(CHashX, CHashY))
+        #print("\t\t({},{})".format(CHashX, CHashY))
         # 執行驗證程序 相關code寫在 SPart內
+        ## 編排驗證訊息
+        msgs = list()
+        for index in txnHistory.keys():
+            if index != "0":
+                msgs.append(str(fromAddr)+str(toAddr)+str(txnHistory[index]["currentAmount"]))
+            else:
+                msgs.append(str(fromAddr)+str(toAddr)+str(txnHistory["0"]["totalAmount"]))
 
+        # 驗證訊息簽章
+        verifyResult = self.part.verifyTransactionSignature(msgs, CHashX, CHashY,Knx,Kny,signatures)
         
-        
-        
-        
-
-         
-        return True
+        return verifyResult

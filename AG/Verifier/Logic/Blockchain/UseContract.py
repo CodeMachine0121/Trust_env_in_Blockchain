@@ -192,7 +192,7 @@ class TransactionContract:
         print("\t[-] Sender: {}".format(fromAddr))
         print("\t[-] Receiver: {}".format(toAddr))
         print("\t[-] Balance: {}".format(balance))
-        print("\t [-] Signature: {}".format(r))
+        print("\t[-] Signature: {}".format(r))
        
         self.balanceRecord[fromAddr][toAddr] = Transaction(balance) # 初始化交易物件
 
@@ -303,7 +303,7 @@ class TransactionContract:
         data = dict()
         for i in range(0, len(history)):
             data[i] = history[i]
-
+        
         return json.dumps(data)
 
     # 關閉合約

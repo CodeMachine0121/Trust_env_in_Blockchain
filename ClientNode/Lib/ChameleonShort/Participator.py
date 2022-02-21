@@ -62,19 +62,30 @@ class Participator:
 
         return r
 
-    def verifyTransactionSignature(self, msgs, chash, Knx, Kny, signatures):
+    def verifyTransactionSignature(self, msgs, CHashX,CHashY, Knx, Kny, signatures):
         senderAG = Point(Knx, Kny, curve=secp256k1)
+        chash = Point(CHashX, CHashY,curve=secp256k1)
+        print("[+] Kn: ", Knx," , ", Kny)
+        print("[+] CH: ",CHashX, " , ", CHashY)
+        print("\n")
         for i in range(0,len(signatures)):
+            if signatures[i]==0:
+                continue
+            print("\t[-] r: ", signatures[i])
+            print("\t[-] msg: ",msgs[i])
             H1 = HMAC.new(b'', digestmod=SHA256)
             H1.update(msgs[i].encode())
             hm = int(H1.hexdigest(), 16)
             
             hkn = senderAG*hm
             rP = self.P*signatures[i]
-            if chash == (hkn+rP):
-                print("Verify result: [{}/{}]".format(i, len(signatures)))
-            else:
-                print("Failed")
-        return 
+            
+            _chash = hkn+rP
+
+            if chash != _chash:
+                print("[!]Failed: [{}/{}]".format(i+1, len(msgs)))
+                return False
+        print("[+]Verify Result: True")
+        return True
 
         

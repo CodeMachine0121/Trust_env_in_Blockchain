@@ -18,7 +18,7 @@ lpart = longMiddleware()
 sver = Verifier(lpart.CA_k)
 
 ## Blockchain
-RContract = RecordContract(lpart.Participator.Kn.x, lpart.Participator.Kn.y)
+RContract = RecordContract(sver.Kn.x, sver.Kn.y)
 
 TContract = TransactionContract()
 
@@ -136,10 +136,10 @@ def createTransaction(request):
     #seed = int(getrandbits(256)) # 在未來可以加入隨機種子
     msg = str(from_addr)+str(to_addr)+str(balance)
     r = sver.Signing(msg, from_addr)
-    
 
    # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
+    print("[+] toAG: ", toAG)
     if toAG == int("0",16):
         print("[!] Receiver AG is not ready, please try again.")
         return HttpResponse("Receiver AG is not ready, please try again", status=401)
@@ -178,7 +178,8 @@ def makePayment(request):
     balance = data["balance"]
 
     # 對交易訊息做簽章
-    msg = str(from_addr)+str(to_addr)+str(balance)
+    msg = str(from_addr)+str(to_addr)+str(balance+TContract.balanceRecord[from_addr][to_addr].currentAmount)
+
     r = sver.Signing(msg, from_addr)
 
     # 要透過 To_addr 取找他所屬的AG的位址
@@ -262,7 +263,7 @@ def getPubKeyFromRContract(request):
         "x": pubKey[0],
         "y": pubKey[1]
     }
-
+    print("\t[-] ", data)
     return HttpResponse(json.dumps(data), content_type='application/json', status=200)
 
 # 取得該特定AG跟client的short-tern變色龍雜湊值
@@ -277,7 +278,7 @@ def getChameleonHash(request):
         "HashX": CHash[0],
         "HashY": CHash[1]
     })
-
+    print("\t[-] ", data)
     return HttpResponse(data, content_type='application/json', status=200)
 
 

@@ -19,22 +19,42 @@ while True:
         client.ask_for_Client_available(client.address)
     elif command == "balance":
         print("[+] Getting Balance information: ")
-        acc = w3.toChecksumAddress(input("\t[-]Receiver: "))
+        try:
+            acc = w3.toChecksumAddress(input("\t[-]Receiver: "))
+        except:
+            print("[!] 輸入錯誤")
+            continue
         client.getContractBalance(client.address, acc)
     elif command == "transaction":
-        acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-        amount = w3.toWei(float(input("\t[-]Balance: ")), 'ether')
+        try:
+            acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
+            amount = w3.toWei(float(input("\t[-]Balance: ")), 'ether')
+        except:
+            print("[!] 輸入錯誤")
+            continue
         client.askTransaction(client.address,acc,amount)
     elif command == "payment":
-        acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-        amount = w3.toWei(float(input("\t[-] Balance: ")),'ether')
+        try:
+            acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
+            amount = w3.toWei(float(input("\t[-] Balance: ")),'ether')
+        except:
+            print("[!] 輸入錯誤")
+            continue
         client.payment(client.address, acc, amount)
     elif command == "setContract":
-        acc = w3.toChecksumAddress(input("\t[-] Sender: "))
+        try:
+            acc = w3.toChecksumAddress(input("\t[-] Sender: "))
+        except:
+            print("[!] 輸入錯誤")
+            continue
         fromAG = client.setTransactionContract(acc)
 
     elif command == "terminateTransaction":
-        acc = w3.toChecksumAddress(input("\t[-] Sender: "))
+        try:
+            acc = w3.toChecksumAddress(input("\t[-] Sender: "))
+        except:
+            print("[!] 輸入錯誤")
+            continue
         client.terminateTransaction(fromAG, acc, client.address)
     elif command == "quit":
         client.quit_current_AG()
