@@ -2,6 +2,9 @@ from ecc.curve import secp256k1 as s256
 from ecc.curve import Point
 import hashlib, random, string
 from Crypto.Random.random import getrandbits
+from Crypto.PublicKey import RSA
+import time 
+
 
 P = s256.G
 print("[+]P: \n\tx: {}\n\ty: {}".format(P.x,P.y))
@@ -37,8 +40,11 @@ end_correct = 0
 ####################
 #
 ####################
+m2 = "helloworld"
+hm2 = int(hashlib.sha256(m2.encode()).hexdigest(), 16)
+
+time_start = time.time()
 for i in range(0,100):
-    m2 = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(10))
     hm2 = int(hashlib.sha256(m2.encode()).hexdigest(), 16)
 
     dn = (hm2*kn)
@@ -47,11 +53,32 @@ for i in range(0,100):
     
     if CH2 == CH:
         end_correct+=1
-###########################
-#
-###########################
+time_end = time.time()
 print("[+] correct / times = {}/{} = {}%".format(end_correct, 100, end_correct))
-print("fdasfsadfas")
+print("time cost: ",time_end-time_start)
+
+
+end_correct=0
+keyPair = RSA.generate(bits=2048)
+time_start = time.time()
+for i in range(0,100):
+    signature = pow(hm2, keyPair.d, keyPair.n)
+    _signature = pow(signature, keyPair.e, keyPair.n)
+    if signature == _signature:
+        end_correct += 1
+time_end = time.time()
+
+print("[+] correct / times = {}/{} = {}%".format(end_correct, 100, end_correct))
+print("time cost: ",time_end-time_start)
+
+
+
+
+
+
+
+
+
 
 
 

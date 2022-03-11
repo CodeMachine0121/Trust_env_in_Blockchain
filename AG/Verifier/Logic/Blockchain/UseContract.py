@@ -96,7 +96,8 @@ class RecordContract:
             self.web3.eth.wait_for_transaction_receipt(txn)
             self.nonce+=1
             return True
-        except:
+        except Exception as e:
+            print("[!] {}".format(repr(e)))
             return False
 
     def findAGviaAddress(self, cli_address):
@@ -177,8 +178,24 @@ class TransactionContract:
         self.contractABI = Jres["abi"]
         self.contractAddress = Jres["address"]
         return res.text
+    
+    def doAfterTransaction(self,to,r,nonce):
+        # 每次對合約做完交易的動作就把該交易雜湊值做變色龍發布新交易
+        txn = {
+            'chainId':602602,
+            'to':to,
+            'nonce':nonce,
+            'data': str(hex(r)), ##  欄位會是 input
+            'gas':200000,
+            'gasPrice': self.web3.eth.gasPrice,
+        }
+        privateKey = getKey(self.web3)
+        signed_tx = self.web3.eth.account.sign_transaction(txn, privateKey)
+        tx_hash = self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
+        print("[+] Signing Txn: ", tx_hash.hex())
+        return tx_hash
+      
 
-       
     def createTransaction(self, fromAddr, toAddr, toAG, balance, r, txnHash, nonce):
         # 開啟交易
         if self.contractABI==None or self.contractAddress==None:
@@ -197,14 +214,14 @@ class TransactionContract:
         self.balanceRecord[fromAddr][toAddr] = Transaction(balance) # 初始化交易物件
 
         contract = self.web3.eth.contract(abi=self.contractABI, address = self.contractAddress)
-        contract.functions.createTransaction(fromAddr, toAddr, toAG, balance, r, txnHash).transact({
+        txn = contract.functions.createTransaction(fromAddr, toAddr, toAG, balance, r, txnHash).transact({
             'from':self.address,
             'nonce':nonce,
-            'value': balance
+            'value': balance,
             })
+        print("[+] Create Transaction txn: ", txn.hex())
         
-        return True
-
+        return txn 
     
     def Payment(self, fromAddr, toAddr, toAG, balance, r, nonce):  
         # 單次扣款
@@ -222,7 +239,7 @@ class TransactionContract:
         print("\t[-] Sender: {}".format(fromAddr))
         print("\t[-] Receiver: {}".format(toAddr))
         print("\t[-] Balance: {}".format(balance))
-        print("\t [-] Signature: {}".format(r))
+        print("\t [-] Signature: {}".format(r.hex()))
         
         # 紀錄交易
         self.balanceRecord[fromAddr][toAddr].setPayment(balance)

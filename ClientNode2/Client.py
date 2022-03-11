@@ -153,8 +153,10 @@ class Client:
         data["txnHash"] = str(tx_hash)
 
         res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
+        
+        txnCH = json.loads(res.text)["txnCH"]
 
-        return res.text
+        return txnCH
     
 
     def payment(self, from_address, to_address, balance):

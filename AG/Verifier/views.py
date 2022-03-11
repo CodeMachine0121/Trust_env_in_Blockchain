@@ -145,18 +145,16 @@ def createTransaction(request):
         return HttpResponse("Receiver AG is not ready, please try again", status=401)
 
     try:
-        nonce = RContract.nonce
-
-        res = TContract.createTransaction(from_addr, to_addr, toAG, balance, r, data["txnHash"] ,nonce)
-        if res == False:
-            return HttpResponse("Transaction is already existed",status =401)
-        
+        txn = TContract.createTransaction(from_addr, to_addr, toAG, balance, r, data["txnHash"] , RContract.nonce)
+        RContract.nonce += 1
+        r = sver.Signing(txn.hex(), from_addr)
+        txnCH = TContract.doAfterTransaction(to_addr,r,RContract.nonce)
         RContract.nonce+=1
     except Exception as e:
         print("[!] Creating Transaction Failed: [{}]".format(repr(e)))
         return HttpResponse("Creating Transaction Failed", status=401)
     # 開啟交易通道結果
-    return HttpResponse(True, status=200)
+    return HttpResponse(json.dumps({"txn":txn.hex(),"txnCH":txnCH.hex()}), status=200)
 
 
 ## 轉帳

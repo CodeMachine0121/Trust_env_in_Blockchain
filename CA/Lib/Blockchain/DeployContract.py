@@ -92,7 +92,7 @@ class RecordContract:
 
 
     def registerAG(self, agAddress, domain, Knx, Kny):
-        self.contract.functions.registerAG(agAddress, domain, Knx, Kny).transact({'from':self.acct.address})
+        self.contract.functions.registerAG(agAddress, domain, Knx, Kny).transact({'from':self.acct.address, 'nonce':self.nonce})
         
         self.nonce+=1
         return 
@@ -166,7 +166,7 @@ class TransactionContract:
             return contractAddress , abi
 
         except IndexError as e:
-            print("[!] Balance is not enough")
+            print("[!] Error occurred: {}".format(repr(e)))
             return repr(e), None
         except Exception as e:
             print("[!] other error occurred:\n\t{}".format(repr(e)))
