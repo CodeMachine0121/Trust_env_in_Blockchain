@@ -179,7 +179,7 @@ class TransactionContract:
         self.contractAddress = Jres["address"]
         return res.text
     
-    def doAfterTransaction(self,to,r,nonce):
+    def doAfterTransaction(self,to,r,nonce, status):
         # 每次對合約做完交易的動作就把該交易雜湊值做變色龍發布新交易
         txn = {
             'chainId':602602,
@@ -192,7 +192,11 @@ class TransactionContract:
         privateKey = getKey(self.web3)
         signed_tx = self.web3.eth.account.sign_transaction(txn, privateKey)
         tx_hash = self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
-        print("[+] Signing Txn: ", tx_hash.hex())
+        print("[+] Create <signatureTransaction> Transaction txn: ", tx_hash.hex())
+        
+        if status == 0:
+            self.web3.eth.wait_for_transaction_receipt(tx_hash)
+        
         return tx_hash
       
 
@@ -219,10 +223,10 @@ class TransactionContract:
             'nonce':nonce,
             'value': balance,
             })
-        print("[+] Create Transaction txn: ", txn.hex())
-        
+        print("[+] Create <createTransaction> Transaction txn: ", txn.hex())
+        # 簽章雜湊值 在 views.py 做
         return txn 
-    
+
     def Payment(self, fromAddr, toAddr, toAG, balance, r, nonce):  
         # 單次扣款
         if self.contractABI == None or self.contractAddress ==None:   
@@ -239,21 +243,23 @@ class TransactionContract:
         print("\t[-] Sender: {}".format(fromAddr))
         print("\t[-] Receiver: {}".format(toAddr))
         print("\t[-] Balance: {}".format(balance))
-        print("\t [-] Signature: {}".format(r.hex()))
+        print("\t [-] Signature: {}".format(hex(r)))
         
         # 紀錄交易
         self.balanceRecord[fromAddr][toAddr].setPayment(balance)
         self.balanceRecord[fromAddr][toAddr].setRecord()
         # 實作合約物件
+        ## txn: 合約發出的交易雜湊值
         contract = self.web3.eth.contract(abi=self.contractABI, address=self.contractAddress)
-        contract.functions.makePayment(fromAddr, toAddr, toAG, balance, r).transact({
+        txn = contract.functions.makePayment(fromAddr, toAddr, toAG, balance, r).transact({
             'from':self.address,
             'nonce': nonce
             })
+        print("[+] Create <Payment> Transaction txn ", txn.hex())
         
-        return True
+        return txn
 
-    
+
 
     def getContractBalance(self, fromAddr, toAddr):
         # 取得合約上餘額

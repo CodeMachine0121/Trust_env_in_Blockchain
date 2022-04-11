@@ -58,7 +58,19 @@ class Client:
 
         self.w3 = Web3(Web3.HTTPProvider(self.nodeServer))
         self.nonce = self.w3.eth.getTransactionCount(self.w3.eth.coinbase)
-        
+        self.abi = self.getABI()
+    
+
+    ## 讀取ABI
+    def getABI(self,):
+        try:
+            abi = ""
+            with open("TransferContract.json", 'r') as file:
+                abi = json.loads(file.read())["abi"]
+            return abi
+        except Exception as e:
+            print(repr(e))
+            print("找不到 abi file")
     ## 更換server
     def Refresh_AG(self, server):
         self.__init__(server)
@@ -154,8 +166,14 @@ class Client:
 
         res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
         
+        txn = json.loads(res.text)["txn"]
         txnCH = json.loads(res.text)["txnCH"]
-
+        contractAddr = json.loads(res.text)["contractAddr"]
+        print("[+] Get Contract Txn:\n\t{}".format(txn))
+        print("[+] Get Signature Txn:\n\t{}".format(txnCH))
+        
+        result = self.verifyTransactionHash(contractAddr, txn, txnCH, data, 0)
+        print("[+] Verify Signature Txn: {}\n\t".format(result))
         return txnCH
     
 
@@ -167,7 +185,15 @@ class Client:
         data["balance"] = balance
 
         res = requests.post("{}/AG/payment/".format(self.server), data = json.dumps(data))
-        print("[+] {}".format(res.text))
+        txn = json.loads(res.text)["txn"]
+        txnCH = json.loads(res.text)["txnCH"]
+        contractAddr = json.loads(res.text)["contractAddr"]
+
+        print("[+] Get Contract Txn:\n\t{}".format(txn))
+        print("[+] Get Signature Txn: \n\t{}".format(txnCH))
+        
+        result = self.verifyTransactionHash(contractAddr, txn, txnCH, data, 1)
+        print("[+] Verify Signature Txn: {}\n\t".format(result))
         return res.text
 
     def getContractBalance(self, from_address, to_address):
@@ -207,8 +233,6 @@ class Client:
     def terminateTransaction(self, fromAG ,from_address, to_address):
         print("[+] Endding transaction contract...")
         print("\t[-] Getting TC's address: ")
-        data = self.beforeAction(str(from_address)+str(to_address))
-        data["fromAG"] = fromAG
         res = requests.post("{}/AG/getTContract/".format(self.server), json.dumps(data))
         tcAddr = json.loads(res.text)["tcAddress"]
         print("\t[-] Get TC: [{}]".format(tcAddr))
@@ -279,3 +303,44 @@ class Client:
         verifyResult = self.part.verifyTransactionSignature(msgs, CHashX, CHashY,Knx,Kny,signatures)
         
         return verifyResult
+
+    # 驗證交易雜湊值
+    def verifyTransactionHash(self, contractAddr, txn, txnCH, txnData, status):
+    
+        signature = self.w3.eth.getTransaction(txnCH)["input"]
+        r = int(signature, 16)
+        result = self.part.VerifySignature(txn, r, self.Public_AG.x, self.Public_AG.y)
+        
+        if result == False:
+            print("Verify Result: ", False)
+            return False
+        ## 判斷當下是 createTransaction 還是 payment
+        if status == 0:
+            status = "totalAmount"
+        elif status == 1:
+            status = "balance"
+
+
+        contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
+        
+        contractInput = self.w3.eth.getTransaction(txn)["input"]
+        func_obj, func_params = contract.decode_function_input(contractInput)
+        
+        # 比較合約參數是否一致
+        ##print(func_params)
+        if( func_params["_sender"] != txnData["from_address"] or func_params["_receiver"] != txnData["to_address"] or func_params[status] != txnData["balance"]):
+            #print("{} : {}".format(func_params["_sender"] , txnData["from_address"]))
+            #print("{} : {}".format(func_params["_receiver"] , txnData["to_address"]))
+            #print("{} : {}".format(func_params["totalAmount"] , txnData["balance"]))
+            print("[!] Transaction Data is wrong")
+            return False
+                
+        msg = str(func_params["_sender"]) + str(func_params["_receiver"]) + str(func_params[status])
+        result = self.part.VerifySignature(msg, func_params["_signature"], self.Public_AG.x, self.Public_AG.y)
+
+        if result == False:
+            print("Verify Transaction Args Verify Failed")
+            return False
+
+        return result
+        

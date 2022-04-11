@@ -28,7 +28,7 @@ while True:
     elif command == "transaction":
         try:
             acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-            amount = w3.toWei(float(input("\t[-]Balance: ")), 'ether')
+            amount = w3.toWei(float(input("\t[-]Balance (eth): ")), 'ether')
         except:
             print("[!] 輸入錯誤")
             continue

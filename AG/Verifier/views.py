@@ -146,19 +146,21 @@ def createTransaction(request):
 
     try:
         txn = TContract.createTransaction(from_addr, to_addr, toAG, balance, r, data["txnHash"] , RContract.nonce)
-        RContract.nonce += 1
         r = sver.Signing(txn.hex(), from_addr)
-        txnCH = TContract.doAfterTransaction(to_addr,r,RContract.nonce)
+        RContract.nonce +=1 ## 不能直接加2 後面交易會出錯
+        txnCH = TContract.doAfterTransaction(to_addr,r,RContract.nonce,0)
         RContract.nonce+=1
     except Exception as e:
         print("[!] Creating Transaction Failed: [{}]".format(repr(e)))
         return HttpResponse("Creating Transaction Failed", status=401)
     # 開啟交易通道結果
-    return HttpResponse(json.dumps({"txn":txn.hex(),"txnCH":txnCH.hex()}), status=200)
+    return HttpResponse(json.dumps({"txn":txn.hex(),"txnCH":txnCH.hex(), 'contractAddr': TContract.address}), status=200)
 
 
 ## 轉帳
 def makePayment(request):
+    # client透過兩個簽章作為本次扣款的收據
+
     data = json.loads(request.body.decode('utf-8'))
     if not short_Receiver_Actions(data):
         return HttpResponse("Authentication Failed", status=401)
@@ -186,15 +188,22 @@ def makePayment(request):
         return HttpResponse("AG of receiver is not ready") 
    
     try:
-        res = TContract.Payment(from_addr, to_addr, toAG, balance, r, RContract.nonce)
+        txn = TContract.Payment(from_addr, to_addr, toAG, balance, r, RContract.nonce)
         RContract.nonce += 1
-        
-        
+
+        ## 針對合約發出的交易進行變色龍簽章再發送一筆交易出去
+        r = sver.Signing(txn.hex(), from_addr)
+        txnCH = TContract.doAfterTransaction(to_addr,r,RContract.nonce,1) #### 此處出錯        RContract.nonce+=1
+
+        ### txn: 合約交易 , txnCH: 變色龍簽章
     except Exception as e:
         print("[!] Erroe occured: [{}]".format(repr(e)))
         return HttpResponse("Payment Error",status=401)
 
-    return HttpResponse(res, status=200)
+    return HttpResponse(json.dumps({"txn":txn.hex(), "txnCH":txnCH.hex(), "contractAddr": TContract.address}), status=200)
+
+
+
 
     
 def getContractBalance(request):
