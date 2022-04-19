@@ -109,7 +109,7 @@ class RecordContract:
 
         print("[+] Find AG of : [{}]".format(cli_address))
         print("\t[-] AG: [{}]".format(agAddr))
-        return agAddr
+        return self.web3.toChecksumAddress(agAddr)
     
     def getAGPublicKey(self, ag_address):
         # 透過AG address尋找對應的公鑰
@@ -218,7 +218,8 @@ class TransactionContract:
         self.balanceRecord[fromAddr][toAddr] = Transaction(balance) # 初始化交易物件
 
         contract = self.web3.eth.contract(abi=self.contractABI, address = self.contractAddress)
-        txn = contract.functions.createTransaction(fromAddr, toAddr, toAG, balance, r, txnHash).transact({
+        txn = contract.functions.createTransaction(fromAddr, toAddr, toAG, balance, r).transact({
+
             'from':self.address,
             'nonce':nonce,
             'value': balance,
@@ -235,7 +236,7 @@ class TransactionContract:
         if not fromAddr in self.balanceRecord.keys():
             print("[!] Client [{}] has not registered".format(fromAddr))
             return False
-        if balance >= self.balanceRecord[fromAddr][toAddr].totalAmount:
+        if balance > self.balanceRecord[fromAddr][toAddr].totalAmount:
             print("[!] Payment value cannot greater than total Amount!")
             return False
 
@@ -257,7 +258,7 @@ class TransactionContract:
             })
         print("[+] Create <Payment> Transaction txn ", txn.hex())
         
-        return txn
+        return txn, hex(r)
 
 
 

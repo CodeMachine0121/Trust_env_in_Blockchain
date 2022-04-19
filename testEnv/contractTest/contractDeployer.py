@@ -1,10 +1,11 @@
 from web3 import Web3
 import json
 
-w3 = Web3(Web3.HTTPProvider("http://140.125.32.10:8545"))
+w3 = Web3(Web3.HTTPProvider("http://0.0.0.0:8545"))
 
 
-with open("Con.json") as file :
+with open("TransferContract.json") as file :
+
     Jdata = json.loads(file.read())
 
 abi = Jdata["abi"]

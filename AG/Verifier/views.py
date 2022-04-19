@@ -175,7 +175,8 @@ def makePayment(request):
 
     from_addr = RContract.web3.toChecksumAddress(data["from_address"])
     to_addr =  RContract.web3.toChecksumAddress(data["to_address"])
-    balance = data["balance"]
+    balance = int(data["balance"])
+
 
     # 對交易訊息做簽章
     msg = str(from_addr)+str(to_addr)+str(balance+TContract.balanceRecord[from_addr][to_addr].currentAmount)
@@ -188,19 +189,20 @@ def makePayment(request):
         return HttpResponse("AG of receiver is not ready") 
    
     try:
-        txn = TContract.Payment(from_addr, to_addr, toAG, balance, r, RContract.nonce)
+        txn, paymentSign = TContract.Payment(from_addr, to_addr, toAG, balance, r, RContract.nonce)
         RContract.nonce += 1
 
-        ## 針對合約發出的交易進行變色龍簽章再發送一筆交易出去
+       ## 針對合約發出的交易進行變色龍簽章再發送一筆交易出去
         r = sver.Signing(txn.hex(), from_addr)
-        txnCH = TContract.doAfterTransaction(to_addr,r,RContract.nonce,1) #### 此處出錯        RContract.nonce+=1
+        txnCH = TContract.doAfterTransaction(to_addr,r,RContract.nonce,1)      
+        RContract.nonce+=1
 
         ### txn: 合約交易 , txnCH: 變色龍簽章
     except Exception as e:
         print("[!] Erroe occured: [{}]".format(repr(e)))
         return HttpResponse("Payment Error",status=401)
 
-    return HttpResponse(json.dumps({"txn":txn.hex(), "txnCH":txnCH.hex(), "contractAddr": TContract.address}), status=200)
+    return HttpResponse(json.dumps({"txn":txn.hex(), "txnCH":txnCH.hex(), "contractAddr": TContract.address, "paymentSign": paymentSign}), status=200)
 
 
 
@@ -268,7 +270,7 @@ def getPubKeyFromRContract(request):
 
     data = {
         "x": pubKey[0],
-        "y": pubKey[1]
+        "y": pubKey[1],
     }
     print("\t[-] ", data)
     return HttpResponse(json.dumps(data), content_type='application/json', status=200)

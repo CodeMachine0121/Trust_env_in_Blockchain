@@ -17,7 +17,6 @@ from Lib.Blockchain.DeployContract import RecordContract, TransactionContract
 ver = Verifier()
 
 ## 區塊練相關宣告
-Tcontract = ()
 Rcontract = RecordContract()
 Tcontract = TransactionContract()
 

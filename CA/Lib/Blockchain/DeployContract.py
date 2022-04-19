@@ -27,7 +27,19 @@ class RecordContract:
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3)) 
         # 紀錄交易次數
         self.nonce = self.web3.eth.getTransactionCount(self.acct.address)
-        self.contractAddress, self.abi = self.deploy()
+        
+        ## 是否要套入RC合約
+        try:
+            status = int(input("Whether import RC (0 or 1): "))
+        except:
+            status = 0
+        
+        if status ==0:
+            self.contractAddress, self.abi = self.deploy()
+        elif status ==1:
+            self.contractAddress = self.web3.toChecksumAddress(input("RC Address: "))
+            self.abi = self.getContract_data()["abi"]
+
 
         self.contract = self.web3.eth.contract(abi=self.abi,address=self.contractAddress)
         
@@ -38,6 +50,7 @@ class RecordContract:
             contract_json = json.loads(file.read())
         return contract_json
     
+
     def deploy(self):
         print("[+] Deploying RecordContract ...")
         print("[+] deployer's address: {}".format(self.acct.address))       
@@ -72,20 +85,10 @@ class RecordContract:
             contractAddress = tx_recipt.contractAddress
             print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
             print("[+] RecordContract address: [{}]".format(contractAddress))
-            """
-                實驗記錄用 額外儲存ABI
-            """ 
-            with open("./RABI", 'w') as file:
-                file.write(str(contract_json["abi"]))
-                file.close()
-
             return contractAddress, contract_json['abi']
-        except IndexError:
-            print("[!] Balance is not enough")
+
         except Exception as e:
             print("[!] other error occurred:\n\t{}".format(repr(e)))
-        
-
 
         return
     

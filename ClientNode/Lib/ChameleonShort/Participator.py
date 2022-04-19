@@ -88,4 +88,18 @@ class Participator:
         print("[+]Verify Result: True")
         return True
 
+    def verifyPaymentSignature(self, msg, CHashX, CHashY, Knx, Kny, signatures):
+        PubKey = Point(Knx, Kny, curve=secp256k1)
+
+        H1 = HMAC.new(b'', digestmod=SHA256)
+
+        H1.update(msg.encode())
+        hm = int(H1.hexdigest(), 16)
+      
+        hKn = PubKey * hm
+        rP = self.P*signatures
+        chash = hKn+rP
+
+        CHash = Point(CHashX, CHashY, curve=secp256k1)
         
+        return chash == CHash

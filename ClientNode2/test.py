@@ -15,8 +15,10 @@ while True:
 
     if command == "reg":
         client.RegisterAG()
+    
     elif command == "askAvailable":
         client.ask_for_Client_available(client.address)
+    
     elif command == "balance":
         print("[+] Getting Balance information: ")
         try:
@@ -25,14 +27,16 @@ while True:
             print("[!] 輸入錯誤")
             continue
         client.getContractBalance(client.address, acc)
+    
     elif command == "transaction":
         try:
             acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
-            amount = w3.toWei(float(input("\t[-]Balance: ")), 'ether')
+            amount = w3.toWei(float(input("\t[-]Balance (eth): ")), 'ether')
         except:
             print("[!] 輸入錯誤")
             continue
         client.askTransaction(client.address,acc,amount)
+    
     elif command == "payment":
         try:
             acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
@@ -41,21 +45,25 @@ while True:
             print("[!] 輸入錯誤")
             continue
         client.payment(client.address, acc, amount)
-    elif command == "setContract":
+    
+    elif command == "withdraw":
         try:
-            acc = w3.toChecksumAddress(input("\t[-] Sender: "))
-        except:
-            print("[!] 輸入錯誤")
-            continue
-        fromAG = client.setTransactionContract(acc)
+           # txn, txnCH, contractAddr, data, senderPubX, senderPubY
+            txn = input("\t[-] Contract Action txn: ")
+            txnCH = input("\t[-] Signature txn: ")
+            contractAddr = w3.toChecksumAddress(input("\t[-] Contract Addr: "))
+            senderAGAddr = w3.toChecksumAddress(input("\t[-] Sender AG Address: "))
+            
 
-    elif command == "terminateTransaction":
-        try:
-            acc = w3.toChecksumAddress(input("\t[-] Sender: "))
-        except:
-            print("[!] 輸入錯誤")
+            data = dict()
+            data["from_address"] = w3.toChecksumAddress(input("\t[-] Sender's Address: "))
+            data["balance"] = w3.toWei(float(input("\t[-] Balance(eth): ")), 'ether')
+            data["paymentSign"] = int(input("\t[-] Payment Signature: "),16)
+            client.withdraw_from_Contract(txn, txnCH, contractAddr, senderAGAddr, data)
+
+        except Exception as e:
+            print("[!] 輸入錯誤: {}".format(repr(e)))
             continue
-        client.terminateTransaction(fromAG, acc, client.address)
     elif command == "quit":
         client.quit_current_AG()
 #client.quit_current_AG()

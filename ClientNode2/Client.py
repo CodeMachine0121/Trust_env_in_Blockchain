@@ -23,7 +23,8 @@ def getServerAddress():
     return nodeServer
 
 
-def getAddress():
+def getAddress(w3:Web3):
+    """ 已停用
     w3 = Web3()
     for file in os.listdir("./Lib/Blockchain/keystore"):
         path = os.path.join('./Lib/Blockchain/keystore',file)
@@ -32,7 +33,8 @@ def getAddress():
         priv = w3.eth.account.decrypt(f.read(), "mcuite")
     
     acct = w3.eth.account.privateKeyToAccount(priv)
-    return acct.address
+    """
+    return w3.eth.coinbase
 
 class Client:
     def __init__(self, server):
@@ -42,10 +44,12 @@ class Client:
         Jsystem = json.loads(res.text)
         
         self.Public_AG = Point(Jsystem.get("Knx"), Jsystem.get("Kny"), curve=secp256k1)
-        
+        print("AG: Public Key X: ", self.Public_AG.x)
+        print("AG: Public Key Y: ", self.Public_AG.y)
+
+
         self.part = Participator()
-        
-        self.address = getAddress() 
+         
 
 
         #self.RegisterAG()
@@ -58,7 +62,21 @@ class Client:
 
         self.w3 = Web3(Web3.HTTPProvider(self.nodeServer))
         self.nonce = self.w3.eth.getTransactionCount(self.w3.eth.coinbase)
-        
+        self.abi = self.getABI()
+        self.address = self.w3.eth.coinbase
+        print("Public Key X: ", self.part.Kn.x)
+        print("Public Key Y: ", self.part.Kn.y)
+
+    ## 讀取ABI
+    def getABI(self,):
+        try:
+            abi = ""
+            with open("TransferContract.json", 'r') as file:
+                abi = json.loads(file.read())["abi"]
+            return abi
+        except Exception as e:
+            print(repr(e))
+            print("找不到 abi file")
     ## 更換server
     def Refresh_AG(self, server):
         self.__init__(server)
@@ -154,8 +172,16 @@ class Client:
 
         res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
         
+        txn = json.loads(res.text)["txn"]
         txnCH = json.loads(res.text)["txnCH"]
+        contractAddr = json.loads(res.text)["contractAddr"]
+        print("[+] Get Contract Txn:\n\t{}".format(txn))
+        print("[+] Get Signature Txn:\n\t{}".format(txnCH))
+        
+        # contractAddr, txn, txnCH, txnData, pubX, pubY, status
 
+        result = self.verifyTransactionHash(contractAddr, txn, txnCH, data, self.Public_AG.x, self.Public_AG.y, 0)
+        print("[+] Verify Signature Txn: {}\n\t".format(result))
         return txnCH
     
 
@@ -167,7 +193,17 @@ class Client:
         data["balance"] = balance
 
         res = requests.post("{}/AG/payment/".format(self.server), data = json.dumps(data))
-        print("[+] {}".format(res.text))
+        txn = json.loads(res.text)["txn"]
+        txnCH = json.loads(res.text)["txnCH"]
+        contractAddr = json.loads(res.text)["contractAddr"]
+        paymentSign = json.loads(res.text)["paymentSign"]
+
+        print("[+] Get Contract Txn:\n\t{}".format(txn))
+        print("[+] Get Signature Txn: \n\t{}".format(txnCH))
+        print("[+] Get payment Signature: \n\t{}".format(paymentSign))
+        #result = self.verifyTransactionHash(contractAddr, txn, txnCH, data, self.Public_AG.x, self.Public_AG.y, 1)
+
+        #print("[+] Verify Signature Txn: {}\n\t".format(result))
         return res.text
 
     def getContractBalance(self, from_address, to_address):
@@ -207,8 +243,6 @@ class Client:
     def terminateTransaction(self, fromAG ,from_address, to_address):
         print("[+] Endding transaction contract...")
         print("\t[-] Getting TC's address: ")
-        data = self.beforeAction(str(from_address)+str(to_address))
-        data["fromAG"] = fromAG
         res = requests.post("{}/AG/getTContract/".format(self.server), json.dumps(data))
         tcAddr = json.loads(res.text)["tcAddress"]
         print("\t[-] Get TC: [{}]".format(tcAddr))
@@ -279,3 +313,114 @@ class Client:
         verifyResult = self.part.verifyTransactionSignature(msgs, CHashX, CHashY,Knx,Kny,signatures)
         
         return verifyResult
+
+    # 驗證交易雜湊值 (from AG)
+    def verifyTransactionHash(self, contractAddr, txn, txnCH, txnData, pubX, pubY, status):
+    
+        signature = self.w3.eth.getTransaction(txnCH)["input"]
+        r = int(signature, 16)
+        result = self.part.VerifySignature(txn, r, pubX, pubY)
+        
+        if result == False:
+            print("Verify Result: ", False)
+            return False
+
+        ## 判斷當下是 createTransaction 還是 payment
+        if status == 0:
+            status = "totalAmount"
+        elif status ==1 :
+            status = "balance"
+        contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
+        
+        contractInput = self.w3.eth.getTransaction(txn)["input"]
+        func_obj, func_params = contract.decode_function_input(contractInput)
+        
+        # 比較合約參數是否一致
+        ##print(func_params)
+        if( func_params["_sender"] != txnData["from_address"] or func_params["_receiver"] != txnData["to_address"] or func_params[status] != txnData["balance"]):
+            print("\t[-] {} : {}".format(func_params["_sender"] , txnData["from_address"]))
+            print("\t[-] {} : {}".format(func_params["_receiver"] , txnData["to_address"]))
+            print("\t[-] {} : {}".format(func_params["totalAmount"] , txnData["balance"]))
+            print("[!] Transaction Data is wrong")
+            return False
+        else:
+            print("\t[-] Verify: Pass")
+        msg = str(func_params["_sender"]) + str(func_params["_receiver"]) + str(func_params[status])
+        
+        result = None
+        if status == "totalAmount":
+            result = self.part.VerifySignature(msg, func_params["_signature"], self.Public_AG.x, self.Public_AG.y)
+            print("Result: ", result)
+            return result
+        elif status == "balance" :
+            ## 因為payment是驗證別人的變色龍雜湊所以還需要索取CH
+            print("Jelly fish")
+
+        if result == False:
+            print("Verify Transaction Args Verify Failed")
+            return False
+        
+        return result
+       
+    
+    # 接收TXn後 要透過Txn領取金額
+    def withdraw_from_Contract(self, txn, txnCH, contractAddr, senderAGAddr, data):
+        print("[+] Withdrawing the Eth")
+        ## via QR Code
+        contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
+        
+        ## 取得發送方AG的公要
+        res = requests.post("{}/AG/getPublicKey/".format(self.server), data = json.dumps({"agAddress": senderAGAddr}))
+        senderAGPubX = int(json.loads(res.text)["x"])
+        senderAGPubY = int(json.loads(res.text)["y"])
+        print("\t[-] sender AG PublicKey X: ", senderAGPubX)
+        print("\t[-] sedner AG PublicKey Y: ", senderAGPubY)
+        
+        ## 取得發送方與其AG的變色龍雜湊值
+        res = requests.post("{}/AG/getChameleonHash/".format(self.server), data=json.dumps({"clientAddr": data["from_address"], "agAddr":senderAGAddr}))
+        HashX = int(json.loads(res.text)["HashX"])
+        HashY = int(json.loads(res.text)["HashY"])
+        print("\t[-] AG Hash: \n\t\tx: {}\n\t\ty: {}".format(HashX, HashY))
+       
+        ## 從txnCH上取得變色龍簽章
+        txnSign = int(self.w3.eth.getTransaction(txnCH)["input"],16)
+        
+        ## 從txn 取得合約參數
+        contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
+        contractInput = self.w3.eth.getTransaction(txn)["input"]
+        func_obj, func_params = contract.decode_function_input(contractInput)
+        
+        if func_params["_sender"] != data["from_address"] or func_params["_receiver"] != self.address or func_params["balance"] != data["balance"]:
+            print("\t[-] {} : {}".format(func_params["_sender"] , data["from_address"]))
+            print("\t[-] {} : {}".format(func_params["_receiver"] , self.address))
+            print("\t[-] {} : {}".format(func_params["balance"] , data["balance"]))
+            print("[!] Transaction Data is wrong")
+            return False
+        else:
+            print("\t[-] Contract Args Verify: Pass")
+        
+        ## 驗正簽章
+        msg =  txn       
+        result = self.part.verifyPaymentSignature(msg, HashX, HashY, senderAGPubX, senderAGPubY, txnSign)
+        print("\t[-] Txn Verify: ",result)
+        
+        if result == False:
+            return result
+
+        ## 從智能合約中領錢
+        
+        ### 要取得AG對於該筆payment的交易簽章
+        a1,a2 = contract.functions.test(data["from_address"], self.address).call()
+        print("[Debug]: ", a1, "\n[Debug]: ", a2)
+        print("[Debug]: ", self.w3.eth.coinbase)
+        
+        
+        txn = contract.functions.withdraw(data["from_address"], self.address, data["paymentSign"]).transact({
+                "nonce": self.nonce,
+                "from": self.address,
+                'gasPrice': self.w3.eth.gasPrice,
+        })
+        self.nonce+=1 
+        
+        return result
+
