@@ -52,7 +52,7 @@ class RecordContract:
     def registerAN(self, anAddress, ):
         txn = self.contract.functions.registerAN(anAddress).transact({"from":self.acct.address, "nonce":self.nonce})
         self.nonce+=1
-        return txn
+        return txn.hex()
 
     def getContract_data(self):
         compiled_contract_path = './Lib/Blockchain/build/contracts/RecordContract.json'
