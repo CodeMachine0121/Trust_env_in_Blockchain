@@ -2,7 +2,7 @@ from web3 import Web3, middleware
 from web3.gas_strategies.time_based import medium_gas_price_strategy
 import json
 import os
-
+import requests
 
 def getKey(web3):
     # privatekey hard code problem
@@ -19,6 +19,12 @@ def getChainNodeAddress():
     with open("./Lib/Blockchain/server.json") as file:
         JData = json.loads(file.read())
     return JData["nodeAddress"]
+
+def requestAN(address):
+    res = requests.post("http://192.168.50.136:8000/AN_Register/", data=json.dumps({"address":address}))
+    txn = json.loads(res.text)["txn"]
+    return txn
+
 
 class RecordContract:
     def __init__(self):
@@ -39,10 +45,14 @@ class RecordContract:
         elif status ==1:
             self.contractAddress = self.web3.toChecksumAddress(input("RC Address: "))
             self.abi = self.getContract_data()["abi"]
-
+            requestAN(self.acct.address)
 
         self.contract = self.web3.eth.contract(abi=self.abi,address=self.contractAddress)
         
+    def registerAN(self, anAddress, ):
+        txn = self.contract.functions.registerAN(anAddress).transact({"from":self.acct.address, "nonce":self.nonce})
+        self.nonce+=1
+        return txn
 
     def getContract_data(self):
         compiled_contract_path = './Lib/Blockchain/build/contracts/RecordContract.json'

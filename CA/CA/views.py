@@ -131,7 +131,15 @@ def getTransactionContract(request):
             'address': address
         }),
         content_type='application/json'
-    )
+     )
 
 
+### 其他AN要與主AN進行註冊
+def AN_Register(request):
+    print("[+] Receiver AN Register Requests")
+    jsonData = json.loads(request.body.decode())
+    address = jsonData["address"]
+
+    txn = Rcontract.registerAN(address) 
+    return HttpResponse(json.dumps({'txn':txn}), content_type="application/json")
 

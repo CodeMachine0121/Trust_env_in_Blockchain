@@ -20,10 +20,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('Parameters/', views.getSystem_Parameters),
     path("AG_Register/", views.AG_Register),    
+    path("AN_Register/", views.AN_Register),
 
     # Blockchain API
     path("TxnDeploy/",views.deployTransactionContract),
     path("TxnContract/",views.getTransactionContract),
     path("RecordContract/", views.registerAG_for_RecordContract),
-    
+     
 ]
