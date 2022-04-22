@@ -4,7 +4,7 @@ from web3 import Web3
 w3 = Web3()
 
 
-client = Client('http://0.0.0.0:8888')
+client = Client('http://192.168.50.184:8888')
 #client.RegisterAG()
 
 #client.ask_for_Client_available(client.address)

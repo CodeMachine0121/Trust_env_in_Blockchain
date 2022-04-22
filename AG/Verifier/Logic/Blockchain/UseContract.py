@@ -64,7 +64,7 @@ class RecordContract:
         print("[+] Setting Record Contract.....")
         print("[+] Registering to CA ")
         
-        API = "{}/RecordContract/".format(self.CAHost)
+        API = "{}RecordContract/".format(self.CAHost)
         
         JData = json.dumps({
             'Address': self.address,
