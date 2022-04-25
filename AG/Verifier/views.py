@@ -202,7 +202,7 @@ def makePayment(request):
         print("[!] Erroe occured: [{}]".format(repr(e)))
         return HttpResponse("Payment Error",status=401)
 
-    return HttpResponse(json.dumps({"txn":txn.hex(), "txnCH":txnCH.hex(), "contractAddr": TContract.address, "paymentSign": paymentSign}), status=200)
+    return HttpResponse(json.dumps({"txn":txn.hex(), "txnCH":txnCH.hex(), "contractAddr": TContract.address, "paymentSign": paymentSign, "Address":RContract.address}), status=200)
 
 
 

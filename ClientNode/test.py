@@ -1,10 +1,12 @@
 from Client import Client
 from web3 import Web3
+import time
+
 
 w3 = Web3()
 
 
-client = Client('http://192.168.50.184:8888')
+client = Client('http://192.168.50.190:8888')
 #client.RegisterAG()
 
 #client.ask_for_Client_available(client.address)
@@ -35,8 +37,10 @@ while True:
         except:
             print("[!] 輸入錯誤")
             continue
+        start = time.time()
         client.askTransaction(client.address,acc,amount)
-    
+        print("[+] 花費時間: {}".format(time.time()-start))
+
     elif command == "payment":
         try:
             acc = w3.toChecksumAddress(input("\t[-] Receiver: "))
@@ -44,8 +48,11 @@ while True:
         except:
             print("[!] 輸入錯誤")
             continue
+
+        start = time.time()
         client.payment(client.address, acc, amount)
-    
+        print("[+] 花費時間: {}".format(time.time()-start))
+        
     elif command == "withdraw":
         try:
            # txn, txnCH, contractAddr, data, senderPubX, senderPubY
@@ -59,7 +66,10 @@ while True:
             data["from_address"] = w3.toChecksumAddress(input("\t[-] Sender's Address: "))
             data["balance"] = w3.toWei(float(input("\t[-] Balance(eth): ")), 'ether')
             data["paymentSign"] = int(input("\t[-] Payment Signature: "),16)
+            
+            start = time.time()
             client.withdraw_from_Contract(txn, txnCH, contractAddr, senderAGAddr, data)
+            print("[+] 花費時間: {}".format(time.time()-start))
 
         except Exception as e:
             print("[!] 輸入錯誤: {}".format(repr(e)))

@@ -197,9 +197,14 @@ class Client:
         txnCH = json.loads(res.text)["txnCH"]
         contractAddr = json.loads(res.text)["contractAddr"]
         paymentSign = json.loads(res.text)["paymentSign"]
+        agAddress = json.loads(res.text)["Address"]
 
         print("[+] Get Contract Txn:\n\t{}".format(txn))
         print("[+] Get Signature Txn: \n\t{}".format(txnCH))
+        print("[+] Contract Address: \n\t{}".format(contractAddr))
+        print("[+] AG's Address:\n\t{}".format(agAddress))
+        print("[+] Sender's Address:\n\t{}".format(self.address))
+        print("[+] Payment Balance: \n\t{}".format(balance))
         print("[+] Get payment Signature: \n\t{}".format(paymentSign))
         #result = self.verifyTransactionHash(contractAddr, txn, txnCH, data, self.Public_AG.x, self.Public_AG.y, 1)
 
