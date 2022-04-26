@@ -237,6 +237,8 @@ class TransactionContract:
             print("[!] Client [{}] has not registered".format(fromAddr))
             return False
         if balance > self.balanceRecord[fromAddr][toAddr].totalAmount:
+            print("[!] Balance: ",balance)
+            print("[!] Record : ",self.balanceRecord[fromAddr][toAddr].totalAmount)
             print("[!] Payment value cannot greater than total Amount!")
             return False
 

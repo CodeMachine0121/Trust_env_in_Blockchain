@@ -6,7 +6,7 @@ import time
 w3 = Web3()
 
 
-client = Client('http://192.168.50.190:8888')
+client = Client('http://0.0.0.0:8888')
 #client.RegisterAG()
 
 #client.ask_for_Client_available(client.address)
@@ -74,6 +74,15 @@ while True:
         except Exception as e:
             print("[!] 輸入錯誤: {}".format(repr(e)))
             continue
+    elif command == "performance":
+        from_addr = w3.toChecksumAddress(input("\t[-] Sender's Address: "))
+        to_addr = w3.toChecksumAddress(input("\t[-] Receiver's Address: "))
+        balance = w3.toWei(float(input("\t[-] Balance: ")), 'ether')
+        
+        start = time.time()
+        client.PerformanceTesting(from_addr, to_addr, balance)
+        print("--------------------------------------------------------------")
+        print("共耗時: {} sec".format(time.time()-start))
     elif command == "quit":
         client.quit_current_AG()
 #client.quit_current_AG()

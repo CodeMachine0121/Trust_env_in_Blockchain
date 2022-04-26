@@ -6,6 +6,8 @@ from Lib.ChameleonShort.Participator import Participator
 from Crypto.Random.random import getrandbits
 from Lib.RSA.rsa import RSA_Library
 from ecc.curve import Point, secp256k1
+import time
+
 
 def getPrivateKey(web3):
 
@@ -206,6 +208,19 @@ class Client:
         print("[+] Sender's Address:\n\t{}".format(self.address))
         print("[+] Payment Balance: \n\t{}".format(balance))
         print("[+] Get payment Signature: \n\t{}".format(paymentSign))
+        
+        jsonObj = json.dumps({
+            "contractTxn":txn, 
+            "SignatureTxn": txnCH, 
+            "ContractAddress": contractAddr,
+            "AGAddress":agAddress,
+            "SenderAddress":self.address,
+            "Balance":balance,
+            "PaymentSign":paymentSign})
+        
+        with open("./txns/{}.json".format(txn), "w") as file:
+            file.write(jsonObj)
+
         #result = self.verifyTransactionHash(contractAddr, txn, txnCH, data, self.Public_AG.x, self.Public_AG.y, 1)
 
         #print("[+] Verify Signature Txn: {}\n\t".format(result))
@@ -428,4 +443,28 @@ class Client:
         self.nonce+=1 
         
         return result
+    
+
+    ## 效能測試
+    def PerformanceTesting(self, from_address, to_address, balance):
+        start = time.time()
+        counter = 0
+        for i in range(0,1000):
+            print("目前: counter: ",counter)
+            self.askTransaction(from_address, to_address, balance)
+            counter+=1
+        print("----------------------------------------------------")
+        print("Transaction 耗時: {}".format(time.time()-start))
+        print("----------------------------------------------------")
+
+        start = time.time()
+        counter=0
+        for i in range(0,1000):
+            self.payment(from_address, to_address, balance/1000)
+            print("目前 counter: ",counter)
+            counter+=1
+        print("----------------------------------------------------")
+        print("payment 耗時: {}".format(time.time()-start))
+        print("----------------------------------------------------")
+    
 
