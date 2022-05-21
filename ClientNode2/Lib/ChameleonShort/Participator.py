@@ -8,7 +8,7 @@ class Participator:
         self.q = secp256k1.p # 曲線計算用的模數
         self.order = 115792089237316195423570985008687907852837564279074904382605163141518161494337 # order number
         # Key pair
-        self.kn = int(getrandbits(64))
+        self.kn = int(getrandbits(512))
         self.Kn = self.P*self.kn
 
         self.sk = -1

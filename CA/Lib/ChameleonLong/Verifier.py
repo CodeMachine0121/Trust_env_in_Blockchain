@@ -16,8 +16,8 @@ class Verifier:
         self.order = 115792089237316195423570985008687907852837564279074904382605163141518161494337 
 
         # secret values
-        self.k = int(getrandbits(2048))
-        self.kn = int(getrandbits(2048)) 
+        self.k = int(getrandbits(512))
+        self.kn = int(getrandbits(512)) 
 
         # public value (向量點乘)
         self.Kn = self.kn * self.P

@@ -75,11 +75,21 @@ while True:
             print("[!] 輸入錯誤: {}".format(repr(e)))
             continue
     elif command == "performance":
-        from_addr = w3.toChecksumAddress(input("\t[-] Sender's Address: "))
+        times = int(input("\t[-] 次數: "))
         to_addr = w3.toChecksumAddress(input("\t[-] Receiver's Address: "))
-        balance = w3.toWei(int(input("\t[-] Balance: ")), 'ether')
+        balance = int(w3.toWei(float(input("\t[-] Balance: ")), 'ether'))
         
-        client.PerformanceTesting(from_addr, to_addr, balance)
+        start = time.time()
+        client.PerformanceTesting(times, to_addr, balance)
+        print("--------------------------------------------------------------")
+        print("共耗時: {} sec".format(time.time()-start))
+    elif command == "normalTransaction":
+        times = int(input("\t[-] 次數: "))
+        to_addr = w3.toChecksumAddress(input("\t[-] Receiver's Address: "))
+        balance = int(w3.toWei(float(input("\t[-] Balance: ")), 'ether'))
+        client.TransactionTesting(times, to_addr, balance)
+    elif command == "withdrawTesting":
+        client.withdrawTesting()
     elif command == "quit":
         client.quit_current_AG()
 #client.quit_current_AG()

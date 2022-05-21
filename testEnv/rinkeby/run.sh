@@ -1,0 +1,1 @@
+geth --rinkeby --datadir ./ --unlock c512bd4facdf03c5336f70c29d81ec4fb19522bc --port 8887 --mine --http --http.api eth,net,web3,miner,admin --http.addr 0.0.0.0 --http.corsdomain "*" --http.port 8886 --allow-insecure-unlock console

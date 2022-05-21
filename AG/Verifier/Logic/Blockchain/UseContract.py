@@ -1,7 +1,9 @@
 from web3 import Web3
+#from web3.middleware import geth_poa_middleware
 import requests
 import json
 import os
+
 
 def getServerAddress():
 # 設定 Blockchain Node server
@@ -46,12 +48,16 @@ class RecordContract:
         self.CAHost, self.blockchain_address = getServerAddress()
         self.web3 = Web3(Web3.HTTPProvider(self.blockchain_address))
         
+        #self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+        
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3))
-        self.address = self.acct.address
+        self.address = self.web3.toChecksumAddress(self.acct.address)
         
         self.Domain = "127.0.0.1:8888"
+        self.contractAddress = ""
+        self.contractABI = ""
         self.contract= self.setContract(self.Domain,Knx,Kny)
-        
+         
         
         self.nonce = self.web3.eth.getTransactionCount(self.address)
 
@@ -75,11 +81,11 @@ class RecordContract:
         # 註冊RecordContract 並索取合約資訊
         res =requests.post(API, data=JData)
         JData = json.loads(res.text)
-        abi = JData['abi']
-        address = JData['address']
+        self.contractABI = JData['abi']
+        self.contractAddress = JData['address']
         
 
-        return self.web3.eth.contract(address = address, abi=abi)
+        return self.web3.eth.contract(address = self.contractAddress, abi=self.contractABI)
     
 
     
@@ -92,7 +98,8 @@ class RecordContract:
                 'from':self.address,
                 #'gasPrice': self.web3.eth.gasPrice,
                 'nonce': self.nonce
-                })
+            })
+            
             self.web3.eth.wait_for_transaction_receipt(txn)
             self.nonce+=1
             return True
@@ -102,7 +109,8 @@ class RecordContract:
 
     def findAGviaAddress(self, cli_address):
         # 透過client address 搜尋  AG位址
-        agAddr = self.contract.functions.findAGviaAddress(cli_address).call()
+        contract = self.web3.eth.contract(abi=self.contractABI, address=self.contractAddress)
+        agAddr = contract.functions.findAGviaAddress(cli_address).call()
         if int(agAddr,16) == 0:
             print("[!] [{}] have no AG, please try again.".format(cli_address))
             return 0
@@ -159,7 +167,8 @@ class TransactionContract:
         self.TCList = dict()
         return 
     
-    
+
+
     def setBalanceRecord(self, cliAddr):
         # Client 註冊時啟動
         self.balanceRecord[cliAddr] = dict()
@@ -189,9 +198,8 @@ class TransactionContract:
             'gas':200000,
             'gasPrice': self.web3.eth.gasPrice,
         }
-        privateKey = getKey(self.web3)
-        signed_tx = self.web3.eth.account.sign_transaction(txn, privateKey)
-        tx_hash = self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
+        signed_tx = self.acct.sign_transaction(txn)
+        tx_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
         print("[+] Create <signatureTransaction> Transaction txn: ", tx_hash.hex())
         
         if status == 0:
@@ -210,16 +218,15 @@ class TransactionContract:
             return False
 
         print("[+] Create new Transaction to Tcontract:")
-        print("\t[-] Sender: {}".format(fromAddr))
-        print("\t[-] Receiver: {}".format(toAddr))
-        print("\t[-] Balance: {}".format(balance))
-        print("\t[-] Signature: {}".format(r))
+        print("\t[-] Sender: {}/{}".format(fromAddr, type(fromAddr)))
+        print("\t[-] Receiver: {}/{}".format(toAddr, type(toAddr)))
+        print("\t[-] Balance: {}/{}".format(balance, type(balance)))
+        print("\t[-] Signature: {}/{}".format(r, type(r)))
        
         self.balanceRecord[fromAddr][toAddr] = Transaction(balance) # 初始化交易物件
 
         contract = self.web3.eth.contract(abi=self.contractABI, address = self.contractAddress)
         txn = contract.functions.createTransaction(fromAddr, toAddr, toAG, balance, r).transact({
-
             'from':self.address,
             'nonce':nonce,
             'value': balance,
@@ -257,7 +264,7 @@ class TransactionContract:
         txn = contract.functions.makePayment(fromAddr, toAddr, toAG, balance, r).transact({
             'from':self.address,
             'nonce': nonce
-            })
+        })
         print("[+] Create <Payment> Transaction txn ", txn.hex())
         
         return txn, hex(r)

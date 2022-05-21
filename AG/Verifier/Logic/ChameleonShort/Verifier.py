@@ -16,11 +16,11 @@ class Verifier:
         # Order number
         self.order = 115792089237316195423570985008687907852837564279074904382605163141518161494337
 
-        self.x = int(getrandbits(2048))
+        self.x = int(getrandbits(512))
         self.xP = self.P*self.x
 
         # secret values      
-        self.kn = int(getrandbits(2048)) 
+        self.kn = int(getrandbits(512)) 
         # public value (向量點乘)
         self.Kn = self.kn * self.P
         

@@ -1,4 +1,5 @@
 from web3 import Web3, middleware
+#from web3.middleware import geth_poa_middleware
 from web3.gas_strategies.time_based import medium_gas_price_strategy
 import json
 import os
@@ -30,6 +31,9 @@ class RecordContract:
     def __init__(self):
         self.blockchain_address = getChainNodeAddress()
         self.web3 = Web3(Web3.HTTPProvider(self.blockchain_address))
+        
+        #self.web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3)) 
         # 紀錄交易次數
         self.nonce = self.web3.eth.getTransactionCount(self.acct.address)
@@ -46,11 +50,24 @@ class RecordContract:
             self.contractAddress = self.web3.toChecksumAddress(input("RC Address: "))
             self.abi = self.getContract_data()["abi"]
             requestAN(self.acct.address)
+        elif status==2 :
+            self.contractAddress = self.web3.toChecksumAddress(input("RC Address: "))
+            self.abi = self.getContract_data()["abi"]
+
+
 
         self.contract = self.web3.eth.contract(abi=self.abi,address=self.contractAddress)
         
     def registerAN(self, anAddress, ):
-        txn = self.contract.functions.registerAN(anAddress).transact({"from":self.acct.address, "nonce":self.nonce})
+        txn = self.contract.functions.registerAN(anAddress).buildTransaction()
+
+        txn.update({"from":self.acct.address})
+        txn.update({"nonce":self.nonce})
+
+        private_key = getKey(self.web3)
+        signed_tx = self.web3.eth.account.sign_transaction(txn, private_key)
+        txn_hash = self.web3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        
         self.nonce+=1
         return txn.hex()
 
@@ -72,27 +89,35 @@ class RecordContract:
                 abi=contract_json['abi'],
                 bytecode=contract_json['bytecode']
         )
+       
+        contractConstruct = contract_.constructor()
+
 
         txn_body = {
             'from': self.acct.address,
-            #'gas': 300000,
+            #'gas': contractConstruct.estimateGas(),
             'gasPrice': self.web3.eth.gasPrice,
             'nonce': self.nonce
-        }
+            }
         
         self.nonce += 1
-
-        construct_txn = contract_.constructor().buildTransaction(txn_body)
+        construct_txn = contractConstruct.buildTransaction(txn_body)
         signed = self.acct.signTransaction(construct_txn)
         tx_hash = self.web3.toHex(self.web3.keccak(signed.rawTransaction))
 
         # throw IndexError if balance is out of band
+        contractAddress = ""
         try:
             self.web3.eth.sendRawTransaction(signed.rawTransaction)
             print("[+] RecordContract txn: [{}]".format(tx_hash))
-            
-            tx_recipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
-            contractAddress = tx_recipt.contractAddress
+            while True:
+                try:
+                    tx_recipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
+                    contractAddress = tx_recipt.contractAddress
+                    break
+                except:
+                    continue
+
             print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
             print("[+] RecordContract address: [{}]".format(contractAddress))
             return contractAddress, contract_json['abi']
@@ -105,11 +130,12 @@ class RecordContract:
 
 
     def registerAG(self, agAddress, domain, Knx, Kny):
-        self.contract.functions.registerAG(agAddress, domain, Knx, Kny).transact({'from':self.acct.address, 'nonce':self.nonce})
-        
+        txn = self.contract.functions.registerAG(agAddress, domain, Knx, Kny).transact({'from':self.acct.address, 'nonce':self.nonce})
+        print("[+] AG Register: {}".format(txn.hex()))
         self.nonce+=1
         return 
     
+        
 
 class TransactionContract:  
     def __init__(self):
@@ -122,7 +148,8 @@ class TransactionContract:
  #       self.web3.eth.set_gas_price_strategy(medium_gas_price_strategy)
         self.web3.eth.set_gas_price_strategy(medium_gas_price_strategy)
 
-        self.web3.middleware_onion.add(middleware.time_based_cache_middleware) 
+        #self.web3.middleware_onion.add(middleware.time_based_cache_middleware) 
+
         self.acct = self.web3.eth.account.privateKeyToAccount(getKey(self.web3))
         self.contractList = dict()
         return 
@@ -153,7 +180,7 @@ class TransactionContract:
             contractConstruct = self.web3.eth.contract(
                 abi=abi,
                 bytecode=str(bytecode)
-            ).constructor(self.web3.eth.coinbase, fromAG)
+            ).constructor(self.acct.address, fromAG)
             
 
             txn_body = {
@@ -161,21 +188,35 @@ class TransactionContract:
                 'gas': contractConstruct.estimateGas(),
                 'gasPrice': self.web3.eth.gasPrice,
                 'nonce': nonce}
-            result = contractConstruct.transact(txn_body)
-            tx_receipt = self.web3.eth.wait_for_transaction_receipt(result)
-
+            construct_txn = contractConstruct.buildTransaction(txn_body)
+            signed_tx = self.acct.signTransaction(construct_txn)
+            txn_hash = self.web3.toHex(self.web3.keccak(signed_tx.rawTransaction))
+            #result = contractConstruct.transact(txn_body)
+            print("Transaction Contract Hash: [{}]".format(txn_hash))
+            
+            self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
+            contractAddress = ""
+            while True:
+                try: 
+                    tx_receipt = self.web3.eth.wait_for_transaction_receipt(txn_hash)
+                    contractAddress = self.web3.toChecksumAddress(tx_receipt.contractAddress)
+                    break
+                except:
+                    continue
+            
             # store the contract information
             self.contractList[fromAG]=dict()
             self.contractList[fromAG]["abi"] = abi
-            self.contractList[fromAG]["address"] = tx_receipt.contractAddress
+            self.contractList[fromAG]["address"] = contractAddress
 
-            contractAddress = tx_receipt.contractAddress
             print("[+] contract address: [{}]".format(contractAddress))
-            print("[+] Deploy contract test: ")
             contract = self.web3.eth.contract(address=contractAddress, abi=abi)
-            print("\t[-] CA: [{}]".format(contract.functions.getCA().call()))
-            print("\t[-] Owner: [{}]".format(contract.functions.getOwner().call()))
+            print("\t[-] CA: [{}]".format(contract.functions.getCA()().call()))
+            print("\t[-] Owner: [{}]".format(contract.functions.getOwner()().call()))
             
+            #print("\t[-] CA: [{}]".format(contract.functions.getCA().transact()))
+            #print("\t[-] Owner: [{}]".format(contract.functions.getOwner().transact()))
+
             return contractAddress , abi
 
         except IndexError as e:

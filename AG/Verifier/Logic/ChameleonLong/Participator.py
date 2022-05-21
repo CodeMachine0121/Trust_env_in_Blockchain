@@ -18,7 +18,7 @@ class Participator:
         # secret values
         #self.k = int(getrandbits(2048))
         self.k = k
-        self.kn = int(getrandbits(2048)) 
+        self.kn = int(getrandbits(512)) 
 
         # public value (向量點乘)
         self.Kn = self.kn * self.P

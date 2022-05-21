@@ -431,11 +431,10 @@ class Client:
         func_obj, func_params = contract.decode_function_input(contractInput)
         
         if func_params["_sender"] != data["from_address"] or func_params["_receiver"] != self.address or func_params["balance"] != data["balance"]:
-            print("[!]  Comparation Error!")
-            print("\t[-] [Sender] {} : {}".format(func_params["_sender"] , data["from_address"]))
-            print("\t[-] [Receiver] {} : {}".format(func_params["_receiver"] , self.address))
-            print("\t[-] [Balance] {} : {}".format(func_params["balance"] , data["balance"]))
-            print("\t [-] Transaction Data is wrong")
+            print("\t[-] {} : {}".format(func_params["_sender"] , data["from_address"]))
+            print("\t[-] {} : {}".format(func_params["_receiver"] , self.address))
+            print("\t[-] {} : {}".format(func_params["balance"] , data["balance"]))
+            print("[!] Transaction Data is wrong")
             return False
         else:
             print("\t[-] Contract Args Verify: Pass")

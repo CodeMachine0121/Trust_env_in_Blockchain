@@ -76,11 +76,16 @@ def short_Receiver_Actions(data):
     # cipher will present as hex string
     print("[+] Decryptign message")
     msg = rsa.DecryptFunc(data.get('msg'))
+    data['from_address'] = rsa.DecryptFunc(data.get("from_address"))
+    data['to_address'] = rsa.DecryptFunc(data.get('to_address'))
+    data['balance'] = rsa.DecryptFunc(data.get('balance'))
+
     print("[+] Get message: {}".format(msg))
     r_plum = data.get('r')
     Knx = data.get("Knx")
     Kny = data.get("Kny")
     
+
     # rsa public key
     cliPublic = data.get('RSA_publicKey')
     address = data.get('chainAddress')
@@ -88,7 +93,7 @@ def short_Receiver_Actions(data):
 
     print("[+] Initialize Result: {}".format(result))
 
-    return result    
+    return result, data    
 
 ## 查詢使用者是否在此AG管轄範圍
 def find_Client_available(request): 
@@ -102,7 +107,8 @@ def find_Client_available(request):
 ## 使用者要求離開AG管轄範圍
 def quit_this_AG(request):
     data = json.loads(request.body.decode('utf-8'))
-    if not short_Receiver_Actions(data):
+    result = sver.Verifying(rsa.DecryptFunc(data["msg"]), data["r"], data["Knx"], data["Kny"], data["chainAddress"])
+    if not result:
         return HttpResponse('Authentication Failed', status=401)
     # 字典內刪除該項目
     print("[+] Deleting account: [{}]".format(data.get("chainAddress")))
@@ -115,7 +121,8 @@ def quit_this_AG(request):
 ## 遞送交易訊息
 def createTransaction(request):
     data = json.loads(request.body.decode('utf-8'))
-    if not short_Receiver_Actions(data):
+    result, data = short_Receiver_Actions(data)
+    if not result:
         return HttpResponse("Authentication Failed", status=401)
 
     # show ip of requesters
@@ -130,7 +137,7 @@ def createTransaction(request):
     # get transaction data
     from_addr = RContract.web3.toChecksumAddress(data["from_address"])
     to_addr =  RContract.web3.toChecksumAddress(data["to_address"])
-    balance = data["balance"]
+    balance = int(data["balance"])
 
     # AG對交易訊息簽章
     #seed = int(getrandbits(256)) # 在未來可以加入隨機種子
@@ -161,8 +168,8 @@ def createTransaction(request):
 def makePayment(request):
     # client透過兩個簽章作為本次扣款的收據
 
-    data = json.loads(request.body.decode('utf-8'))
-    if not short_Receiver_Actions(data):
+    result, data = short_Receiver_Actions(json.loads(request.body.decode('utf-8')))
+    if not result:
         return HttpResponse("Authentication Failed", status=401)
 
     # show ip of requesters
