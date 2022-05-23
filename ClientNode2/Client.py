@@ -198,9 +198,13 @@ class Client:
         self.nonce+=1
 
         data["txnHash"] = str(tx_hash)
-
+        
         res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
         
+        if "please try again" in res.text:
+            print("[!] Recevier has not register AG")
+            return ""
+
         txn = json.loads(res.text)["txn"]
         txnCH = json.loads(res.text)["txnCH"]
         contractAddr = json.loads(res.text)["contractAddr"]
