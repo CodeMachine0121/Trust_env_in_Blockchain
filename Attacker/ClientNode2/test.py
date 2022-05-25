@@ -6,7 +6,7 @@ import time
 w3 = Web3()
 
 
-client = Client('http://0.0.0.0:8888')
+client = Client('http://0.0.0.0:9000')
 #client.RegisterAG()
 
 #client.ask_for_Client_available(client.address)
@@ -90,8 +90,6 @@ while True:
         client.TransactionTesting(times, to_addr, balance)
     elif command == "withdrawTesting":
         client.withdrawTesting()
-    elif command == "refresh":
-        client.refreshSessionKey()
     elif command == "quit":
         client.quit_current_AG()
 #client.quit_current_AG()

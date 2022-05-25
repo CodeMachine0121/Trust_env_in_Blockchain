@@ -90,6 +90,8 @@ while True:
         client.TransactionTesting(times, to_addr, balance)
     elif command == "withdrawTesting":
         client.withdrawTesting()
+    elif command == "refresh":
+        client.refreshSessionKey()
     elif command == "quit":
         client.quit_current_AG()
 #client.quit_current_AG()

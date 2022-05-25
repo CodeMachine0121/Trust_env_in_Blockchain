@@ -2,6 +2,7 @@ from ecc.curve import Point
 from ecc.curve import secp256k1 as S256
 from Crypto.Hash import HMAC, SHA256
 from Crypto.Random.random import getrandbits
+import time
 
 
 class Verifier:
@@ -30,9 +31,9 @@ class Verifier:
     
     def start_SessionKey(self):
         return int(self.xP.x), int(self.xP.y)
+    
     def set_SessionKey(self, zpx, zpy, Cli_PubX, chain_Address):
         print("[+] client: {} Registering".format(chain_Address))
-
         zP = Point(zpx, zpy, curve=S256)
         sk = int((zP*self.x).x)
         
@@ -46,7 +47,7 @@ class Verifier:
             "cliPub": Cli_PubX,
             "sk": sk,
             "Chash": Chash,
-            "times": 10
+            "times": time.time()
         }
         
         return 

@@ -7,6 +7,7 @@ import requests
 
 
 from .Logic.ChameleonShort.Verifier import Verifier
+from .Logic.ChameleonShort import SessionKeyManagement as SKM
 from .Logic.RSA.rsa import RSA_Library
 from .Logic.longMiddleware import longMiddleware
 from .Logic.Blockchain.UseContract import RecordContract
@@ -35,7 +36,27 @@ def get_shortTerm_SystemParameters(request):
         "Kny": int(sver.Kn.y),
         "RSA_PublicKey": rsa.OutputPublic(),
         "Address": TContract.address}), content_type='application/json')
+# 更新 Session key
+def updateSessionKey(request):
+    data = json.loads(request.body.decode('utf-8'))
+    zpX = data["zpX"]
+    zpY = data["zpY"]
+    address = data["address"]
+    cli_PubX = data["cliPub"]
 
+    if address not in sver.sessionKeys.keys():
+        print("[!] Address has not registered yet")
+        return HttpResponse(json.dumps(
+            {"result": "Address has not registed yet"}), status=401, content_type='application/json')
+    
+    client = sver.sessionKeys[address]
+    SKM.emptySessionKey(client)
+    
+    sver.set_SessionKey(zpX, zpY, cli_PubX, address)  # 這邊就會初始化變色龍雜湊
+    result = RContract.registerClient(address, sver.sessionKeys[address]["Chash"])
+    
+    xpX, xpY = sver.start_SessionKey()
+    return HttpResponse(json.dumps({"xpX":xpX,"xpY":xpY}))
 
 # Session key 交換 採用 ECDH
 def sessionKey_exchange(request):
@@ -55,7 +76,7 @@ def sessionKey_exchange(request):
     # Client 已經註冊過了
     if address in sver.sessionKeys.keys():
         print("[!] Address has already registered")
-        return HttpResponse(json.dumps({"xPx":-1, "xPY":-1, 'address': TContract.address}), content_type='application/json')
+        return HttpResponse(json.dumps({"result":"Already registered"}), content_type='application/json')
 
 
     print("[+] New session key exchanging: {}".format(address))
@@ -74,6 +95,13 @@ def sessionKey_exchange(request):
 def short_Receiver_Actions(data):
     # use rsa algorithm to en/decrypt message
     # cipher will present as hex string
+    ## 在這裡檢測sessionKey 是否過期
+    result = SKM.ifSessionKey_outDate(sver.sessionKeys[data['chainAddress']]['times'])
+    if result:
+        print("[!] Client's Session Key is Out of Date !!")
+        return False, "SessionKey is Out of Date!"
+    
+
     print("[+] Decryptign message")
     msg = rsa.DecryptFunc(data.get('msg'))
     data['from_address'] = rsa.DecryptFunc(data.get("from_address"))
@@ -123,7 +151,7 @@ def createTransaction(request):
     data = json.loads(request.body.decode('utf-8'))
     result, data = short_Receiver_Actions(data)
     if not result:
-        return HttpResponse("Authentication Failed", status=401)
+        return HttpResponse(json.dumps({"result":data}), status=401)
 
     # show ip of requesters
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -170,7 +198,7 @@ def makePayment(request):
 
     result, data = short_Receiver_Actions(json.loads(request.body.decode('utf-8')))
     if not result:
-        return HttpResponse("Authentication Failed", status=401)
+        return HttpResponse(json.dumps({"result":data}), status=401)
 
     # show ip of requesters
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -212,8 +240,6 @@ def makePayment(request):
     return HttpResponse(json.dumps({"txn":txn.hex(), "txnCH":txnCH.hex(), "contractAddr": TContract.contractAddress , "paymentSign": paymentSign, "Address":RContract.address}), status=200)
 
 
-
-
     
 def getContractBalance(request):
     # show ip of requesters
@@ -237,36 +263,6 @@ def getContractBalance(request):
     
     return  HttpResponse(data, content_type='application/json', status=200)
  
-
-# 取得發送發AG的TC資訊
-def setSenderAG_Contract(request):
-    data = json.loads(request.body.decode('utf-8'))
-    if not short_Receiver_Actions(data):
-        return HttpResponse("Authentication Failed", status=401)
-    # 發送方的address 
-    from_address = data["from_address"]
-    try:
-        # 找尋這個Client的AG
-        agAddress = RContract.findAGviaAddress(from_address)
-        TContract.setSenderAG_Contract(agAddress)
-        return HttpResponse(json.dumps({"agAddress":agAddress}), status=200)
-    except Exception as e:
-        print("[!] getSenderAG_Contract occured problem: [{}]".format(repr(e)))
-        return HttpResponse(False, status=401)
-
-# 取得合約
-def getTContract(request):
-    print("[+] Asking for TC address")
-    data = json.loads(request.body.decode('utf-8'))
-    if not short_Receiver_Actions(data):
-        return HttpResponse(False, content_type='application/json')
-
-    fromAG = data["fromAG"]
-    print("\t[-] TC: {}".format(fromAG))
-    data = json.dumps({
-        "tcAddress": TContract.TCList[fromAG]
-    })
-    return HttpResponse(data, content_type='application/json', status=200)
 
 # 取得任一AG的公鑰
 def getPubKeyFromRContract(request):
@@ -297,35 +293,5 @@ def getChameleonHash(request):
     print("\t[-] ", data)
     return HttpResponse(data, content_type='application/json', status=200)
 
-
-# 取得交易歷史紀錄(自己的)
-def getTransactionHistory(request):
-    print("[+] Getting Transaction History")
-    data = json.loads(request.body.decode("utf-8"))
-    fromAddr = data["fromAddr"]
-    toAddr = data["toAdd"]
-    return HttpResponse(TContract.getTransactionHistory(fromAddr, toAddr), content_type='application/json', status=200)
-
-def getTransactionHistory_Others(request):
-    print("[+] Getting Transaction From other AG")
-    data = json.loads(request.body.decode("utf-8"))
-    fromAddr = data["fromAddr"]
-    toAddr = data["toAddr"]
-    fromAG = data["fromAG"]
-
-    # 取得Domain
-    print("\t[-] Get Domain of [{}]".format(fromAG))
-    domain = RContract.getDomain(fromAG)
-
-    # 取得該AG的交易紀錄
-    if domain != RContract.Domain:
-        uri = "http://{}/AG/TransactionHistory/".format(domain)
-        res = requests.post(uri, data=json.dumps({
-            "fromAddr":fromAddr,
-            "toAddr":toAddr}
-        )).text
-    else:
-        res = TContract.getTransactionHistory(fromAddr, toAddr)
-    return HttpResponse(res, content_type='application/json', status=200)
 
 

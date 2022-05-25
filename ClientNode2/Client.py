@@ -91,8 +91,9 @@ class Client:
     ##Session key Exchange
         ### 計算 zP
         z = int(getrandbits(128))
-        zpX = (self.part.P*z).x
-        zpY = (self.part.P*z).y
+        zp = self.part.P*z
+        zpX = zp.x
+        zpY = zp.y
 
         res = requests.post('{}/AG/SessionKey/'.format(self.server),
                             data=json.dumps({
@@ -101,13 +102,32 @@ class Client:
                                 'KnX': int(self.part.Kn.x),
                                 'address': self.address
                             }))
-
+        if "result" in dict(json.loads(res.text)):
+            print("[!] {}".format(json.loads(res.text)["result"]))
+            return 
         xpX = json.loads(res.text).get('xPX')
         xpY = json.loads(res.text).get('xPY')
 
         self.agAddr = json.loads(res.text).get("address")
 
         ### 計算sk
+        self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
+        return 
+
+    def refreshSessionKey(self):
+        z = int(getrandbits(128))
+        zp = self.part.P*z
+        zpX = zp.x
+        zpY = zp.y
+        res = requests.post("{}/AG/updateSessionKey/".format(self.server), 
+                data=json.dumps({"zpX":zpX, "zpY":zpY, "address": self.address, "cliPub":self.part.Kn.x}))
+        if 'result' in dict(json.loads(res.text)).keys():
+            print("[!] {}".format(json.loads(res.text)['result']))
+            return 
+
+        xpX = json.loads(res.text).get("xpX")
+        xpY = json.loads(res.text).get("xpY")
+        ## 重新計算sk
         self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
         return 
 
@@ -178,12 +198,19 @@ class Client:
             return 
         print("\t[-] AG: [{}]".format(self.agAddr))
         data = self.beforeAction(from_address, to_address, balance)
-        #data = self.beforeAction(str(from_address)+str(to_address)+str(balance))
-        #data["from_address"] = from_address
-        #data["to_address"] = to_address
-        #data["balance"] = balance
         
+                
+        res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
+        if "result" in dict(json.loads(res.text)).keys():
+            print("[!] {}".format(json.loads(res.text)["result"]))
+            return ""
+
+        if "please try again" in res.text:
+            print("[!] Recevier has not register AG")
+            return ""
+
         # 這邊需要先轉錢給AG
+###################################################################################################        
         tx = {
             "chainId": 602602,
             "nonce": self.nonce,
@@ -196,14 +223,9 @@ class Client:
         signed_tx = self.w3.eth.account.sign_transaction(tx, getPrivateKey(self.w3))
         tx_hash = self.w3.eth.sendRawTransaction(signed_tx.rawTransaction)
         self.nonce+=1
-
         data["txnHash"] = str(tx_hash)
-        
-        res = requests.post("{}/AG/askTransactions/".format(self.server), data = json.dumps(data))
-        
-        if "please try again" in res.text:
-            print("[!] Recevier has not register AG")
-            return ""
+####################################################################################################
+
 
         txn = json.loads(res.text)["txn"]
         txnCH = json.loads(res.text)["txnCH"]
@@ -241,6 +263,15 @@ class Client:
         #data["balance"] = balance
 
         res = requests.post("{}/AG/payment/".format(self.server), data = json.dumps(data))
+        if "result" in dict(json.loads(res.text)).keys():
+            print("[!] {}".format(json.loads(res.text)["result"]))
+            return ""
+
+        if "please try again" in res.text:
+            print("[!] Recevier has not register AG")
+            return ""
+
+
         txn = json.loads(res.text)["txn"]
         txnCH = json.loads(res.text)["txnCH"]
         contractAddr = json.loads(res.text)["contractAddr"]
@@ -316,9 +347,6 @@ class Client:
         fromAG = json.loads(res.text)["agAddress"]
         print("[+] Get fromAG: [{}]".format(fromAG)) 
         return fromAG
-
-
-
 
 
 
@@ -455,18 +483,20 @@ class Client:
         ## 從智能合約中領錢
         
         ### 要取得AG對於該筆payment的交易簽章
-        a1,a2 = contract.functions.test(data["from_address"], self.address).call()
-        print("[Debug]: ", a1, "\n[Debug]: ", a2)
-        print("[Debug]: ", self.w3.eth.coinbase)
+        try:
+            a1,a2 = contract.functions.test(data["from_address"], self.address).call()
+            print("[Debug]: ", a1, "\n[Debug]: ", a2)
+            print("[Debug]: ", self.w3.eth.coinbase)
         
         
-        txn = contract.functions.withdraw(self.w3.toChecksumAddress(data["from_address"]), self.address, int(data["paymentSign"],16)).transact({
+            txn = contract.functions.withdraw(self.w3.toChecksumAddress(data["from_address"]), self.address, int(data["paymentSign"],16)).transact({
                 "nonce": self.nonce,
                 "from": self.address,
                 'gasPrice': self.w3.eth.gasPrice,
-        })
-        self.nonce+=1 
-        
+            })
+            self.nonce+=1 
+        except Exception as e:
+            print("[!] {}".format(repr(e)))
         return result
     
 
@@ -527,7 +557,7 @@ class Client:
         print("----------------------------------------------")
 
 
-
+    ## 效能測試 - 取款交易
     def withdrawTesting(self):
         jdata = []
         fileName = os.listdir('./txns')
@@ -556,5 +586,5 @@ class Client:
             print("\t[-] {}: {}".format(counter, t))
             counter+=10
 
-
+    
 

@@ -21,6 +21,7 @@ from . import views
 urlpatterns = [
     path("Parameters/", views.get_shortTerm_SystemParameters),
     path("SessionKey/", views.sessionKey_exchange),
+    path("updateSessionKey/", views.updateSessionKey),
     path("clientAvailability/", views.find_Client_available),
     path("quit_AG/", views.quit_this_AG),
     #path("shortReceive/", views.short_Receiver_Actions),
@@ -28,10 +29,6 @@ urlpatterns = [
 
     path("payment/", views.makePayment),
     path("getContractBalance/", views.getContractBalance),
-    path("setSenderAGContract/", views.setSenderAG_Contract),
-    path("getTContract/", views.getTContract),
     path("getPublicKey/", views.getPubKeyFromRContract),
     path("getChameleonHash/", views.getChameleonHash),
-    path("getTransactionHistory", views.getTransactionHistory),
-    path("getTransactionHistory_Others", views.getTransactionHistory_Others),
 ]
