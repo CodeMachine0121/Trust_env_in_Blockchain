@@ -180,7 +180,7 @@ def createTransaction(request):
         return HttpResponse("Receiver AG is not ready, please try again", status=401)
 
     try:
-        txn = TContract.createTransaction(from_addr, to_addr, toAG, balance, r, data["txnHash"] , RContract.nonce)
+        txn = TContract.createTransaction(from_addr, to_addr, toAG, balance, r, RContract.nonce)
         r = sver.Signing(txn.hex(), from_addr)
         RContract.nonce +=1 ## 不能直接加2 後面交易會出錯
         txnCH = TContract.doAfterTransaction(to_addr,r,RContract.nonce,0)

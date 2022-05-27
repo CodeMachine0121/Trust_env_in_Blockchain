@@ -208,7 +208,7 @@ class TransactionContract:
         return tx_hash
       
 
-    def createTransaction(self, fromAddr, toAddr, toAG, balance, r, txnHash, nonce):
+    def createTransaction(self, fromAddr, toAddr, toAG, balance, r, nonce):
         # 開啟交易
         if self.contractABI==None or self.contractAddress==None:
             print( "[!] Contract is not available")

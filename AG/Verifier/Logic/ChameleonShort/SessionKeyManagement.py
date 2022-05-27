@@ -13,7 +13,7 @@ def ifSessionKeyEmpty(client):
         return False
 
 def ifSessionKey_outDate(startTime):
-    if time.time() - startTime > 10:
+    if time.time() - startTime > 3600:
         return True
     else:
         return False
