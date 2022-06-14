@@ -1,12 +1,13 @@
 from django.http import HttpResponse
 import json
-
-from Verifier.migrations.Logic.ChameleonShort.Verifier import Verifier
-from .migrations.Logic.ChameleonShort import SessionKeyManagement as SKM
-from Verifier.migrations.Logic.RSA.rsa import RSA_Library
-from Verifier.migrations.Logic.longMiddleware import longMiddleware
-from Verifier.migrations.Logic.Blockchain.UseContract import RecordContract
-from Verifier.migrations.Logic.Blockchain.UseContract import TransactionContract
+from .Logic.Authentication import OneTimePassword
+from .Logic.Authentication.OneTimePassword import optObject
+from .Logic.ChameleonShort.Verifier import Verifier
+from .Logic.ChameleonShort import SessionKeyManagement as SKM
+from .Logic.RSA.rsa import RSA_Library
+from .Logic.longMiddleware import longMiddleware
+from .Logic.Blockchain.UseContract import RecordContract
+from .Logic.Blockchain.UseContract import TransactionContract
 
 # 變色龍雜湊
 rsa = RSA_Library()
@@ -19,7 +20,7 @@ TContract = TransactionContract()
 
 ## 記錄使用者資訊: address為index
 userList = dict()
-
+optObj = optObject()
 
 # API Function
 ## Register_for_Clients
@@ -32,6 +33,10 @@ def get_shortTerm_SystemParameters(request):
         "Kny": int(sver.Kn.y),
         "RSA_PublicKey": rsa.OutputPublic(),
         "Address": TContract.address}), content_type='application/json')
+# 註冊請求
+def registerReqeust(reqeust):
+
+    return HttpResponse()
 # 更新 Session key
 def updateSessionKey(request):
     data = json.loads(request.body.decode('utf-8'))
@@ -59,11 +64,16 @@ def sessionKey_exchange(request):
     # 我覺得需要公鑰去記得誰的Session Key是哪一把
     # 接收另一半 zP.x zP.y
     # 回傳 x^{-1} * P
-    # 在此階段將Client紀錄在智能合約中 
-
+    # 在此階段將Client紀錄在智能合約中
     data = json.loads(request.body.decode("utf-8"))
-    xpX, xpY = sver.start_SessionKey()
 
+    # opt Authentication
+    if optObj.verify(data.get("otpAnswer")):
+        return HttpResponse(status=401)
+
+
+    # session Exchange
+    xpX, xpY = sver.start_SessionKey()
     zpX = data.get('zpX')
     zpY = data.get('zpY')
     KnX = data.get("KnX")
@@ -72,7 +82,7 @@ def sessionKey_exchange(request):
     # Client 已經註冊過了
     if address in sver.sessionKeys.keys():
         print("[!] Address has already registered")
-        return HttpResponse(json.dumps({"result":"Already registered"}), content_type='application/json')
+        return HttpResponse(json.dumps({"result": "Already registered"}), content_type='application/json')
 
 
 
@@ -84,12 +94,12 @@ def sessionKey_exchange(request):
     sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
 
     # 登記client資訊
-
     userData = {
         "Id": data.get("userData")["Id"],
         "Name": data.get("Name"),
         "liveAddress": data.get("liveAddress"),
         "Phone": data.get("phoneNumber"),
+        "Email": data.get("email"),
         "chainAddress": address
     }
     userList[address] = userData
