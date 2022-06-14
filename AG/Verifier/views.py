@@ -1,17 +1,12 @@
-from django.shortcuts import render
 from django.http import HttpResponse
-from Crypto.Random.random import getrandbits
 import json
-import sys
-import requests
 
-
-from .Logic.ChameleonShort.Verifier import Verifier
-from .Logic.ChameleonShort import SessionKeyManagement as SKM
-from .Logic.RSA.rsa import RSA_Library
-from .Logic.longMiddleware import longMiddleware
-from .Logic.Blockchain.UseContract import RecordContract
-from .Logic.Blockchain.UseContract import TransactionContract
+from Verifier.migrations.Logic.ChameleonShort.Verifier import Verifier
+from .migrations.Logic.ChameleonShort import SessionKeyManagement as SKM
+from Verifier.migrations.Logic.RSA.rsa import RSA_Library
+from Verifier.migrations.Logic.longMiddleware import longMiddleware
+from Verifier.migrations.Logic.Blockchain.UseContract import RecordContract
+from Verifier.migrations.Logic.Blockchain.UseContract import TransactionContract
 
 # 變色龍雜湊
 rsa = RSA_Library()
@@ -20,9 +15,10 @@ sver = Verifier(lpart.CA_k)
 
 ## Blockchain
 RContract = RecordContract(sver.Kn.x, sver.Kn.y)
-
 TContract = TransactionContract()
 
+## 記錄使用者資訊: address為index
+userList = dict()
 
 
 # API Function
@@ -72,11 +68,12 @@ def sessionKey_exchange(request):
     zpY = data.get('zpY')
     KnX = data.get("KnX")
     address = data.get("address")
-    
+
     # Client 已經註冊過了
     if address in sver.sessionKeys.keys():
         print("[!] Address has already registered")
         return HttpResponse(json.dumps({"result":"Already registered"}), content_type='application/json')
+
 
 
     print("[+] New session key exchanging: {}".format(address))
@@ -85,10 +82,21 @@ def sessionKey_exchange(request):
     # 向合約登記此client在他的管轄內
     TContract.setBalanceRecord(address)
     sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
+
+    # 登記client資訊
+
+    userData = {
+        "Id": data.get("userData")["Id"],
+        "Name": data.get("Name"),
+        "liveAddress": data.get("liveAddress"),
+        "Phone": data.get("phoneNumber"),
+        "chainAddress": address
+    }
+    userList[address] = userData
+
     result = RContract.registerClient(address, sver.sessionKeys[address]["Chash"])
-
-
-    return HttpResponse(json.dumps({"xPX": xpX, "xPY": xpY, "address":TContract.address}), content_type="application/json")
+    return HttpResponse(json.dumps({"xPX": xpX, "xPY": xpY, "address": TContract.address}),
+                        content_type="application/json")
 
 
 ## 執行 Client 的指令前要做的事情

@@ -1,4 +1,4 @@
-import Logic.ChameleonShort.SessionKeyManagement as SKM 
+import Verifier.migrations.Logic.ChameleonShort.SessionKeyManagement as SKM
 
 
 def test():
