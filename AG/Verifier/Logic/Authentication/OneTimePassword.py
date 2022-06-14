@@ -12,7 +12,7 @@ def new_OPTobject() -> Tuple[pyotp.TOTP, str]:
     return pyotp.TOTP(seed), seed
 
 
-class optObject:
+class otpObject:
     """
         透過 pyotp 產生 OTP，再透過Email轉寄至使用者email
     """

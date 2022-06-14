@@ -20,6 +20,9 @@ while True:
             liveAddress = str(input("\t[-] Living Address: "))
             Id = str(input("\t[-] ID Number: "))
             phoneNumber = str(input("\t[-] Phone Number: "))
+            email = str(input("\t[-] Email: "))
+            chainAddress = str(w3.toChecksumAddress(input("\t[-] Chain Address: ")))
+
         except:
             print("\t[!] 錯誤輸入")
             continue
@@ -28,6 +31,8 @@ while True:
             "Name": Name,
             "liveAddress": liveAddress,
             "phoneNumber": phoneNumber,
+            "email": email,
+            "chainAddress": chainAddress
         }
 
         client.RegisterAG(userData)

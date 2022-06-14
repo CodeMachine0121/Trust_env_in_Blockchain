@@ -86,8 +86,16 @@ class Client:
 
     ## 設定 Session Key
     def RegisterAG(self, userData):
+        ## One Time Password Authentication
+        res = requests.post("{}/AG/Register/".format(self.server),
+                            data=json.dumps(userData))
+        if res.status_code != 200:
+            print("[!] Something Error!")
+        print("[+] The OTP has already send to ur Email, please check it")
+        optAns = str(input("Ur OTP: "))
+
         ## Session key Exchange
-        ### 計算 zP
+        ## 計算 zP
         z = int(getrandbits(128))
         zp = self.part.P * z
         zpX = zp.x
@@ -95,6 +103,7 @@ class Client:
 
         res = requests.post('{}/AG/SessionKey/'.format(self.server),
                             data=json.dumps({
+                                'otpAnswer': optAns,
                                 'zpX': zpX,
                                 'zpY': zpY,
                                 'KnX': int(self.part.Kn.x),
