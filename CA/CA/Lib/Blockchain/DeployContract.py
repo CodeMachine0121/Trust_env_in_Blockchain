@@ -8,7 +8,7 @@ import requests
 
 def getKey(web3):
     # privatekey hard code problem
-    print("[!] ", os.listdir("."))
+
     path = "./keystore"
     for file in os.listdir(path):
         keystore_path = os.path.join(path, file)
@@ -20,6 +20,7 @@ def getKey(web3):
 
 
 def getChainNodeAddress():
+    print("[!] ", os.listdir("."))
     with open("./server.json") as file:
         JData = json.loads(file.read())
     return JData["nodeAddress"]
