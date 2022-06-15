@@ -52,7 +52,7 @@ def registerReqeust(request):
         'otp': otpObj
     }
     userList[data.get("chainAddress")] = userData
-    return HttpResponse()
+    return HttpResponse(status=200)
 
 
 # 更新 Session key

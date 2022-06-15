@@ -21,11 +21,12 @@ while True:
             Id = str(input("\t[-] ID Number: "))
             phoneNumber = str(input("\t[-] Phone Number: "))
             email = str(input("\t[-] Email: "))
-            chainAddress = str(w3.toChecksumAddress(input("\t[-] Chain Address: ")))
+            chainAddress = str(w3.toChecksumAddress(input("\t[-] Chain Address: ").replace(" ", "")))
 
-        except:
-            print("\t[!] 錯誤輸入")
+        except Exception as e:
+            print("\t[!] 錯誤輸入: {}".format(repr(e)))
             continue
+
         userData = {
             "Id": Id,
             "Name": Name,
