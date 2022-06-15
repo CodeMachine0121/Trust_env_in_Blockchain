@@ -8,8 +8,7 @@ import requests
 
 def getKey(web3):
     # privatekey hard code problem
-
-    path = "./keystore"
+    path = "./CA/Lib/Blockchain/keystore"
     for file in os.listdir(path):
         keystore_path = os.path.join(path, file)
 
@@ -20,8 +19,7 @@ def getKey(web3):
 
 
 def getChainNodeAddress():
-    print("[!] ", os.listdir("."))
-    with open("./server.json") as file:
+    with open("./CA/Lib/Blockchain/server.json") as file:
         JData = json.loads(file.read())
     return JData["nodeAddress"]
 
@@ -75,7 +73,7 @@ class RecordContract:
         return txn.hex()
 
     def getContract_data(self):
-        compiled_contract_path = '../Blockchain/build/contracts/RecordContract.json'
+        compiled_contract_path = './CA/Lib/Blockchain/build/contracts/RecordContract.json'
         with open(compiled_contract_path) as file:
             contract_json = json.loads(file.read())
         return contract_json
@@ -155,7 +153,7 @@ class TransactionContract:
         # 取得合約 abi, bytecode
 
     def getContractData(self):
-        with open("../Blockchain/build/contracts/TransferContract.json") as file:
+        with open("./CA/Lib/Blockchain/build/contracts/TransferContract.json") as file:
             Jdata = json.loads(file.read())
 
         abi = Jdata["abi"]
