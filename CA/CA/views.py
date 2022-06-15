@@ -9,9 +9,9 @@ CA's code
 
 """
 # 變色龍雜湊
-from ..Lib.ChameleonLong.Verifier import Verifier
-from ..Lib.RSA.rsa import RSA_Library
-from ..Lib.Blockchain.DeployContract import RecordContract, TransactionContract
+from .Lib.ChameleonLong.Verifier import Verifier
+from .Lib.RSA.rsa import RSA_Library
+from .Lib.Blockchain.DeployContract import RecordContract, TransactionContract
 
 ## 變色龍相關宣告
 ver = Verifier()
