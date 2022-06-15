@@ -9,9 +9,9 @@ CA's code
 """
 # 變色龍雜湊
 sys.path.append('..')
-from Lib.ChameleonLong.Verifier import Verifier
-from Lib.RSA.rsa import RSA_Library
-from Lib.Blockchain.DeployContract import RecordContract, TransactionContract
+from ..Lib.ChameleonLong.Verifier import Verifier
+from ..Lib.RSA.rsa import RSA_Library
+from ..Lib.Blockchain.DeployContract import RecordContract, TransactionContract
 
 ## 變色龍相關宣告
 ver = Verifier()
@@ -53,8 +53,8 @@ def getSystem_Parameters(request) :
 
 ## AG 申請註冊 要確認得到的k是否正確
 def AG_Register(request):
+    print("[+] AG Register Phase")
     # TK key 透過其他管道進行傳輸
-    print(request.body)
     upload = json.loads(request.body.decode("utf-8"))
     ## 請對於訊息進行加密
     msg = upload.get('msg')
@@ -64,6 +64,11 @@ def AG_Register(request):
 
     result = ver.Verifying(msg, signature, Knx, Kny)
 
+    print("\t[-] Verify Message: ", msg)
+    print("\t[-] AG's Public key x: ", Knx)
+    print("\t[-] AG's Public key y: ", Kny)
+    print("\t[-] Signature: ", signature)
+    print("\t[-] Verify Result: ", result)
     return HttpResponse(result)
 
 
