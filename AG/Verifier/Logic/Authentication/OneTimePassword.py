@@ -37,4 +37,7 @@ class otpObject:
 
     ## one-time-password
     def verify(self, ans: str) -> bool:
+        print("[+] OTP Verify Phase:  ")
+        print("\t[-] Ans: ", self.optObj.now())
+        print("\t[-] Received Ans: ", ans)
         return self.optObj.now() == ans
