@@ -40,7 +40,7 @@ def get_shortTerm_SystemParameters(request):
 def registerReqeust(request):
     data = json.loads(request.body.decode('utf-8'))
     otpObj = otpObject()
-    otpObj.sendEmail()
+    otpObj.sendEmail(data.get("email"))
     # 登記client資訊
     userData = {
         "Id": data.get("userData")["Id"],
@@ -89,7 +89,8 @@ def sessionKey_exchange(request):
 
     # opt Authentication
     if userList[address]["otp"].verify(data.get("otpAnswer")):
-        return HttpResponse(status=401)
+        return HttpResponse(json.dumps({"result": "Already registered"}),
+                            content_type="application/json", status=401)
 
     # session Exchange
     xpX, xpY = sver.start_SessionKey()
