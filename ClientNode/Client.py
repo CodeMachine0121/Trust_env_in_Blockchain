@@ -8,7 +8,6 @@ from Crypto.Random.random import getrandbits
 from Lib.RSA.rsa import RSA_Library
 from ecc.curve import Point, secp256k1
 import time
-from progress.bar import Bar
 
 
 def getPrivateKey(web3):
@@ -542,7 +541,6 @@ class Client:
             'nonce': self.w3.eth.getTransactionCount(self.address)
         }
         counter = 1
-        bar = Bar('Processing', max=times)
         for i in range(0, times):
 
             signed_tx = self.w3.eth.account.sign_transaction(txn, getPrivateKey(self.w3))

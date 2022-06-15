@@ -1,5 +1,5 @@
 {
-     "NodeServer": "http://0.0.0.0:8547",
+     "NodeServer": "http://0.0.0.0:8546",
      "CAHost": "http://0.0.0.0:8000/"
 
 }
