@@ -88,8 +88,8 @@ def sessionKey_exchange(request):
     address = data.get("address")
 
     # opt Authentication
-    if userList[address]["otp"].verify(data.get("otpAnswer")):
-        return HttpResponse(json.dumps({"result": "Already registered"}),
+    if not userList[address]["otp"].verify(data.get("otpAnswer")):
+        return HttpResponse(json.dumps({"result": "OPT Authentication Failed"}),
                             content_type="application/json", status=401)
 
     # session Exchange
