@@ -71,6 +71,15 @@ while True:
         client.payment(client.address, acc, amount)
         print("[+] 花費時間: {}".format(time.time() - start))
 
+    elif command == "payCheck":
+        print("[+] Receiver payment Phase")
+        try:
+            from_address = w3.toChecksumAddress(input("\t[-] Sender: "))
+            balance = int(input("\t[-] Balance: "))
+            client.receivePayment(from_address, balance)
+        except Exception as e:
+            print("\t[-] 輸入錯誤: {}".format(repr(e)))
+
     elif command == "withdraw":
         try:
             # txn, txnCH, contractAddr, data, senderPubX, senderPubY

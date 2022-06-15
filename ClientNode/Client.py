@@ -27,6 +27,7 @@ def getServerAddress():
 
 def getAddress():
     w3 = Web3()
+    path =""
     for file in os.listdir("./Lib/Blockchain/keystore"):
         path = os.path.join('./Lib/Blockchain/keystore', file)
 
@@ -65,6 +66,8 @@ class Client:
         self.abi = self.getABI()
         self.address = getAddress()
         self.nonce = self.w3.eth.getTransactionCount(self.address)
+
+        self.paymentRecord = dict() # 紀錄支付名單
         print("Public Key X: ", self.part.Kn.x)
         print("Public Key Y: ", self.part.Kn.y)
 
@@ -141,6 +144,7 @@ class Client:
         self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
         return
 
+    ## 開啟通道、支付時使用
     def beforeAction(self, from_address, to_address, balance):
         ### 簽章驗證
         msg = str(from_address) + str(to_address) + str(balance)
@@ -165,19 +169,7 @@ class Client:
 
         return data
 
-    #########################################################
-
-    def ask_for_Client_available(self, address):
-
-        data = self.beforeAction(str(address))
-        data["Target_address"] = address
-
-        res = requests.post("{}/AG/clientAvailability/".format(self.server), data=json.dumps(data))
-
-        print("[+] The result for the search: {}".format(res.text))
-
-        return
-
+    # 退出現在的AG
     def quit_current_AG(self):
         msg = str(self.address) + str(self.part.sk)
         en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
@@ -200,6 +192,7 @@ class Client:
 
         return
 
+    # 開啟交易通道
     def askTransaction(self, from_address, to_address, balance):
         print("[+] Sending transaction request to AG server")
         if self.agAddr == None:
@@ -261,6 +254,16 @@ class Client:
         print("[+] Verify Signature Txn: {}\n\t".format(result))
         return txnCH
 
+    # 接收芳於扣款時觸發
+    def receivePayment(self, from_address, balance):
+
+        if from_address in self.paymentRecord.keys():
+            self.paymentRecord[from_address] += balance
+        else:
+            self.paymentRecord[from_address] = balance
+        return
+
+    # 付款方支付
     def payment(self, from_address, to_address, balance):
         print("[+] Sending payment request to AG server")
         data = self.beforeAction(from_address, to_address, balance)
@@ -307,27 +310,6 @@ class Client:
 
         # print("[+] Verify Signature Txn: {}\n\t".format(result))
         return res.text
-
-    def getContractBalance(self, from_address, to_address):
-        print("[+] Getting Balance information:")
-        data = self.beforeAction(str(from_address) + str(to_address))
-        data["fromAddr"] = from_address
-        data["toAddr"] = to_address
-
-        res = requests.post("{}/AG/getContractBalance/".format(self.server), data=json.dumps(data))
-        res = json.loads(res.text)
-
-        contractAmount = res["contractAmount"]
-        agAmount = res["agAmount"]
-
-        print("\t[+] on Contract")
-        print("\t\t[-] Total Amount: {}".format(contractAmount[0]))
-        print("\t\t[-] Current Amount: {}".format(contractAmount[1]))
-        print("\t[+] on AG")
-        print("\t\t[-]Total Amount: {}".format(agAmount[0]))
-        print("\t\t[-]Current Amount: {}".format(agAmount[1]))
-
-        return
 
     # 向AG設置發送方的TC位址
     def setTransactionContract(self, from_address):
@@ -466,8 +448,8 @@ class Client:
         contractInput = self.w3.eth.getTransaction(txn)["input"]
         func_obj, func_params = contract.decode_function_input(contractInput)
 
-        if func_params["_sender"] != data["from_address"] or func_params["_receiver"] != self.address or func_params[
-            "balance"] != data["balance"]:
+        if func_params["_sender"] != data["from_address"] or func_params["_receiver"] != self.address or\
+                func_params["balance"] != data["balance"]:
             print("[!]  Comparation Error!")
             print("\t[-] [Sender] {} : {}".format(func_params["_sender"], data["from_address"]))
             print("\t[-] [Receiver] {} : {}".format(func_params["_receiver"], self.address))
