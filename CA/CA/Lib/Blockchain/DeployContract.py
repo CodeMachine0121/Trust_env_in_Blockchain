@@ -8,6 +8,7 @@ import requests
 
 def getKey(web3):
     # privatekey hard code problem
+    print("[!] ", os.listdir("."))
     path = "./keystore"
     for file in os.listdir(path):
         keystore_path = os.path.join(path, file)
