@@ -86,6 +86,7 @@ class Client:
     ## 設定 Session Key
     def RegisterAG(self, userData):
         ## One Time Password Authentication
+        userData["chainAddress"] = self.address
         res = requests.post("{}/AG/Register/".format(self.server),
                             data=json.dumps(userData))
         if res.status_code != 200:

@@ -21,7 +21,6 @@ while True:
             Id = str(input("\t[-] ID Number: "))
             phoneNumber = str(input("\t[-] Phone Number: "))
             email = str(input("\t[-] Email: "))
-            chainAddress = str(w3.toChecksumAddress(input("\t[-] Chain Address: ").replace(" ", "")))
 
         except Exception as e:
             print("\t[!] 錯誤輸入: {}".format(repr(e)))
@@ -33,7 +32,6 @@ while True:
             "liveAddress": liveAddress,
             "phoneNumber": phoneNumber,
             "email": email,
-            "chainAddress": chainAddress
         }
 
         client.RegisterAG(userData)
