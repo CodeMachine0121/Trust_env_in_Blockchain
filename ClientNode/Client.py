@@ -92,7 +92,7 @@ class Client:
         if res.status_code != 200:
             print("[!] Something Error!")
         print("[+] The OTP has already send to ur Email, please check it")
-        optAns = str(input("Ur OTP: "))
+        optAns = str(input("\t[-] Your OTP: "))
 
         ## Session key Exchange
         ## 計算 zP

@@ -35,7 +35,7 @@ while True:
         }
 
         client.RegisterAG(userData)
-
+        print("\t[-] 完成註冊")
     elif command == "askAvailable":
         client.ask_for_Client_available(client.address)
 
