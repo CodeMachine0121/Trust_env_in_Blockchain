@@ -25,11 +25,9 @@ urlpatterns = [
     path("updateSessionKey/", views.updateSessionKey),
     path("clientAvailability/", views.find_Client_available),
     path("quit_AG/", views.quit_this_AG),
-
     path('askTransactions/', views.createTransaction),
-
     path("payment/", views.makePayment),
-    path("getContractBalance/", views.getContractBalance),
+    path("getBalance/", views.getContractBalance),
     path("getPublicKey/", views.getPubKeyFromRContract),
     path("getChameleonHash/", views.getChameleonHash),
 ]

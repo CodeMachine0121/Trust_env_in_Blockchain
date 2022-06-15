@@ -107,10 +107,14 @@ def sessionKey_exchange(request):
     print("[+] Adding Client to Record Contract list")
 
     # 向合約登記此client在他的管轄內
-    TContract.setBalanceRecord(address)
+    TContract.balanceList[address] = dict()
     sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
 
     result = RContract.registerClient(address, sver.sessionKeys[address]["Chash"])
+    if not result:
+        return HttpResponse(json.dumps({"result": "Session key Exchange Failed"}),
+                            content_type="application/json")
+
     return HttpResponse(json.dumps({"xPX": xpX, "xPY": xpY, "address": TContract.address}),
                         content_type="application/json")
 
@@ -237,7 +241,7 @@ def makePayment(request):
     balance = int(data["balance"])
 
     # 對交易訊息做簽章
-    msg = str(from_addr) + str(to_addr) + str(balance + TContract.balanceRecord[from_addr][to_addr].currentAmount)
+    msg = str(from_addr) + str(to_addr) + str(balance)
 
     r = sver.Signing(msg, from_addr)
 
@@ -272,16 +276,15 @@ def getContractBalance(request):
         ip = x_forwarded_for.split(',')[0]
     else:
         ip = request.META.get('REMOTE_ADDR')
-    print("[+] Receive Balance requests from: {}".format(ip))
-
     Jdata = json.loads(request.body.decode("utf-8"))
     fromAddr = Jdata["fromAddr"]
     toAddr = Jdata["toAddr"]
 
-    contractAmount, agAmount = TContract.getContractBalance(fromAddr, toAddr)
+    totalAmount, onlyBalance, payedAmount = TContract.getContractBalance(fromAddr, toAddr)
     data = json.dumps({
-        "contractAmount": contractAmount,
-        "agAmount": agAmount
+        "totalAmount": totalAmount,
+        "onlyBalance": onlyBalance,
+        "payedAmount": payedAmount
     })
 
     return HttpResponse(data, content_type='application/json', status=200)

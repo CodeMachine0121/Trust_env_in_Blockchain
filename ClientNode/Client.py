@@ -27,7 +27,7 @@ def getServerAddress():
 
 def getAddress():
     w3 = Web3()
-    path =""
+    path = ""
     for file in os.listdir("./Lib/Blockchain/keystore"):
         path = os.path.join('./Lib/Blockchain/keystore', file)
 
@@ -67,7 +67,7 @@ class Client:
         self.address = getAddress()
         self.nonce = self.w3.eth.getTransactionCount(self.address)
 
-        self.paymentRecord = dict() # 紀錄支付名單
+        self.paymentRecord = dict()  # 紀錄支付名單
         print("Public Key X: ", self.part.Kn.x)
         print("Public Key Y: ", self.part.Kn.y)
 
@@ -311,6 +311,18 @@ class Client:
         # print("[+] Verify Signature Txn: {}\n\t".format(result))
         return res.text
 
+    # 取得餘額
+    def getBalance(self, from_address, to_address):
+        data = json.dumps({
+            "fromAddr": from_address,
+            "toAddr": to_address
+        })
+
+        res = requests.post("{}/getBalance/".format(self.server),
+                            data=data)
+        response = json.loads(res.text)
+        return response.get("totalAmount"), response.get("onlyBalance"), response.get("payedAmount")
+
     # 向AG設置發送方的TC位址
     def setTransactionContract(self, from_address):
         print("[+] Setting transaction contract...")
@@ -334,6 +346,7 @@ class Client:
         print("[+] Get fromAG: [{}]".format(fromAG))
         return fromAG
 
+    """
     def verifyTransactionSignature(self, fromAG, fromAddr, toAddr, signatures, txnHistory):
         # 用來驗證TC內的簽章
         ## 需要先取得fromAG的公鑰 Knx, Kny，變色龍 (從RC取得) -> 向AG請求
@@ -370,6 +383,7 @@ class Client:
         verifyResult = self.part.verifyTransactionSignature(msgs, CHashX, CHashY, Knx, Kny, signatures)
 
         return verifyResult
+    """
 
     # 驗證交易雜湊值 (from AG)
     def verifyTransactionHash(self, contractAddr, txn, txnCH, txnData, pubX, pubY, status):
@@ -378,7 +392,7 @@ class Client:
         r = int(signature, 16)
         result = self.part.VerifySignature(txn, r, pubX, pubY)
 
-        if result == False:
+        if not result:
             print("Verify Result: ", False)
             return False
 
@@ -410,11 +424,8 @@ class Client:
             result = self.part.VerifySignature(msg, func_params["_signature"], self.Public_AG.x, self.Public_AG.y)
             print("Result: ", result)
             return result
-        elif status == "balance":
-            ## 因為payment是驗證別人的變色龍雜湊所以還需要索取CH
-            print("Jelly fish")
 
-        if result == False:
+        if not result:
             print("Verify Transaction Args Verify Failed")
             return False
 
@@ -448,7 +459,7 @@ class Client:
         contractInput = self.w3.eth.getTransaction(txn)["input"]
         func_obj, func_params = contract.decode_function_input(contractInput)
 
-        if func_params["_sender"] != data["from_address"] or func_params["_receiver"] != self.address or\
+        if func_params["_sender"] != data["from_address"] or func_params["_receiver"] != self.address or \
                 func_params["balance"] != data["balance"]:
             print("[!]  Comparation Error!")
             print("\t[-] [Sender] {} : {}".format(func_params["_sender"], data["from_address"]))

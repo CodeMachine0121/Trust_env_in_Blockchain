@@ -36,17 +36,18 @@ while True:
 
         client.RegisterAG(userData)
 
-    elif command == "askAvailable":
-        client.ask_for_Client_available(client.address)
-
     elif command == "balance":
-        print("[+] Getting Balance information: ")
+        print("[+] Get Balance Phase: ")
         try:
             acc = w3.toChecksumAddress(input("\t[-]Receiver: "))
         except:
             print("[!] 輸入錯誤")
             continue
-        client.getContractBalance(client.address, acc)
+        totalAmount, onlyBalance, payedAmount = client.getContractBalance(client.address, acc)
+
+        print("\t[-] 剩餘: ", totalAmount)
+        print("\t[-] 可用: ", onlyBalance)
+        print("\t[-] 已使用: ", payedAmount)
 
     elif command == "transaction":
         try:
