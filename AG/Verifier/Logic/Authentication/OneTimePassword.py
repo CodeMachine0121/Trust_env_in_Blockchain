@@ -8,7 +8,6 @@ def new_OPTobject() -> Tuple[pyotp.TOTP, str]:
     seed = pyotp.random_base32()
     out = pyotp.totp.TOTP(seed, 600).provisioning_uri(
         name='CodeMachine0121@google.com', issuer_name='Secure App')
-    print(pyotp.TOTP(seed).now())
     return pyotp.TOTP(seed), seed
 
 

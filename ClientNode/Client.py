@@ -117,13 +117,15 @@ class Client:
         if "result" in dict(json.loads(res.text)):
             print("[!] {}".format(json.loads(res.text)["result"]))
             return
-
+        if res.status_code is 401:
+            print("[!] OTP Authentication Failed!")
         xpX = json.loads(res.text).get('xPX')
         xpY = json.loads(res.text).get('xPY')
         self.agAddr = json.loads(res.text).get("address")
 
         ### 計算sk
         self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
+        print("\t[-] 完成註冊")
         return
 
     def refreshSessionKey(self):
