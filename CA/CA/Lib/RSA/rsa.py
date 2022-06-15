@@ -30,7 +30,7 @@ class RSA_Library:
         private = self.privateKey.export_key(passphrase=secretCode, pkcs=8, protection="scryptAndAES128-CBC")
         
         #  寫入文件
-        path = join('.','RSA_keystore')
+        path = join('', 'RSA_keystore')
         with open(join(path,"private.pem"), "wb") as f:
             f.write(private)
         
@@ -39,7 +39,7 @@ class RSA_Library:
     def ImportKey(self):
         secretCode = 'codeToreadKey'
         # 讀取金鑰文件i
-        path = join('.','RSA_keystore')
+        path = join('', 'RSA_keystore')
         encodedKey = open(join(path,'private.pem'), 'rb').read()
 
         privateKey = RSA.import_key(encodedKey, passphrase=secretCode)

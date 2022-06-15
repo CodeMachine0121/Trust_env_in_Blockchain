@@ -1,7 +1,5 @@
-from django.shortcuts import render
 from django.http import HttpResponse
 import json
-import sys
 
 """
 
@@ -9,9 +7,9 @@ CA's code
 
 """
 # 變色龍雜湊
-from CA.Lib.ChameleonLong.Verifier import Verifier
-from CA.Lib.RSA.rsa import RSA_Library
-from CA.Lib.Blockchain.DeployContract import RecordContract, TransactionContract
+from .Lib.ChameleonLong.Verifier import Verifier
+from .Lib.RSA.rsa import RSA_Library
+from .Lib.Blockchain.DeployContract import RecordContract, TransactionContract
 
 ## 變色龍相關宣告
 ver = Verifier()
