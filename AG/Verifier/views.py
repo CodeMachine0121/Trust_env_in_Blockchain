@@ -43,7 +43,7 @@ def registerReqeust(request):
     otpObj.sendEmail(data.get("email"))
     # 登記client資訊
     userData = {
-        "Id": data.get("userData")["Id"],
+        "Id": data.get("Id"),
         "Name": data.get("Name"),
         "liveAddress": data.get("liveAddress"),
         "Phone": data.get("phoneNumber"),
