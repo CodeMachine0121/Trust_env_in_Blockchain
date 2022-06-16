@@ -262,6 +262,9 @@ class Client:
             "Balance": balance,
         })
 
+        if not "txns" in os.listdir('.'):
+            os.mkdir("txns")
+
         with open("./txns/{}.json".format("Open-" + txn), "w") as file:
             file.write(jsonObj)
 
