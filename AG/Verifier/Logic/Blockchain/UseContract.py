@@ -259,7 +259,7 @@ class TransactionContract:
         )
         totalAmount = contract.functions.getTotalAmount(fromAddr, toAddr).call()
         payedAmount = contract.functions.getCurrentAmount(fromAddr, toAddr).call()
-        onlyBalance = int(totalAmount) - int(self.balanceList[fromAddr])
+        onlyBalance = int(totalAmount) - int(self.balanceList[fromAddr][toAddr])
         # 總共分成 剩餘(total)，可用(onlyBalance)，已付款 (payedAmount)
         print("\t[-] 剩餘: ", totalAmount)
         print("\t[-] 可用: ", onlyBalance)
