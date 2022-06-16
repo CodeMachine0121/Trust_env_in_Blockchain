@@ -120,9 +120,9 @@ class Client:
                     return
                 elif result["result"] == "OPT Authentication Failed":
                     ans = input("\t[-] Resend or Retry: ")
-                    if ans is "Retry":
+                    if ans == "Retry":
                         continue
-                    elif ans is "Resend":
+                    elif ans == "Resend":
                         res = requests.post("{}/AG/ResendOTP/".format(self.server),
                                             data=json.dumps({
                                                 "email": userData["email"],
