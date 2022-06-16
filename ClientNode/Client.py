@@ -110,8 +110,7 @@ class Client:
                                     'zpX': zpX,
                                     'zpY': zpY,
                                     'KnX': int(self.part.Kn.x),
-                                    'address': self.address,
-                                    'userData': userData
+                                    'address': self.address
                                 }))
             result = dict(json.loads(res.text))
             if "result" in result.keys():
@@ -119,11 +118,8 @@ class Client:
                 if result["result"] == "Already registered":
                     return
                 elif result["result"] == "OPT Authentication Failed":
-                    ans = input("\t[-] Resend or Retry: ")
-                    if ans == "Retry":
-                        optAns = str(input("\t[-] Your OTP: "))
-                        continue
-                    elif ans == "Resend":
+                    ans = input("\t[-] Resend (y/n) ")
+                    if ans == "y":
                         res = requests.post("{}/AG/ResendOTP/".format(self.server),
                                             data=json.dumps({
                                                 "email": userData["email"],
@@ -132,7 +128,7 @@ class Client:
                         optAns = str(input("\t[-] Your OTP: "))
                         continue
                     else:
-                        print("[!] 錯誤輸入!")
+                        print("[!] Quit the Registering Phase! ")
                         return
             else:
                 break

@@ -1,22 +1,17 @@
-from typing import Tuple
 import pyotp
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
-
-def new_OPTobject() -> Tuple[pyotp.TOTP, str]:
-    seed = pyotp.random_base32()
-    out = pyotp.totp.TOTP(seed, 600).provisioning_uri(
-        name='CodeMachine0121@google.com', issuer_name='Secure App')
-    return pyotp.TOTP(seed), seed
 
 
 class otpObject:
     """
         透過 pyotp 產生 OTP，再透過Email轉寄至使用者email
     """
+
     def __init__(self):
-        self.optObj, self.seed = new_OPTobject()
+        self.seed = pyotp.random_base32()
+        self.optObj =pyotp.TOTP(self.seed)
 
     def sendEmail(self, remoteMail) -> None:
         content = MIMEMultipart()  # 建立MIMEMultipart物件
@@ -35,7 +30,7 @@ class otpObject:
             except Exception as e:
                 print("Error message: ", e)
 
-    ## one-time-password
+    # one-time-password
     def verify(self, ans: str) -> bool:
         print("[+] OTP Verify Phase:  ")
         print("\t[-] Ans: ", self.optObj.now())
