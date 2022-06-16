@@ -78,6 +78,14 @@ def updateSessionKey(request):
     return HttpResponse(json.dumps({"xpX": xpX, "xpY": xpY}))
 
 
+# 重新寄送OTP信件
+def reSendOTPEmail(request):
+    data = json.loads(request.body.decode('utf-8'))
+    otpObj = otpObject()
+    otpObj.sendEmail(data.get("email"))
+    userList[data.get(data.get("chainAddress"))]["otp"] = otpObj
+    return HttpResponse(status=200)
+
 # Session key 交換 採用 ECDH
 def sessionKey_exchange(request):
     # 我覺得需要公鑰去記得誰的Session Key是哪一把

@@ -103,20 +103,47 @@ class Client:
         zp = self.part.P * z
         zpX = zp.x
         zpY = zp.y
+        while True:
+            res = requests.post('{}/AG/SessionKey/'.format(self.server),
+                                data=json.dumps({
+                                    'otpAnswer': optAns,
+                                    'zpX': zpX,
+                                    'zpY': zpY,
+                                    'KnX': int(self.part.Kn.x),
+                                    'address': self.address,
+                                    'userData': userData
+                                }))
+            result = dict(json.loads(res.text))
+            if "result" in result.keys():
+                print("[!] {}".format(json.loads(res.text)["result"]))
+                if result["result"] is "Already registered":
+                    return
+                elif result["result"] is "OPT Authentication Failed":
+                    ans = input("\t[-] Resend or Retry: ")
+                    if ans is "Retry":
+                        res = requests.post('{}/AG/SessionKey/'.format(self.server),
+                                            data=json.dumps({
+                                                'otpAnswer': optAns,
+                                                'zpX': zpX,
+                                                'zpY': zpY,
+                                                'KnX': int(self.part.Kn.x),
+                                                'address': self.address,
+                                                'userData': userData
+                                            }))
+                    elif ans is "Resend":
+                        res = requests.post("{}/AG/ResendOTP/".format(self.server),
+                                            data=json.dumps({
+                                                "email": userData["email"],
+                                                "chainAddress": self.address}))
+                        print("[+] The OTP has already send to ur Email, please check it")
+                        optAns = str(input("\t[-] Your OTP: "))
+                        continue
+                    else:
+                        print("[!] 錯誤輸入!")
+                        return
+            else:
+                break
 
-        res = requests.post('{}/AG/SessionKey/'.format(self.server),
-                            data=json.dumps({
-                                'otpAnswer': optAns,
-                                'zpX': zpX,
-                                'zpY': zpY,
-                                'KnX': int(self.part.Kn.x),
-                                'address': self.address,
-                                'userData': userData
-                            }))
-
-        if "result" in dict(json.loads(res.text)):
-            print("[!] {}".format(json.loads(res.text)["result"]))
-            return
         xpX = json.loads(res.text).get('xPX')
         xpY = json.loads(res.text).get('xPY')
         self.agAddr = json.loads(res.text).get("address")
