@@ -11,7 +11,7 @@ class otpObject:
 
     def __init__(self):
         self.seed = pyotp.random_base32()
-        self.optObj =pyotp.TOTP(self.seed)
+        self.optObj = pyotp.TOTP(self.seed, interval=120)
 
     def sendEmail(self, remoteMail) -> None:
         content = MIMEMultipart()  # 建立MIMEMultipart物件
