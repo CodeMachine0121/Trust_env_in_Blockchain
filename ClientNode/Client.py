@@ -115,7 +115,7 @@ class Client:
                                 }))
             result = dict(json.loads(res.text))
             if "result" in result.keys():
-                print("[!] {}".format(json.loads(res.text)["result"]))
+                print("[!] {}".format(result["result"]))
                 if result["result"] is "Already registered":
                     return
                 elif result["result"] is "OPT Authentication Failed":
