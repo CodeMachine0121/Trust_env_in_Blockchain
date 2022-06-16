@@ -83,7 +83,7 @@ def reSendOTPEmail(request):
     data = json.loads(request.body.decode('utf-8'))
     otpObj = otpObject()
     otpObj.sendEmail(data.get("email"))
-    userList[data.get(data.get("chainAddress"))]["otp"] = otpObj
+    userList[data.get("chainAddress")]["otp"] = otpObj
     return HttpResponse(status=200)
 
 # Session key 交換 採用 ECDH
