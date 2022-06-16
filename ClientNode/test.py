@@ -43,7 +43,7 @@ while True:
         except:
             print("[!] 輸入錯誤")
             continue
-        totalAmount, onlyBalance, payedAmount = client.getContractBalance(client.address, acc)
+        totalAmount, onlyBalance, payedAmount = client.getBalance(client.address, acc)
 
         print("\t[-] 剩餘: ", totalAmount)
         print("\t[-] 可用: ", onlyBalance)
