@@ -346,138 +346,36 @@ class Client:
         response = json.loads(res.text)
         return response.get("totalAmount"), response.get("onlyBalance"), response.get("payedAmount")
 
-    # 向AG設置發送方的TC位址
-    def setTransactionContract(self, from_address):
-        print("[+] Setting transaction contract...")
-        msg = str(from_address)
-        en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
-        r = self.part.MakeSignature(msg)
-        publicKey = self.rsa.OutputPublic()
-        # print("[Debug]: {}".format(en_msg))
-        data = {
-            "msg": en_msg,
-            "r": r,
-            "Knx": int(self.part.Kn.x),
-            "Kny": int(self.part.Kn.y),
-            "RSA_publicKey": publicKey,
-            "chainAddress": self.address,
-            "from_address": from_address
-        }
-        res = requests.post("{}/AG/setSenderAGContract/".format(self.server), data=json.dumps(data))
-
-        fromAG = json.loads(res.text)["agAddress"]
-        print("[+] Get fromAG: [{}]".format(fromAG))
-        return fromAG
-
-    """
-    def verifyTransactionSignature(self, fromAG, fromAddr, toAddr, signatures, txnHistory):
-        # 用來驗證TC內的簽章
-        ## 需要先取得fromAG的公鑰 Knx, Kny，變色龍 (從RC取得) -> 向AG請求
-        print("[+] Getting Public Key of sender AG")
-        res = requests.post("{}/AG/getPublicKey/".format(self.server), data=json.dumps({
-            "agAddress": fromAG
-        }))
-        data = json.loads(res.text)
-        Knx = data["x"]
-        Kny = data["y"]
-        # print("\t[-] x: ", Knx)
-        # print("\t[-] y: ", Kny)
-
-        print("\t[-] Now Verifying Signatures")
-        # print("\t\t[-] signatures: \n\t{}".format(signatures))
-        print("\t[-] Getting Chameleon Hash of sender: [{}]".format(fromAddr))
-
-        res = requests.post("{}/AG/getChameleonHash/".format(self.server),
-                            data=json.dumps({"clientAddr": fromAddr, "agAddr": fromAG}))
-
-        CHashX = json.loads(res.text)["HashX"]
-        CHashY = json.loads(res.text)["HashY"]
-        # print("\t\t({},{})".format(CHashX, CHashY))
-        # 執行驗證程序 相關code寫在 SPart內
-        ## 編排驗證訊息
-        msgs = list()
-        for index in txnHistory.keys():
-            if index != "0":
-                msgs.append(str(fromAddr) + str(toAddr) + str(txnHistory[index]["currentAmount"]))
-            else:
-                msgs.append(str(fromAddr) + str(toAddr) + str(txnHistory["0"]["totalAmount"]))
-
-        # 驗證訊息簽章
-        verifyResult = self.part.verifyTransactionSignature(msgs, CHashX, CHashY, Knx, Kny, signatures)
-
-        return verifyResult
-    """
-
-    # 驗證交易雜湊值 (from AG)
-    def verifyTransactionHash(self, contractAddr, txn, txnCH, txnData, pubX, pubY, status):
-
-        signature = self.w3.eth.getTransaction(txnCH)["input"]
-        r = int(signature, 16)
-        result = self.part.VerifySignature(txn, r, pubX, pubY)
-
-        if not result:
-            print("Verify Result: ", False)
-            return False
-
-        ## 判斷當下是 createTransaction 還是 payment
-        if status == 0:
-            status = "totalAmount"
-        elif status == 1:
-            status = "balance"
-        contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
-
-        contractInput = self.w3.eth.getTransaction(txn)["input"]
-        func_obj, func_params = contract.decode_function_input(contractInput)
-
-        # 比較合約參數是否一致
-        ##print(func_params)
-        if (func_params["_sender"] != txnData["from_address"] or func_params["_receiver"] != txnData["to_address"] or
-                func_params[status] != txnData["balance"]):
-            print("\t[-] {} : {}".format(func_params["_sender"], txnData["from_address"]))
-            print("\t[-] {} : {}".format(func_params["_receiver"], txnData["to_address"]))
-            print("\t[-] {} : {}".format(func_params["totalAmount"], txnData["balance"]))
-            print("[!] Transaction Data is wrong")
-            return False
-        else:
-            print("\t[-] Verify: Pass")
-        msg = str(func_params["_sender"]) + str(func_params["_receiver"]) + str(func_params[status])
-
-        result = None
-        if status == "totalAmount":
-            result = self.part.VerifySignature(msg, func_params["_signature"], self.Public_AG.x, self.Public_AG.y)
-            print("Result: ", result)
-            return result
-
-        if not result:
-            print("Verify Transaction Args Verify Failed")
-            return False
-
-        return result
-
     # 接收TXn後 要透過Txn領取金額
     def withdraw_from_Contract(self, txn, txnCH, contractAddr, senderAGAddr, data):
-        print("[+] Withdrawing the Eth")
-        ## via QR Code
-        contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
-
-        ## 取得發送方AG的公要
+        print("[+] Withdrawing Phase ")
+        # 取得發送方AG的公要
         res = requests.post("{}/AG/getPublicKey/".format(self.server), data=json.dumps({"agAddress": senderAGAddr}))
         senderAGPubX = int(json.loads(res.text)["x"])
         senderAGPubY = int(json.loads(res.text)["y"])
         print("\t[-] sender AG PublicKey X: ", senderAGPubX)
-        print("\t[-] sedner AG PublicKey Y: ", senderAGPubY)
+        print("\t[-] sender AG PublicKey Y: ", senderAGPubY)
 
-        ## 取得發送方與其AG的變色龍雜湊值
+        # 取得發送方與其AG的變色龍雜湊值
         res = requests.post("{}/AG/getChameleonHash/".format(self.server),
                             data=json.dumps({"clientAddr": data["from_address"], "agAddr": senderAGAddr}))
         HashX = int(json.loads(res.text)["HashX"])
         HashY = int(json.loads(res.text)["HashY"])
         print("\t[-] AG Hash: \n\t\tx: {}\n\t\ty: {}".format(HashX, HashY))
 
-        ## 從txnCH上取得變色龍簽章
+        # 驗正簽章
+        print("[+] Verifying payment Txn Phase")
+        # 從txnCH上取得針對觸發payment函數的變色龍簽章(sender AG簽的)
         txnSign = int(self.w3.eth.getTransaction(txnCH)["input"], 16)
+        msg = txn
+        result = self.part.verifyPaymentSignature(msg, HashX, HashY, senderAGPubX, senderAGPubY, txnSign)
+        print("\t[-] Txn Verify: ", result)
+        if not result:
+            return result
 
-        ## 從txn 取得合約參數
+        # 比對合約參數
+        print("[+] Comparing Arguments Phase")
+        # 從txn 取得合約參數
         contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
         contractInput = self.w3.eth.getTransaction(txn)["input"]
         func_obj, func_params = contract.decode_function_input(contractInput)
@@ -493,24 +391,11 @@ class Client:
         else:
             print("\t[-] Contract Args Verify: Pass")
 
-        ## 驗正簽章
-        msg = txn
-        result = self.part.verifyPaymentSignature(msg, HashX, HashY, senderAGPubX, senderAGPubY, txnSign)
-        print("\t[-] Txn Verify: ", result)
-
-        if result == False:
-            return result
-
-        ## 從智能合約中領錢
-
-        ### 要取得AG對於該筆payment的交易簽章
+        # 從智能合約中領錢
         try:
-            a1, a2 = contract.functions.test(data["from_address"], self.address).call()
-            print("[Debug]: ", a1, "\n[Debug]: ", a2)
-            print("[Debug]: ", self.w3.eth.coinbase)
-
             txn = contract.functions.withdraw(self.w3.toChecksumAddress(data["from_address"]), self.address,
-                                              int(data["paymentSign"], 16)).transact({
+                                              int(data["paymentSign"], 16))
+            txn.transact({
                 "nonce": self.nonce,
                 "from": self.address,
                 'gasPrice': self.w3.eth.gasPrice,
@@ -520,7 +405,7 @@ class Client:
             print("[!] {}".format(repr(e)))
         return result
 
-    ## 效能測試
+    # 效能測試
     def PerformanceTesting(self, times, to_address, balance):
         start = time.time()
         cost = []
@@ -545,7 +430,7 @@ class Client:
         # print("payment 耗時: {}".format(time.time()-start))
         # print("----------------------------------------------------")
 
-    ## 效能測試 - 一般交易
+    # 效能測試 - 一般交易
     def TransactionTesting(self, times, to_address, balance):
         start = time.time()
         print("[+] Now Testing Normal Transaction Performance")
@@ -572,7 +457,7 @@ class Client:
         print("----------------------------------------------")
         print("----------------------------------------------")
 
-    ## 效能測試 - 取款交易
+    # 效能測試 - 取款交易
     def withdrawTesting(self):
         jdata = []
         fileName = os.listdir('./txns')
@@ -584,6 +469,7 @@ class Client:
         counter = 1
         cost = []
         start = time.time()
+        balanceCounter = 0
 
         for data in jdata:
             data["from_address"] = data["SenderAddress"]
@@ -593,6 +479,7 @@ class Client:
                 data['contractTxn'], data['SignatureTxn'], data['ContractAddress'],
                 data['AGAddress'], data
             )
+            balanceCounter+=data["balance"]
             if counter % 10 == 0:
                 cost.append(time.time() - start)
             counter += 1
@@ -600,3 +487,7 @@ class Client:
         for t in cost:
             print("\t[-] {}: {}".format(counter, t))
             counter += 10
+
+        if self.paymentRecord[data['from_address']] != balanceCounter:
+            print("[!] Local Balance Comparing is Error!")
+            print("\t[!!] Please Contact the AG Node")
