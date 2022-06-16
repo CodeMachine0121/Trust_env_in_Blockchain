@@ -116,20 +116,12 @@ class Client:
             result = dict(json.loads(res.text))
             if "result" in result.keys():
                 print("[!] {}".format(result["result"]))
-                if result["result"] is "Already registered":
+                if result["result"] == "Already registered":
                     return
-                elif result["result"] is "OPT Authentication Failed":
+                elif result["result"] == "OPT Authentication Failed":
                     ans = input("\t[-] Resend or Retry: ")
                     if ans is "Retry":
-                        res = requests.post('{}/AG/SessionKey/'.format(self.server),
-                                            data=json.dumps({
-                                                'otpAnswer': optAns,
-                                                'zpX': zpX,
-                                                'zpY': zpY,
-                                                'KnX': int(self.part.Kn.x),
-                                                'address': self.address,
-                                                'userData': userData
-                                            }))
+                        continue
                     elif ans is "Resend":
                         res = requests.post("{}/AG/ResendOTP/".format(self.server),
                                             data=json.dumps({
