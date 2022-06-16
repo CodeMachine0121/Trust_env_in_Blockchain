@@ -340,7 +340,7 @@ class Client:
             "toAddr": to_address
         })
 
-        res = requests.post("{}/getBalance/".format(self.server),
+        res = requests.post("{}/AG/getBalance/".format(self.server),
                             data=data)
         response = json.loads(res.text)
         return response.get("totalAmount"), response.get("onlyBalance"), response.get("payedAmount")
