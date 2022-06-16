@@ -340,7 +340,9 @@ class Client:
         res = requests.post("{}/AG/getBalance/".format(self.server),
                             data=data)
         response = json.loads(res.text)
-        return response.get("totalAmount"), response.get("onlyBalance"), response.get("payedAmount")
+        return self.w3.fromWei(response.get("totalAmount"), 'ether'), \
+               self.w3.fromWei(response.get("onlyBalance"), 'ether'),\
+               self.w3.fromWei(response.get("payedAmount"), 'ether')
 
     # 接收TXn後 要透過Txn領取金額
     def withdraw_from_Contract(self, txn, txnCH, contractAddr, senderAGAddr, data):
