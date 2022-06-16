@@ -227,7 +227,6 @@ class Client:
             return ""
 
         # 這邊需要先轉錢給AG
-        ###################################################################################################
         tx = {
             "chainId": 602602,
             "nonce": self.nonce,
@@ -272,6 +271,56 @@ class Client:
         result = self.verifyTransactionHash(contractAddr, txn, txnCH, data, self.Public_AG.x, self.Public_AG.y, 0)
         print("[+] Verify Signature Txn: {}\n\t".format(result))
         return txnCH
+
+    # 驗證交易通道的兩個Txn (from AG)
+    def verifyTransactionHash(self, contractAddr, txn, txnCH, txnData, pubX, pubY, status):
+            signature = self.w3.eth.getTransaction(txnCH)["input"]
+            r = int(signature, 16)
+            result = self.part.VerifySignature(txn, r, pubX, pubY)
+
+            if result == False:
+                print("Verify Result: ", False)
+                return False
+
+            ## 判斷當下是 createTransaction 還是 payment
+            if status == 0:
+                status = "totalAmount"
+            elif status == 1:
+                status = "balance"
+            contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
+
+            contractInput = self.w3.eth.getTransaction(txn)["input"]
+            func_obj, func_params = contract.decode_function_input(contractInput)
+
+            # 比較合約參數是否一致
+            ##print(func_params)
+            if (func_params["_sender"] != txnData["from_address"] or func_params["_receiver"] != txnData[
+                "to_address"] or
+                    func_params[status] != txnData["balance"]):
+                print("\t[-] {} : {}".format(func_params["_sender"], txnData["from_address"]))
+                print("\t[-] {} : {}".format(func_params["_receiver"], txnData["to_address"]))
+                print("\t[-] {} : {}".format(func_params["totalAmount"], txnData["balance"]))
+                print("[!] Transaction Data is wrong")
+                return False
+            else:
+                print("\t[-] Verify: Pass")
+            msg = str(func_params["_sender"]) + str(func_params["_receiver"]) + str(func_params[status])
+
+            result = None
+            if status == "totalAmount":
+                result = self.part.VerifySignature(msg, func_params["_signature"], self.Public_AG.x, self.Public_AG.y)
+                print("Result: ", result)
+                return result
+            elif status == "balance":
+                ## 因為payment是驗證別人的變色龍雜湊所以還需要索取CH
+                print("Jelly fish")
+
+            if result == False:
+                print("Verify Transaction Args Verify Failed")
+                return False
+
+            return result
+
 
     # 接收芳於扣款時觸發
     def receivePayment(self, from_address, balance):
