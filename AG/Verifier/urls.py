@@ -21,7 +21,7 @@ from . import views
 urlpatterns = [
     path("Parameters/", views.get_shortTerm_SystemParameters),
     path("Register/", views.registerReqeust),
-    path("ResendOTP/", views.reSendOTPEmail),
+    path("ResendOTP/", views.reSendOtpSMS),
     path("SessionKey/", views.sessionKey_exchange),
     path("updateSessionKey/", views.updateSessionKey),
     path("clientAvailability/", views.find_Client_available),
