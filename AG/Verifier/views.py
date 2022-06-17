@@ -22,10 +22,11 @@ TContract = TransactionContract()
 ## 記錄使用者資訊: address為index
 userList = dict()
 # Oen Time Password Object
-smsVerifier = SMSAuthentication
+smsVerifier = SMSAuthentication()
+
 
 # API Function
-## Register_for_Clients
+# Register_for_Clients
 def get_shortTerm_SystemParameters(request):
     return HttpResponse(json.dumps({
         "Px": int(sver.P.x),
@@ -84,6 +85,7 @@ def reSendOtpSMS(request):
     smsVerifier.sendOneTimePassword_SMS(data.get("phoneNumber"))
     return HttpResponse(status=200)
 
+
 # Session key 交換 採用 ECDH
 def sessionKey_exchange(request):
     # 我覺得需要公鑰去記得誰的Session Key是哪一把
@@ -94,7 +96,6 @@ def sessionKey_exchange(request):
     phoneNumber = data.get("phoneNumber")
     OtpAns = data.get("otpAnswer")
     address = data.get("address")
-
 
     # opt Authentication
     if not smsVerifier.verifyOneTimePassword_SMS(phoneNumber, OtpAns):
@@ -289,7 +290,7 @@ def getContractBalance(request):
     fromAddr = Jdata["fromAddr"]
     toAddr = Jdata["toAddr"]
 
-    totalAmount,  payedAmount = TContract.getContractBalance(fromAddr, toAddr)
+    totalAmount, payedAmount = TContract.getContractBalance(fromAddr, toAddr)
     data = json.dumps({
         "totalAmount": totalAmount,
         "payedAmount": payedAmount
