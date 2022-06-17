@@ -76,7 +76,7 @@ while True:
         print("[+] Receiver payment Phase")
         try:
             from_address = w3.toChecksumAddress(input("\t[-] Sender: "))
-            balance = int(input("\t[-] Balance: "))
+            balance = float(input("\t[-] Balance: "))
             client.receivePayment(from_address, balance)
         except Exception as e:
             print("\t[-] 輸入錯誤: {}".format(repr(e)))
