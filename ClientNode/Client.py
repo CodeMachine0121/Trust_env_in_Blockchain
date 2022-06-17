@@ -359,7 +359,7 @@ class Client:
         print("[+] Contract Address: \n\t{}".format(contractAddr))
         print("[+] AG's Address:\n\t{}".format(agAddress))
         print("[+] Sender's Address:\n\t{}".format(self.address))
-        print("[+] Payment Balance: \n\t{}".format(balance))
+        print("[+] Payment Balance: \n\t{}".format(self.w3.fromWei(balance, 'ether')))
         print("[+] Get payment Signature: \n\t{}".format(paymentSign))
 
         jsonObj = json.dumps({
@@ -390,7 +390,6 @@ class Client:
                             data=data)
         response = json.loads(res.text)
         return self.w3.fromWei(response.get("totalAmount"), 'ether'), \
-               self.w3.fromWei(response.get("onlyBalance"), 'ether'),\
                self.w3.fromWei(response.get("payedAmount"), 'ether')
 
     # 接收TXn後 要透過Txn領取金額

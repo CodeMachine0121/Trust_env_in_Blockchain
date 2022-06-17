@@ -288,10 +288,9 @@ def getContractBalance(request):
     fromAddr = Jdata["fromAddr"]
     toAddr = Jdata["toAddr"]
 
-    totalAmount, onlyBalance, payedAmount = TContract.getContractBalance(fromAddr, toAddr)
+    totalAmount,  payedAmount = TContract.getContractBalance(fromAddr, toAddr)
     data = json.dumps({
         "totalAmount": totalAmount,
-        "onlyBalance": onlyBalance,
         "payedAmount": payedAmount
     })
 

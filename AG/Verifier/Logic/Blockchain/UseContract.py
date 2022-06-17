@@ -259,13 +259,8 @@ class TransactionContract:
         )
         totalAmount = contract.functions.getTotalAmount(fromAddr, toAddr).call()
         payedAmount = contract.functions.getCurrentAmount(fromAddr, toAddr).call()
-        onlyBalance = int(totalAmount) - int(self.balanceList[fromAddr][toAddr])
         # 總共分成 剩餘(total)，可用(onlyBalance)，已付款 (payedAmount)
-        print("\t[-] 剩餘: ", totalAmount)
-        print("\t[-] 可用: ", onlyBalance)
-        print("\t[-] 已使用: ", payedAmount)
-
-        return totalAmount, onlyBalance, payedAmount
+        return totalAmount, payedAmount
 
     # 取得自己的交易合約資訊
     def getContract(self):
