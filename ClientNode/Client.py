@@ -107,6 +107,7 @@ class Client:
             res = requests.post('{}/AG/SessionKey/'.format(self.server),
                                 data=json.dumps({
                                     'otpAnswer': optAns,
+                                    'phoneNumber': userData["phoneNumber"],
                                     'zpX': zpX,
                                     'zpY': zpY,
                                     'KnX': int(self.part.Kn.x),
