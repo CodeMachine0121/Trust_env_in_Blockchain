@@ -122,8 +122,7 @@ class Client:
                     if ans == "y":
                         res = requests.post("{}/AG/ResendOTP/".format(self.server),
                                             data=json.dumps({
-                                                "email": userData["email"],
-                                                "chainAddress": self.address}))
+                                                "phoneNumber": userData["phoneNumber"]}))
                         print("[+] The OTP has already send to ur Email, please check it")
                         optAns = str(input("\t[-] Your OTP: "))
                         continue

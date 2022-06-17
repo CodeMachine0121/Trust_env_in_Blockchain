@@ -2,6 +2,7 @@ from django.http import HttpResponse
 import json
 from .Logic.Authentication import OneTimePassword
 from .Logic.Authentication.OneTimePassword import otpObject
+from .Logic.Authentication.SmsVerify import SMSAuthentication
 from .Logic.ChameleonShort.Verifier import Verifier
 from .Logic.ChameleonShort import SessionKeyManagement as SKM
 from .Logic.RSA.rsa import RSA_Library
@@ -20,8 +21,8 @@ TContract = TransactionContract()
 
 ## 記錄使用者資訊: address為index
 userList = dict()
-
-
+# Oen Time Password Object
+smsVerifier = SMSAuthentication
 
 # API Function
 ## Register_for_Clients
@@ -39,8 +40,8 @@ def get_shortTerm_SystemParameters(request):
 # 註冊請求
 def registerReqeust(request):
     data = json.loads(request.body.decode('utf-8'))
-    otpObj = otpObject()
-    otpObj.sendEmail(data.get("email"))
+    smsVerifier.sendOneTimePassword_SMS(data.get("phoneNumber"))
+
     # 登記client資訊
     userData = {
         "Id": data.get("Id"),
@@ -49,7 +50,6 @@ def registerReqeust(request):
         "Phone": data.get("phoneNumber"),
         "Email": data.get("email"),
         "chainAddress": data.get("chainAddress"),
-        'otp': otpObj
     }
     userList[data.get("chainAddress")] = userData
     return HttpResponse(status=200)
@@ -79,11 +79,9 @@ def updateSessionKey(request):
 
 
 # 重新寄送OTP信件
-def reSendOTPEmail(request):
+def reSendOtpSMS(request):
     data = json.loads(request.body.decode('utf-8'))
-    otpObj = otpObject()
-    otpObj.sendEmail(data.get("email"))
-    userList[data.get("chainAddress")]["otp"] = otpObj
+    smsVerifier.sendOneTimePassword_SMS(data.get("phoneNumber"))
     return HttpResponse(status=200)
 
 # Session key 交換 採用 ECDH
@@ -93,10 +91,13 @@ def sessionKey_exchange(request):
     # 回傳 x^{-1} * P
     # 在此階段將Client紀錄在智能合約中
     data = json.loads(request.body.decode("utf-8"))
+    phoneNumber = data.get("phoneNumber")
+    OtpAns = data.get("otpAnswer")
     address = data.get("address")
 
+
     # opt Authentication
-    if not userList[address]["otp"].verify(data.get("otpAnswer")):
+    if not smsVerifier.verifyOneTimePassword_SMS(phoneNumber, OtpAns):
         return HttpResponse(json.dumps({"result": "OPT Authentication Failed"}),
                             content_type="application/json", status=401)
 
