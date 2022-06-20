@@ -24,7 +24,7 @@ def verifyOneTimePassword_SMS(phoneNumber: str, otp: str) -> bool:
             .create(to='+886{}'.format(phoneNumber[1:]), code=otp).status
     except TwilioRestException as e:
         print("[!] TwilioRestException occur")
-        verification = True
+        verification = "approved"
     return True if verification == "approved" else False
 
 
