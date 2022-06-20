@@ -1,8 +1,6 @@
 from django.http import HttpResponse
 import json
-from .Logic.Authentication import OneTimePassword
-from .Logic.Authentication.OneTimePassword import otpObject
-from .Logic.Authentication.SmsVerify import SMSAuthentication
+from .Logic.Authentication import SmsVerify
 from .Logic.ChameleonShort.Verifier import Verifier
 from .Logic.ChameleonShort import SessionKeyManagement as SKM
 from .Logic.RSA.rsa import RSA_Library
@@ -21,8 +19,7 @@ TContract = TransactionContract()
 
 ## 記錄使用者資訊: address為index
 userList = dict()
-# Oen Time Password Object
-smsVerifier = SMSAuthentication()
+
 
 
 # API Function
@@ -41,7 +38,7 @@ def get_shortTerm_SystemParameters(request):
 # 註冊請求
 def registerReqeust(request):
     data = json.loads(request.body.decode('utf-8'))
-    smsVerifier.sendOneTimePassword_SMS(data.get("phoneNumber"))
+    SmsVerify.sendOneTimePassword_SMS(data.get("phoneNumber"))
 
     # 登記client資訊
     userData = {
@@ -82,7 +79,7 @@ def updateSessionKey(request):
 # 重新寄送OTP信件
 def reSendOtpSMS(request):
     data = json.loads(request.body.decode('utf-8'))
-    smsVerifier.sendOneTimePassword_SMS(data.get("phoneNumber"))
+    SmsVerify.sendOneTimePassword_SMS(data.get("phoneNumber"))
     return HttpResponse(status=200)
 
 
@@ -98,7 +95,7 @@ def sessionKey_exchange(request):
     address = data.get("address")
 
     # opt Authentication
-    if not smsVerifier.verifyOneTimePassword_SMS(phoneNumber, OtpAns):
+    if not SmsVerify.verifyOneTimePassword_SMS(phoneNumber, OtpAns):
         return HttpResponse(json.dumps({"result": "OPT Authentication Failed"}),
                             content_type="application/json", status=401)
 
