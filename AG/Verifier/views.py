@@ -36,10 +36,10 @@ def get_shortTerm_SystemParameters(request):
 
 
 # 註冊請求
-def registerReqeust(request):
+def registerRequest(request):
     data = json.loads(request.body.decode('utf-8'))
     SmsVerify.sendOneTimePassword_SMS(data.get("phoneNumber"))
-
+    print("[+] OPT SMS has already sent to ", data.get("phoneNumber"))
     # 登記client資訊
     userData = {
         "Id": data.get("Id"),
@@ -95,10 +95,13 @@ def sessionKey_exchange(request):
     address = data.get("address")
 
     # opt Authentication
+
     if not SmsVerify.verifyOneTimePassword_SMS(phoneNumber, OtpAns):
+        print("[!] SMS OTP verified result: Fail")
         return HttpResponse(json.dumps({"result": "OPT Authentication Failed"}),
                             content_type="application/json", status=401)
-
+    else:
+        print("[+] SMS OTP verified result: True")
     # session Exchange
     xpX, xpY = sver.start_SessionKey()
     zpX = data.get('zpX')
