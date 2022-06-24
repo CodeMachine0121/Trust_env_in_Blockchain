@@ -94,7 +94,7 @@ class Client:
                             data=json.dumps(userData))
         if res.status_code != 200:
             print("[!] Something Error!")
-        print("[+] The OTP has already send to ur Email, please check it")
+        print("[+] The OTP has already send to you as SMS message please check it")
         optAns = str(input("\t[-] Your OTP: "))
 
         ## Session key Exchange
