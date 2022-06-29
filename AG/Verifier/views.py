@@ -3,14 +3,13 @@ import json
 from .Logic.Authentication import SmsVerify
 from .Logic.ChameleonShort.Verifier import Verifier
 from .Logic.ChameleonShort import SessionKeyManagement as SKM
-from .Logic.CipherAlgorithm.rsa import RSA_Library
+
 from .Logic.CipherAlgorithm import AES_Library as AESfunc
 from .Logic.longMiddleware import longMiddleware
 from .Logic.Blockchain.UseContract import RecordContract
 from .Logic.Blockchain.UseContract import TransactionContract
 
 # 變色龍雜湊
-rsa = RSA_Library()
 lpart = longMiddleware()
 sver = Verifier(lpart.CA_k)
 
@@ -31,7 +30,6 @@ def get_shortTerm_SystemParameters(request):
         "q": sver.q,
         "Knx": int(sver.Kn.x),
         "Kny": int(sver.Kn.y),
-        "RSA_PublicKey": rsa.OutputPublic(),
         "Address": TContract.address}), content_type='application/json')
 
 
@@ -181,14 +179,16 @@ def find_Client_available(request):
 ## 使用者要求離開AG管轄範圍
 def quit_this_AG(request):
     data = json.loads(request.body.decode('utf-8'))
-    result = sver.Verifying(rsa.DecryptFunc(data["msg"]), data["r"], data["Knx"], data["Kny"], data["chainAddress"])
+    address = data.get("chainAddress")
+    msg = AESfunc.Decrypt(sver.sessionKeys[address], data.get("msg"), data.get("iv"))
+    result = sver.Verifying(msg, data["r"], data["Knx"], data["Kny"], address)
     if not result:
         return HttpResponse('Authentication Failed', status=401)
     # 字典內刪除該項目
-    print("[+] Deleting account: [{}]".format(data.get("chainAddress")))
-    del sver.sessionKeys[data.get('chainAddress')]
+    print("[+] Deleting account: [{}]".format(address))
+    del sver.sessionKeys[address]
     # 刪除紀錄合約上的紀錄
-    RContract.removeClient(data.get("chainAddress"))
+    RContract.removeClient(address)
     return HttpResponse('Done', status=200)
 
 

@@ -6,9 +6,7 @@ from web3 import Web3
 from Crypto.Random.random import getrandbits
 from ecc.curve import Point, secp256k1
 import time
-
 from Lib.ChameleonShort.Participator import Participator
-from Lib.CipherAlgorithm.rsa import RSA_Library
 from Lib.CipherAlgorithm import AES_Library as AES
 
 
@@ -54,11 +52,6 @@ class Client:
         print("AG: Public Key Y: ", self.Public_AG.y)
 
         self.part = Participator()
-
-        # self.RegisterAG()
-        self.rsa = RSA_Library()
-
-        self.AG_RSA_PublicKey = Jsystem.get('RSA_PublicKey')
         self.agAddr = None
         self.contract = None
         self.nodeServer = getServerAddress()
@@ -189,18 +182,18 @@ class Client:
 
     # 退出現在的AG
     def quit_current_AG(self):
-        msg = str(self.address) + str(self.part.sk)
-        en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
 
+        msg = str(self.address)
+        en_msg, iv = AES.Encrypt(self.part.sk, msg)
         r = self.part.MakeSignature(msg)
-        publicKey = self.rsa.OutputPublic()
+
         # print("[Debug]: {}".format(en_msg))
         data = {
             "msg": en_msg,
+            "iv": iv,
             "r": r,
             "Knx": int(self.part.Kn.x),
             "Kny": int(self.part.Kn.y),
-            "RSA_publicKey": publicKey,
             "chainAddress": self.address,
         }
 
