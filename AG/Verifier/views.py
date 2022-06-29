@@ -3,7 +3,8 @@ import json
 from .Logic.Authentication import SmsVerify
 from .Logic.ChameleonShort.Verifier import Verifier
 from .Logic.ChameleonShort import SessionKeyManagement as SKM
-from .Logic.RSA.rsa import RSA_Library
+from .Logic.CipherAlgorithm.rsa import RSA_Library
+from .Logic.CipherAlgorithm import AES_Library as AESfunc
 from .Logic.longMiddleware import longMiddleware
 from .Logic.Blockchain.UseContract import RecordContract
 from .Logic.Blockchain.UseContract import TransactionContract
@@ -19,7 +20,6 @@ TContract = TransactionContract()
 
 ## 記錄使用者資訊: address為index
 userList = dict()
-
 
 
 # API Function
@@ -134,30 +134,37 @@ def short_Receiver_Actions(data):
     # use rsa algorithm to en/decrypt message
     # cipher will present as hex string
     ## 在這裡檢測sessionKey 是否過期
-    result = SKM.ifSessionKey_outDate(sver.sessionKeys[data['chainAddress']]['times'])
+    address = data.get('chainAddress')
+    result = SKM.ifSessionKey_outDate(sver.sessionKeys[address]['times'])
     if result:
         print("[!] Client's Session Key is Out of Date !!")
         return False, "SessionKey is Out of Date!"
 
-    print("[+] Decryptign message")
-    msg = rsa.DecryptFunc(data.get('msg'))
-    data['from_address'] = rsa.DecryptFunc(data.get("from_address"))
-    data['to_address'] = rsa.DecryptFunc(data.get('to_address'))
-    data['balance'] = rsa.DecryptFunc(data.get('balance'))
+    print("[+] Decrypt the message")
+    iv = data.get("iv")
+    key = sver.sessionKeys[address]
+    enmsg = data.get("msg")
+    msg = AESfunc.Decrypt(key, enmsg, iv)
 
+    returnData = dict()
+    returnData["from_address"] = msg.split(":")[0]
+    returnData["to_address"] = msg.split(":")[1]
+    returnData["balance"] = msg.split(":")[2]
+    # msg = rsa.DecryptFunc(data.get('msg'))
+    # data['from_address'] = rsa.DecryptFunc(data.get("from_address"))
+    # data['to_address'] = rsa.DecryptFunc(data.get('to_address'))
+    # data['balance'] = rsa.DecryptFunc(data.get('balance'))
     print("[+] Get message: {}".format(msg))
+
+    # 簽章驗證
     r_plum = data.get('r')
     Knx = data.get("Knx")
     Kny = data.get("Kny")
-
-    # rsa public key
-    cliPublic = data.get('RSA_publicKey')
-    address = data.get('chainAddress')
     result = sver.Verifying(msg, r_plum, Knx, Kny, address)
 
     print("[+] Initialize Result: {}".format(result))
 
-    return result, data
+    return result, returnData
 
 
 ## 查詢使用者是否在此AG管轄範圍

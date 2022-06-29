@@ -3,11 +3,14 @@ import os
 import json
 from web3 import Web3
 # from web3.middleware import geth_poa_middleware
-from Lib.ChameleonShort.Participator import Participator
 from Crypto.Random.random import getrandbits
-from Lib.RSA.rsa import RSA_Library
 from ecc.curve import Point, secp256k1
 import time
+
+from Lib.ChameleonShort.Participator import Participator
+from Lib.CipherAlgorithm.rsa import RSA_Library
+from Lib.CipherAlgorithm import AES_Library as AES
+
 
 
 def getPrivateKey(web3):
@@ -163,27 +166,25 @@ class Client:
     ## 開啟通道、支付時使用
     def beforeAction(self, from_address, to_address, balance):
         ### 簽章驗證
-        msg = str(from_address) + str(to_address) + str(balance)
-        en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
-        en_from_address = self.rsa.EncryptFunc(str(from_address), self.AG_RSA_PublicKey)
-        en_to_address = self.rsa.EncryptFunc(str(to_address), self.AG_RSA_PublicKey)
-        en_balance = self.rsa.EncryptFunc(str(balance), self.AG_RSA_PublicKey)
+        msg = str(from_address) +":"+ str(to_address) +":"+ str(balance)
+        key = self.part.sk
+        en_msg, iv = AES.Encrypt(key, msg)
+        #en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
+        #en_from_address = self.rsa.EncryptFunc(str(from_address), self.AG_RSA_PublicKey)
+        #en_to_address = self.rsa.EncryptFunc(str(to_address), self.AG_RSA_PublicKey)
+        #en_balance = self.rsa.EncryptFunc(str(balance), self.AG_RSA_PublicKey)
         r = self.part.MakeSignature(msg)
-        publicKey = self.rsa.OutputPublic()
-        # print("[Debug]: {}".format(en_msg))
         data = {
-            "from_address": en_from_address,
-            "to_address": en_to_address,
-            "balance": en_balance,
             "msg": en_msg,
+            "iv": iv,
             "r": r,
             "Knx": int(self.part.Kn.x),
             "Kny": int(self.part.Kn.y),
-            "RSA_publicKey": publicKey,
             "chainAddress": self.address,
         }
 
         return data
+
 
     # 退出現在的AG
     def quit_current_AG(self):

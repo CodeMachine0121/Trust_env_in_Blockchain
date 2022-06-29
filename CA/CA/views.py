@@ -18,7 +18,7 @@ ver = Verifier()
 Rcontract = RecordContract()
 Tcontract = TransactionContract()
 
-## RSA 加密
+## CipherAlgorithm 加密
 rsa = RSA_Library()
 
 

@@ -1,7 +1,7 @@
 import requests
 import json
 import os
-from .RSA.rsa import RSA_Library
+from .CipherAlgorithm.rsa import RSA_Library
 from .ChameleonLong.Participator import Participator
 def setServer():
     with open("./Verifier/Logic/server.json") as file :
