@@ -143,7 +143,7 @@ def short_Receiver_Actions(data):
 
     print("[+] Decrypt the message")
     iv = data.get("iv")
-    key = sver.sessionKeys[address]
+    key = sver.sessionKeys[address]["sk"]
     enmsg = data.get("msg")
     msg = AESfunc.Decrypt(key, enmsg, iv)
 
