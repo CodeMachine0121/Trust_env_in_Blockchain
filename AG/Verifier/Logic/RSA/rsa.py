@@ -33,7 +33,6 @@ class RSA_Library:
         path = join('.','RSA_keystore')
         with open(join(path,"private.pem"), "wb") as f:
             f.write(private)
-        
         return 
 
     def ImportKey(self):
@@ -75,6 +74,3 @@ class RSA_Library:
 
     def OutputPublic(self):
         return self.publicKey.export_key().decode().replace('-----BEGIN PUBLIC KEY-----\n','').replace('\n-----END PUBLIC KEY-----','')
-    
-
-
