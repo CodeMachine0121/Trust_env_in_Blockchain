@@ -180,7 +180,7 @@ def find_Client_available(request):
 def quit_this_AG(request):
     data = json.loads(request.body.decode('utf-8'))
     address = data.get("chainAddress")
-    msg = AESfunc.Decrypt(sver.sessionKeys[address], data.get("msg"), data.get("iv"))
+    msg = AESfunc.Decrypt(sver.sessionKeys[address]["sk"], data.get("msg"), data.get("iv"))
     result = sver.Verifying(msg, data["r"], data["Knx"], data["Kny"], address)
     if not result:
         return HttpResponse('Authentication Failed', status=401)
