@@ -168,6 +168,7 @@ class Client:
         ### 簽章驗證
         msg = str(from_address) +":"+ str(to_address) +":"+ str(balance)
         key = self.part.sk
+        print(key)
         en_msg, iv = AES.Encrypt(key, msg)
         #en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
         #en_from_address = self.rsa.EncryptFunc(str(from_address), self.AG_RSA_PublicKey)
