@@ -534,6 +534,6 @@ class Client:
             print("\t[-] {}: {}".format(counter, t))
             counter += 10
 
-        if self.w3.toWei(self.paymentRecord[data['from_address']]) != balanceCounter:
+        if self.w3.toWei(self.paymentRecord[data['from_address']], 'ether') != balanceCounter:
             print("[!] Local Balance Comparing is Error!")
             print("\t[!!] Please Contact the AG Node")
