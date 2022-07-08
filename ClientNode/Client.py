@@ -174,7 +174,7 @@ class Client:
             "Kny": int(self.part.Kn.y),
             "chainAddress": self.address,
         }
-
+        self.part.refreshSignatureKey()
         return data
 
     # 退出現在的AG
@@ -316,7 +316,7 @@ class Client:
 
         return result
 
-    # 接收芳於扣款時觸發
+    # 接收芳於扣款時觸發 (手動輸入)
     def receivePayment(self, from_address, balance):
 
         if from_address in self.paymentRecord.keys():
@@ -512,7 +512,6 @@ class Client:
                 jdata.append(json.loads(file.read()))
         balanceCounter = 0
         for data in jdata:
-
             data["from_address"] = data["SenderAddress"]
             data["balance"] = data["Balance"]
             data["paymentSign"] = data["PaymentSign"]
