@@ -14,7 +14,7 @@ class Verifier:
         self.q = S256.p  # 橢圓計算用模數
         # order number
         self.order = 115792089237316195423570985008687907852837564279074904382605163141518161494337
-
+        self.PrintSystemParameters()
         # secret values
         self.k = int(getrandbits(512))
         self.kn = int(getrandbits(512))
@@ -24,7 +24,7 @@ class Verifier:
 
         # calculate chameleon Hash
         self.CHash = self.init_Hash()
-        self.PrintSystemParameters()
+
 
     def init_Hash(self):
         print("[+] Initializing Chameleon Hash")
