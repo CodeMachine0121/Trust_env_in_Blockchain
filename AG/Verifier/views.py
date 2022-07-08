@@ -45,7 +45,7 @@ def get_PublicKey(reqeust):
 # 註冊請求
 def registerRequest(request):
     data = json.loads(request.body.decode('utf-8'))
-    # SmsVerify.sendOneTimePassword_SMS(data.get("phoneNumber"))
+    SmsVerify.sendOneTimePassword_SMS(data.get("phoneNumber"))
     print("[+] OPT SMS has already sent to ", data.get("phoneNumber"))
     # 登記client資訊
     userData = {
@@ -102,14 +102,14 @@ def sessionKey_exchange(request):
     address = data.get("address")
 
     # opt Authentication
-    """
+
     if not SmsVerify.verifyOneTimePassword_SMS(phoneNumber, OtpAns):
         print("[!] SMS OTP verified result: Fail")
         return HttpResponse(json.dumps({"result": "OPT Authentication Failed"}),
                             content_type="application/json", status=401)
     else:
         print("[+] SMS OTP verified result: True")
-    """
+
     # session Exchange
     xpX, xpY = sver.start_SessionKey()
     zpX = data.get('zpX')
@@ -137,11 +137,11 @@ def sessionKey_exchange(request):
                         content_type="application/json")
 
 
-## 執行 Client 的指令前要做的事情
+# 執行 Client 的指令前要做的事情
 def short_Receiver_Actions(data):
     # use rsa algorithm to en/decrypt message
     # cipher will present as hex string
-    ## 在這裡檢測sessionKey 是否過期
+    # 在這裡檢測sessionKey 是否過期
     address = data.get('chainAddress')
     result = SKM.ifSessionKey_outDate(sver.sessionKeys[address]['times'])
     if result:
