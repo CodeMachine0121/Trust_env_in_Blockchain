@@ -55,13 +55,13 @@ def AG_Register(request):
     Kny = upload.get('Kny')
     signature = upload.get('signature')
 
-    result = ver.Verifying(msg, signature, Knx, Kny)
-
     print("\t[-] Verify Message: ", msg)
     print("\t[-] AG's Public key x: ", Knx)
     print("\t[-] AG's Public key y: ", Kny)
     print("\t[-] Signature: ", signature)
+    result = ver.Verifying(msg, signature, Knx, Kny)
     print("\t[-] Verify Result: ", result)
+
     return HttpResponse(result)
 
 

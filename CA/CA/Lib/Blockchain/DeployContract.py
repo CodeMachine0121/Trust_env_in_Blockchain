@@ -80,10 +80,10 @@ class RecordContract:
 
     def deploy(self):
         print("[+] Deploying RecordContract ...")
-        print("[+] deployer's address: {}".format(self.acct.address))
+        #print("[+] deployer's address: {}".format(self.acct.address))
         contract_json = self.getContract_data()
 
-        print("[+] account's nonce: {}".format(self.nonce))
+        #print("[+] account's nonce: {}".format(self.nonce))
         contract_ = self.web3.eth.contract(
             abi=contract_json['abi'],
             bytecode=contract_json['bytecode']
@@ -107,7 +107,7 @@ class RecordContract:
         contractAddress = ""
         try:
             self.web3.eth.sendRawTransaction(signed.rawTransaction)
-            print("[+] RecordContract txn: [{}]".format(tx_hash))
+            #print("[+] RecordContract txn: [{}]".format(tx_hash))
             while True:
                 try:
                     tx_recipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
@@ -116,7 +116,7 @@ class RecordContract:
                 except:
                     continue
 
-            print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
+            # print("[+] contract deploy transaction Hash: [{}]".format(tx_hash))
             print("[+] RecordContract address: [{}]".format(contractAddress))
             return contractAddress, contract_json['abi']
 
@@ -128,7 +128,7 @@ class RecordContract:
     def registerAG(self, agAddress, domain, Knx, Kny):
         txn = self.contract.functions.registerAG(agAddress, domain, Knx, Kny).transact(
             {'from': self.acct.address, 'nonce': self.nonce})
-        print("[+] AG Register: {}".format(txn.hex()))
+        print("[+] upload AG's info to RC: {}".format(txn.hex()))
         self.nonce += 1
         return
 
@@ -162,8 +162,8 @@ class TransactionContract:
 
     def deploy(self, fromAG, nonce):
 
-        print("[+] Deploying TransactionContract ...")
-        print("[+] account's address: {}".format(self.acct.address))
+        print("[+] Deploying TransactionContract ")
+        #print("[+] account's address: {}".format(self.acct.address))
         abi, bytecode = self.getContractData()
 
         # 統一格式
@@ -173,7 +173,7 @@ class TransactionContract:
 
         try:
 
-            print("[+] account's nonce: {}".format(nonce))
+            #print("[+] account's nonce: {}".format(nonce))
             contractConstruct = self.web3.eth.contract(
                 abi=abi,
                 bytecode=str(bytecode)
@@ -188,7 +188,7 @@ class TransactionContract:
             signed_tx = self.acct.signTransaction(construct_txn)
             txn_hash = self.web3.toHex(self.web3.keccak(signed_tx.rawTransaction))
             # result = contractConstruct.transact(txn_body)
-            print("Transaction Contract Hash: [{}]".format(txn_hash))
+            #print("Transaction Contract Hash: [{}]".format(txn_hash))
 
             self.web3.eth.sendRawTransaction(signed_tx.rawTransaction)
             contractAddress = ""
@@ -205,10 +205,10 @@ class TransactionContract:
             self.contractList[fromAG]["abi"] = abi
             self.contractList[fromAG]["address"] = contractAddress
 
-            print("[+] contract address: [{}]".format(contractAddress))
+            print("\t[-] contract address: [{}]".format(contractAddress))
             contract = self.web3.eth.contract(address=contractAddress, abi=abi)
-            print("\t[-] CA: [{}]".format(contract.functions.getCA()().call()))
-            print("\t[-] Owner: [{}]".format(contract.functions.getOwner()().call()))
+            #print("\t[-] CA: [{}]".format(contract.functions.getCA()().call()))
+            #print("\t[-] Owner: [{}]".format(contract.functions.getOwner()().call()))
 
             # print("\t[-] CA: [{}]".format(contract.functions.getCA().transact()))
             # print("\t[-] Owner: [{}]".format(contract.functions.getOwner().transact()))
