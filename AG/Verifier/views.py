@@ -32,14 +32,20 @@ def get_shortTerm_SystemParameters(request):
         "Kny": int(sver.Kn.y),
         "Address": TContract.address}), content_type='application/json')
 
+
 ## 取得短期變色龍簽章公鑰
 def get_PublicKey(reqeust):
-    return int(sver.Kn.x), int(sver.Kn.y)
+    data = json.dumps({
+        "Knx": int(sver.Kn.x),
+        "Kny": int(sver.Kn.y)
+    })
+    return HttpResponse(data, content_type="application/json")
+
 
 # 註冊請求
 def registerRequest(request):
     data = json.loads(request.body.decode('utf-8'))
-    #SmsVerify.sendOneTimePassword_SMS(data.get("phoneNumber"))
+    # SmsVerify.sendOneTimePassword_SMS(data.get("phoneNumber"))
     print("[+] OPT SMS has already sent to ", data.get("phoneNumber"))
     # 登記client資訊
     userData = {
