@@ -19,14 +19,13 @@ class Participator:
         #self.k = int(getrandbits(2048))
         self.k = k
         self.kn = int(getrandbits(512)) 
+        self.PrintSystemParameters()
 
         # public value (向量點乘)
         self.Kn = self.kn * self.P
-        
+        self.PrintSignaturePubliKey()
         # calculate chameleon Hash
         self.CHash = self.init_Hash()
-
-
 
     def init_Hash(self):
         print("[+] Initializing Chameleon Hash")
@@ -35,6 +34,10 @@ class Participator:
         H1.update(msg)
         hm = int(H1.hexdigest(), 16)
         r = (self.k - (hm*self.kn)) % self.order
+
+        print("\t[-] Chameleon Hash: ")
+        print("\t\tx: ", hex(hash.x))
+        print("\t\ty: ", hex(hash.y))
         return ((hm*self.Kn) + (r * self.P))
     
     def Signing(self, msg:str ):
@@ -43,7 +46,7 @@ class Participator:
         
         hm = int(H1.hexdigest(), 16)
         r = (self.k - (hm * self.kn)) % self.order
-        print("[+] Calculate Signature: \n\t{}".format(r))
+        print("[+] Calculate Signature: \n\t{}".format(hex(r)))
         return r
     
     def Verifying(self, msg, r_plum, CA_Knx, CA_Kny):
@@ -59,7 +62,19 @@ class Participator:
         rP = self.P * r_plum
         CH = Kn * hm + rP
 
-        print("[+] Calculate Hash: \n\tx:{}\n\ty:{}".format(CH.x, CH.y) )
+        print("[+] Calculate Hash: \n\tx:{}\n\ty:{}".format(hex(CH.x), hex(CH.y)))
         return self.CHash == CH
-        
-    
+
+    def PrintSystemParameters(self):
+        print("[+] System Parameters: ")
+        print("\t[-] P: ")
+        print("\t\tx:", hex(self.P.x))
+        print("\t\ty:", hex(self.P.y))
+        print("\t[-] q: ")
+        print("\t\t", hex(S256.n))
+
+    def PrintSignaturePublicKey(self):
+        print("[+] Using Signature Key Kn: ")
+        print("\tx: ", hex(self.Kn.x))
+        print("\ty: ", hex(self.Kn.y))
+

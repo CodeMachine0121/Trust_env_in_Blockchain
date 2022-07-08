@@ -3,6 +3,8 @@ import json
 import os
 from .CipherAlgorithm.rsa import RSA_Library
 from .ChameleonLong.Participator import Participator
+from Crypto.Random.random import getrandbits
+
 def setServer():
     with open("./Verifier/Logic/server.json") as file :
         server  = json.loads(file.read())["CAHost"]
@@ -29,10 +31,10 @@ class longMiddleware:
         return
 
     def Register_to_CA(self):
-        print("[+] Register to CA")
+        print("[+] Register to CA Phase: ")
         r = self.Signature(msg='m')
         data = {
-            "msg": 'm',
+            "msg": hex(int(getrandbits(256))),
             'Knx': self.Participator.Kn.x,
             'Kny': self.Participator.Kn.y,
             "signature": r

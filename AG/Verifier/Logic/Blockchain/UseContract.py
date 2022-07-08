@@ -146,7 +146,7 @@ class TransactionContract:
 
     def ask_for_DeployContraction(self):
         # 要求ca開啟合約給ag
-        print("[+] Waiting for TC deployment: ")
+        print("[+] Waiting for Transaction Contract Deployment: ")
         API = self.CAHost + "TxnDeploy/"
         res = requests.post(API, data=json.dumps({
             "address": self.address
