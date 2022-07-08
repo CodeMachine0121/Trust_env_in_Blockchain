@@ -213,7 +213,7 @@ class Client:
         data = self.beforeAction(from_address, to_address, balance)
 
         res = requests.post("{}/AG/askTransactions/".format(self.server), data=json.dumps(data))
-        Jsystem = json.loads(requests.get("{}/AG/PublicKey/").text)
+        Jsystem = json.loads(requests.get("{}/AG/PublicKey/".format(self.server)).text)
         self.Public_AG = Point(Jsystem.get("Knx"), Jsystem.get("Kny"), curve=secp256k1)
 
         if "result" in dict(json.loads(res.text)).keys():
