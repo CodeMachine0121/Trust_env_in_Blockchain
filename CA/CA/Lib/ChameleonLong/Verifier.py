@@ -21,7 +21,7 @@ class Verifier:
 
         # public value (向量點乘)
         self.Kn = self.kn * self.P
-
+        self.PrintSignaturePubliKey()
         # calculate chameleon Hash
         self.CHash = self.init_Hash()
 
