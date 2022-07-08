@@ -33,12 +33,14 @@ class Participator:
         H1 = HMAC.new(b'', digestmod = SHA256)
         H1.update(msg)
         hm = int(H1.hexdigest(), 16)
+
         r = (self.k - (hm*self.kn)) % self.order
+        hash = ((hm*self.Kn) + (r * self.P))
 
         print("\t[-] Chameleon Hash: ")
         print("\t\tx: ", hex(hash.x))
         print("\t\ty: ", hex(hash.y))
-        return ((hm*self.Kn) + (r * self.P))
+        return hash
     
     def Signing(self, msg:str ):
         H1 = HMAC.new(b'', digestmod=SHA256)
