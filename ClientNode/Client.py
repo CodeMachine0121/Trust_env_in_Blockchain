@@ -10,7 +10,6 @@ from Lib.ChameleonShort.Participator import Participator
 from Lib.CipherAlgorithm import AES_Library as AES
 
 
-
 def getPrivateKey(web3):
     keyfile = os.listdir("./Lib/Blockchain/keystore")[0]
     with open(os.path.join("./Lib/Blockchain/keystore", keyfile)) as file:
@@ -159,13 +158,13 @@ class Client:
     ## 開啟通道、支付時使用
     def beforeAction(self, from_address, to_address, balance):
         ### 簽章驗證
-        msg = str(from_address) +":"+ str(to_address) +":"+ str(balance)
+        msg = str(from_address) + ":" + str(to_address) + ":" + str(balance)
         key = self.part.sk
         en_msg, iv = AES.Encrypt(key, msg)
-        #en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
-        #en_from_address = self.rsa.EncryptFunc(str(from_address), self.AG_RSA_PublicKey)
-        #en_to_address = self.rsa.EncryptFunc(str(to_address), self.AG_RSA_PublicKey)
-        #en_balance = self.rsa.EncryptFunc(str(balance), self.AG_RSA_PublicKey)
+        # en_msg = self.rsa.EncryptFunc(msg, self.AG_RSA_PublicKey)
+        # en_from_address = self.rsa.EncryptFunc(str(from_address), self.AG_RSA_PublicKey)
+        # en_to_address = self.rsa.EncryptFunc(str(to_address), self.AG_RSA_PublicKey)
+        # en_balance = self.rsa.EncryptFunc(str(balance), self.AG_RSA_PublicKey)
         r = self.part.MakeSignature(msg)
         data = {
             "msg": en_msg,
@@ -177,7 +176,6 @@ class Client:
         }
 
         return data
-
 
     # 退出現在的AG
     def quit_current_AG(self):
@@ -271,53 +269,52 @@ class Client:
 
     # 驗證交易通道的兩個Txn (from AG)
     def verifyTransactionHash(self, contractAddr, txn, txnCH, txnData, pubX, pubY, status):
-            signature = self.w3.eth.getTransaction(txnCH)["input"]
-            r = int(signature, 16)
-            result = self.part.VerifySignature(txn, r, pubX, pubY)
+        signature = self.w3.eth.getTransaction(txnCH)["input"]
+        r = int(signature, 16)
+        result = self.part.VerifySignature(txn, r, pubX, pubY)
 
-            if result == False:
-                print("Verify Result: ", False)
-                return False
+        if result == False:
+            print("Verify Result: ", False)
+            return False
 
-            ## 判斷當下是 createTransaction 還是 payment
-            if status == 0:
-                status = "totalAmount"
-            elif status == 1:
-                status = "balance"
-            contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
+        ## 判斷當下是 createTransaction 還是 payment
+        if status == 0:
+            status = "totalAmount"
+        elif status == 1:
+            status = "balance"
+        contract = self.w3.eth.contract(abi=self.abi, address=contractAddr)
 
-            contractInput = self.w3.eth.getTransaction(txn)["input"]
-            func_obj, func_params = contract.decode_function_input(contractInput)
+        contractInput = self.w3.eth.getTransaction(txn)["input"]
+        func_obj, func_params = contract.decode_function_input(contractInput)
 
-            # 比較合約參數是否一致
-            ##print(func_params)
-            if (func_params["_sender"] != txnData["from_address"] or func_params["_receiver"] != txnData[
-                "to_address"] or
-                    func_params[status] != txnData["balance"]):
-                print("\t[-] {} : {}".format(func_params["_sender"], txnData["from_address"]))
-                print("\t[-] {} : {}".format(func_params["_receiver"], txnData["to_address"]))
-                print("\t[-] {} : {}".format(func_params["totalAmount"], txnData["balance"]))
-                print("[!] Transaction Data is wrong")
-                return False
-            else:
-                print("\t[-] Verify: Pass")
-            msg = str(func_params["_sender"]) + str(func_params["_receiver"]) + str(func_params[status])
+        # 比較合約參數是否一致
+        ##print(func_params)
+        if (func_params["_sender"] != txnData["from_address"] or func_params["_receiver"] != txnData[
+            "to_address"] or
+                func_params[status] != txnData["balance"]):
+            print("\t[-] {} : {}".format(func_params["_sender"], txnData["from_address"]))
+            print("\t[-] {} : {}".format(func_params["_receiver"], txnData["to_address"]))
+            print("\t[-] {} : {}".format(func_params["totalAmount"], txnData["balance"]))
+            print("[!] Transaction Data is wrong")
+            return False
+        else:
+            print("\t[-] Verify: Pass")
+        msg = str(func_params["_sender"]) + str(func_params["_receiver"]) + str(func_params[status])
 
-            result = None
-            if status == "totalAmount":
-                result = self.part.VerifySignature(msg, func_params["_signature"], self.Public_AG.x, self.Public_AG.y)
-                print("Result: ", result)
-                return result
-            elif status == "balance":
-                ## 因為payment是驗證別人的變色龍雜湊所以還需要索取CH
-                print("Jelly fish")
-
-            if result == False:
-                print("Verify Transaction Args Verify Failed")
-                return False
-
+        result = None
+        if status == "totalAmount":
+            result = self.part.VerifySignature(msg, func_params["_signature"], self.Public_AG.x, self.Public_AG.y)
+            print("Result: ", result)
             return result
+        elif status == "balance":
+            ## 因為payment是驗證別人的變色龍雜湊所以還需要索取CH
+            print("Jelly fish")
 
+        if result == False:
+            print("Verify Transaction Args Verify Failed")
+            return False
+
+        return result
 
     # 接收芳於扣款時觸發
     def receivePayment(self, from_address, balance):
@@ -369,7 +366,10 @@ class Client:
             "AGAddress": agAddress,
             "SenderAddress": self.address,
             "Balance": balance,
-            "PaymentSign": paymentSign})
+            "PaymentSign": paymentSign,
+            "AGKnx": self.Public_AG.x,
+            "AGKny": self.Public_AG.y
+        })
 
         with open("./txns/{}.json".format("Pay-" + txn), "w") as file:
             file.write(jsonObj)
@@ -396,11 +396,10 @@ class Client:
     def withdraw_from_Contract(self, txn, txnCH, contractAddr, senderAGAddr, data):
         print("[+] Withdrawing Phase ")
         # 取得發送方AG的公要
-        res = requests.post("{}/AG/getPublicKey/".format(self.server), data=json.dumps({"agAddress": senderAGAddr}))
-        senderAGPubX = int(json.loads(res.text)["x"])
-        senderAGPubY = int(json.loads(res.text)["y"])
-        print("\t[-] sender AG PublicKey X: ", senderAGPubX)
-        print("\t[-] sender AG PublicKey Y: ", senderAGPubY)
+        senderAGPubX = int(data["AGKnx"])
+        senderAGPubY = int(data["AGKny"])
+        print("\t[-] sender AG PublicKey X: ", hex(senderAGPubX))
+        print("\t[-] sender AG PublicKey Y: ", hex(senderAGPubY))
 
         # 取得發送方與其AG的變色龍雜湊值
         res = requests.post("{}/AG/getChameleonHash/".format(self.server),
@@ -511,13 +510,9 @@ class Client:
         for fn in fileName:
             with open(os.path.join("./txns/", fn)) as file:
                 jdata.append(json.loads(file.read()))
-
-        counter = 1
-        cost = []
-        start = time.time()
         balanceCounter = 0
-
         for data in jdata:
+
             data["from_address"] = data["SenderAddress"]
             data["balance"] = data["Balance"]
             data["paymentSign"] = data["PaymentSign"]
@@ -525,14 +520,7 @@ class Client:
                 data['contractTxn'], data['SignatureTxn'], data['ContractAddress'],
                 data['AGAddress'], data
             )
-            balanceCounter+=data["balance"]
-            if counter % 10 == 0:
-                cost.append(time.time() - start)
-            counter += 1
-        counter = 10
-        for t in cost:
-            print("\t[-] {}: {}".format(counter, t))
-            counter += 10
+            balanceCounter += data["balance"]
 
         if self.w3.toWei(self.paymentRecord[data['from_address']], 'ether') != balanceCounter:
             print("[!] Local Balance Comparing is Error!")
