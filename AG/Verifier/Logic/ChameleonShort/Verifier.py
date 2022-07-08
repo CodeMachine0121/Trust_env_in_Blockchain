@@ -27,8 +27,11 @@ class Verifier:
         
         # 紀錄多個使用者資訊
         self.sessionKeys = dict()
-        
-    
+
+    def refresh_KeyPair(self, ):
+        self.kn = int(getrandbits(512))
+        self.Kn = self.kn * self.P
+
     def start_SessionKey(self):
         return int(self.xP.x), int(self.xP.y)
     

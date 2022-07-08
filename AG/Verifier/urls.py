@@ -20,6 +20,7 @@ from . import views
 
 urlpatterns = [
     path("Parameters/", views.get_shortTerm_SystemParameters),
+    path("PublicKey/", views.get_PublicKey),
     path("Register/", views.registerRequest),
     path("ResendOTP/", views.reSendOtpSMS),
     path("SessionKey/", views.sessionKey_exchange),

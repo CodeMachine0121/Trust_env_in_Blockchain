@@ -32,6 +32,9 @@ def get_shortTerm_SystemParameters(request):
         "Kny": int(sver.Kn.y),
         "Address": TContract.address}), content_type='application/json')
 
+## 取得短期變色龍簽章公鑰
+def get_PublicKey(reqeust):
+    return int(sver.Kn.x), int(sver.Kn.y)
 
 # 註冊請求
 def registerRequest(request):
@@ -162,7 +165,7 @@ def short_Receiver_Actions(data):
     result = sver.Verifying(msg, r_plum, Knx, Kny, address)
 
     print("[+] Initialize Result: {}".format(result))
-
+    sver.refresh_KeyPair()
     return result, returnData
 
 
