@@ -192,6 +192,7 @@ class TransactionContract:
         print("\t[-] Sender: {}/{}".format(fromAddr, type(fromAddr)))
         print("\t[-] Receiver: {}/{}".format(toAddr, type(toAddr)))
         print("\t[-] Balance: {}/{}".format(balance, type(balance)))
+        print("\t[-] AG2: {}/{}".format(toAG, type(toAG)))
         print("\t[-] Signature: {}/{}".format(r, type(r)))
 
         contract = self.web3.eth.contract(abi=self.contractABI, address=self.contractAddress)
