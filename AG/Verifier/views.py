@@ -11,6 +11,8 @@ from .Logic.Blockchain.UseContract import TransactionContract
 
 # 變色龍雜湊
 lpart = longMiddleware()
+lpart.Register_to_CA()
+
 sver = Verifier(lpart.CA_k)
 
 ## Blockchain

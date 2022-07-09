@@ -29,8 +29,6 @@ class longMiddleware:
 
         self.Participator = Participator(self.CA_k)
 
-        self.Register_to_CA()
-
     def Register_to_CA(self):
         print("[+] Register to CA Phase: ")
         msg = hex(int(getrandbits(256)))
