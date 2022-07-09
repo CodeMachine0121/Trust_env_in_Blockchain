@@ -256,7 +256,7 @@ class Client:
         with open("./txns/{}.json".format("Open-" + txn), "w") as file:
             file.write(jsonObj)
 
-        ## 要還原data
+        # 要還原data
         data["from_address"] = self.address
         data["to_address"] = to_address
         data["balance"] = balance
