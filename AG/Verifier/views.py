@@ -173,7 +173,6 @@ def short_Receiver_Actions(data):
     result = sver.Verifying(msg, r_plum, Knx, Kny, address)
 
     print("[+] Initialize Result: {}".format(result))
-    sver.refresh_KeyPair()
     return result, returnData
 
 
@@ -225,15 +224,17 @@ def createTransaction(request):
 
     # AG對交易訊息簽章
     # seed = int(getrandbits(256)) # 在未來可以加入隨機種子
-    msg = str(from_addr) + str(to_addr) + str(balance)
-    r = sver.Signing(msg, from_addr)
-
     # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
     print("[+] toAG: ", toAG)
     if toAG == int("0", 16):
         print("[!] Receiver AG is not ready, please try again.")
         return HttpResponse("Receiver AG is not ready, please try again", status=401)
+
+    # AG 自行再針對交易訊息進行簽章
+    msg = str(from_addr) + str(to_addr) + str(balance)
+    r = sver.Signing(msg, from_addr)
+    sver.refresh_KeyPair()
 
     try:
         txn = TContract.createTransaction(from_addr, to_addr, toAG, balance, r, RContract.nonce)
@@ -269,10 +270,10 @@ def makePayment(request):
     to_addr = RContract.web3.toChecksumAddress(data["to_address"])
     balance = int(data["balance"])
 
-    # 對交易訊息做簽章
+    # AG 自行再針對交易訊息進行簽章
     msg = str(from_addr) + str(to_addr) + str(balance)
-
     r = sver.Signing(msg, from_addr)
+    sver.refresh_KeyPair()
 
     # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
