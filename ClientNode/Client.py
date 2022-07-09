@@ -351,13 +351,14 @@ class Client:
         paymentSign = json.loads(res.text)["paymentSign"]
         agAddress = json.loads(res.text)["Address"]
 
-        print("[+] Get Contract Txn:\n\t{}".format(txn))
-        print("[+] Get Signature Txn: \n\t{}".format(txnCH))
-        print("[+] Contract Address: \n\t{}".format(contractAddr))
-        print("[+] AG's Address:\n\t{}".format(agAddress))
-        print("[+] Sender's Address:\n\t{}".format(self.address))
-        print("[+] Payment Balance: \n\t{}".format(self.w3.fromWei(balance, 'ether')))
-        print("[+] Get payment Signature: \n\t{}".format(paymentSign))
+        print("\t[-] Get Contract Txn: {}".format(txn))
+        print("\t[-] Get Signature Txn: {}".format(txnCH))
+        print("\t[-] Contract Address: {}".format(contractAddr))
+        print("\t[-] AG1's Address: {}".format(agAddress))
+        print("\t[-] AG1's PublicKey:\n\t\tx: {}\n\t\ty: {}".format(self.Public_AG.x, self.Public_AG.y))
+        print("\t[-] Sender's Address: {}".format(self.address))
+        print("\t[-] Payment Balance: {}".format(self.w3.fromWei(balance, 'ether')))
+        print("\t[-] Get payment Signature: {}".format(paymentSign))
 
         jsonObj = json.dumps({
             "contractTxn": txn,
