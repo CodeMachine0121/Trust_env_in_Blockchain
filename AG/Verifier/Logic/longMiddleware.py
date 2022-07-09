@@ -32,9 +32,10 @@ class longMiddleware:
 
     def Register_to_CA(self):
         print("[+] Register to CA Phase: ")
-        r = self.Signature(msg='m')
+        msg = hex(int(getrandbits(256)))
+        r = self.Signature(msg=msg)
         data = {
-            "msg": hex(int(getrandbits(256))),
+            "msg": msg,
             'Knx': self.Participator.Kn.x,
             'Kny': self.Participator.Kn.y,
             "signature": r
