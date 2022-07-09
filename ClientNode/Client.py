@@ -351,7 +351,7 @@ class Client:
         paymentSign = json.loads(res.text)["paymentSign"]
         agAddress = json.loads(res.text)["Address"]
 
-        print("\t[-] Get Contract Txn: {}".format(txn))
+        print("\t[-] Get Payment Txn: {}".format(txn))
         print("\t[-] Get Signature Txn: {}".format(txnCH))
         print("\t[-] Contract Address: {}".format(contractAddr))
         print("\t[-] AG1's Address: {}".format(agAddress))
