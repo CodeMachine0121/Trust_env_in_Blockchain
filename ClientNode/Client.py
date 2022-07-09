@@ -42,13 +42,11 @@ def getAddress():
 class Client:
     def __init__(self, server):
         self.server = server
-
+        print("[+] Getting System Parameters")
         res = requests.get('{}/AG/Parameters/'.format(server))
         Jsystem = json.loads(res.text)
 
         self.Public_AG = Point(Jsystem.get("Knx"), Jsystem.get("Kny"), curve=secp256k1)
-        print("AG: Public Key X: ", self.Public_AG.x)
-        print("AG: Public Key Y: ", self.Public_AG.y)
 
         self.part = Participator()
         self.agAddr = None
@@ -63,8 +61,6 @@ class Client:
         self.nonce = self.w3.eth.getTransactionCount(self.address)
 
         self.paymentRecord = dict()  # 紀錄支付名單
-        print("Public Key X: ", self.part.Kn.x)
-        print("Public Key Y: ", self.part.Kn.y)
 
     ## 讀取ABI
     def getABI(self, ):
@@ -138,6 +134,7 @@ class Client:
         return
 
     def refreshSessionKey(self):
+        print("[+] Refresh Session Key: ")
         z = int(getrandbits(128))
         zp = self.part.P * z
         zpX = zp.x

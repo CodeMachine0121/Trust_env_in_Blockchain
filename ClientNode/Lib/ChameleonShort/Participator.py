@@ -18,10 +18,16 @@ class Participator:
     def refreshSignatureKey(self, ):
         self.kn = int(getrandbits(512))
         self.Kn = self.P * self.kn
+        print("[+] Refresh Signature Key")
+        print("\t[-] Kn: ", hex(self.Kn))
+        print("\t[-] kn: ", hex(self.kn))
+
 
     def start_SessionKey(self, z, xpx, xpy, servPubX):
         xP = Point(xpx, xpy, curve=secp256k1)
         self.sk = int((xP * z).x)
+        print("[+] Setting sk: ")
+        print("\tsk: ",hex(self.sk))
         # 初始化 變色龍雜湊
         self.init_CHash(self.sk)
 
@@ -36,6 +42,10 @@ class Participator:
         rP = ((sk - (hm * self.kn)) % self.order) * self.P
         hKn = self.Kn * hm
         self.Chash = hKn + rP
+
+        print("\t[-] Chameleon Hash: ")
+        print("\t\tx: ", hex(self.Chash.x))
+        print("\t\ty: ", hex(self.Chash.y))
 
         return
 
@@ -52,7 +62,7 @@ class Participator:
         hKn = serv * hm
         rP = self.P * r_plum
         chash = hKn + rP
-
+        print("[+] Calculate Hash: \n\tx:{}\n\ty:{}".format(hex(chash.x), hex(chash.y)))
         result = chash == self.Chash
         return result
 
@@ -64,20 +74,26 @@ class Participator:
         H1.update(msg.encode())
         hm = int(H1.hexdigest(), 16)
         r = (self.sk - (hm * self.kn)) % self.order
-
+        print("[+] Calculate Signature: \n\t{}".format(hex(r)))
         return r
 
     def verifyTransactionSignature(self, msgs, CHashX, CHashY, Knx, Kny, signatures):
+        print("[+] Verify the Txn Signature")
         senderAG = Point(Knx, Kny, curve=secp256k1)
         chash = Point(CHashX, CHashY, curve=secp256k1)
-        print("[+] Kn: ", Knx, " , ", Kny)
-        print("[+] CH: ", CHashX, " , ", CHashY)
+        print("\t[-] AG(Sender)'s Kn: ")
+        print("\t\tx: ", hex(Knx))
+        print("\t\ty: ", hex(Kny))
+        print("\t[-] sender's CH: ")
+        print("\t\tx: ",hex(CHashX))
+        print("\t\ty: ", hex(CHashY))
         print("\n")
+
         for i in range(0, len(signatures)):
             if signatures[i] == 0:
                 continue
-            print("\t[-] r: ", signatures[i])
-            print("\t[-] msg: ", msgs[i])
+            print("\t[-] r: ", hex(signatures[i]))
+            print("\t[-] txn msg: ", msgs[i])
             H1 = HMAC.new(b'', digestmod=SHA256)
             H1.update(msgs[i].encode())
             hm = int(H1.hexdigest(), 16)
@@ -90,14 +106,23 @@ class Participator:
             if chash != _chash:
                 print("[!]Failed: [{}/{}]".format(i + 1, len(msgs)))
                 return False
-        print("[+]Verify Result: True")
+        print("\t[-]Verify Result: True")
         return True
 
     def verifyPaymentSignature(self, msg, CHashX, CHashY, Knx, Kny, signatures):
+        print("[+] Verify the payment Txn Signature")
         PubKey = Point(Knx, Kny, curve=secp256k1)
 
-        H1 = HMAC.new(b'', digestmod=SHA256)
+        print("\t[-] AG(Sender)'s Kn: ")
+        print("\t\tx: ", hex(Knx))
+        print("\t\ty: ", hex(Kny))
+        print("\t[-] sender's CH: ")
+        print("\t\tx: ", hex(CHashX))
+        print("\t\ty: ", hex(CHashY))
+        print("\t[-] r: ", hex(signatures))
+        print("\t[-] txn msg: ", msgs)
 
+        H1 = HMAC.new(b'', digestmod=SHA256)
         H1.update(msg.encode())
         hm = int(H1.hexdigest(), 16)
 
