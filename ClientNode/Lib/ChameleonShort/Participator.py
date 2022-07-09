@@ -19,8 +19,8 @@ class Participator:
         self.kn = int(getrandbits(512))
         self.Kn = self.P * self.kn
         print("[+] Refresh Signature Key")
-        print("\t[-] Kn: ", hex(self.Kn))
-        print("\t[-] kn: ", hex(self.kn))
+        print("\t[-] Kn x: ", hex(self.Kn.x))
+        print("\t[-] kn y: ", hex(self.kn.y))
 
 
     def start_SessionKey(self, z, xpx, xpy, servPubX):
