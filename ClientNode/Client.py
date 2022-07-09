@@ -268,6 +268,7 @@ class Client:
     def verifyTransactionHash(self, contractAddr, txn, txnCH, txnData, pubX, pubY, status):
         signature = self.w3.eth.getTransaction(txnCH)["input"]
         r = int(signature, 16)
+        print("[+] Verify transaction signature:")
         result = self.part.VerifySignature(txn, r, pubX, pubY)
 
         if result == False:
@@ -296,6 +297,8 @@ class Client:
             return False
         else:
             print("\t[-] Verify: Pass")
+
+        print("[+] Verify transaction msg:")
         msg = str(func_params["_sender"]) + str(func_params["_receiver"]) + str(func_params[status])
 
         result = None
