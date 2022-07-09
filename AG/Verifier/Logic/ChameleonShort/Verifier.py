@@ -43,11 +43,10 @@ class Verifier:
         print("[+] client: {} Registering".format(chain_Address))
         zP = Point(zpx, zpy, curve=S256)
         sk = int((zP * self.x).x)
+        print("\t[-] Session Key:\n\t\t{}".format(hex(sk)))
 
         # 初始化變色龍雜湊跟使用者紀錄
         Chash = self.init_Hash(sk)
-        print("\t[-] Session Key:\n\t{}".format(hex(sk)))
-        print("\t[-] Session CH:\n\t x:{}\n\t y:{}".format(hex(Chash.x), hex(Chash.y)))
 
         # address as index
         self.sessionKeys[chain_Address] = {
