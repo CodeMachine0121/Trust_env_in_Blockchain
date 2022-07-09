@@ -20,7 +20,7 @@ class Participator:
         self.Kn = self.P * self.kn
         print("[+] Refresh Signature Key")
         print("\t[-] Kn x: ", hex(self.Kn.x))
-        print("\t[-] kn y: ", hex(self.kn.y))
+        print("\t[-] kn y: ", hex(self.Kn.y))
 
 
     def start_SessionKey(self, z, xpx, xpy, servPubX):
