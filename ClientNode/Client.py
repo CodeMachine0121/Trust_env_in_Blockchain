@@ -458,9 +458,9 @@ class Client:
             # if (i+1)%10 ==0:
             #   cost.append(time.time()-start)
 
-        #print("----------------------------------------------------")
-        #print("Transaction 耗時: {}".format(time.time() - start))
-        #print("----------------------------------------------------")
+        # print("----------------------------------------------------")
+        # print("Transaction 耗時: {}".format(time.time() - start))
+        # print("----------------------------------------------------")
 
         start = time.time()
         for i in range(0, times):
@@ -507,6 +507,10 @@ class Client:
             with open(os.path.join("./txns/", fn)) as file:
                 jdata.append(json.loads(file.read()))
         balanceCounter = 0
+
+        start = time.time()
+        counter = 0
+        cost = []
         for data in jdata:
             data["from_address"] = data["SenderAddress"]
             data["balance"] = data["Balance"]
@@ -515,8 +519,12 @@ class Client:
                 data['contractTxn'], data['SignatureTxn'], data['ContractAddress'],
                 data['AGAddress'], data
             )
+            if (counter + 1) % 10 == 0:
+                cost.append(time.time() - start)
             balanceCounter += data["balance"]
+            counter += 1
 
         if self.w3.toWei(self.paymentRecord[data['from_address']], 'ether') != balanceCounter:
             print("[!] Local Balance Comparing is Error!")
             print("\t[!!] Please Contact the AG Node")
+        print("time: ", str(cost))
