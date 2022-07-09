@@ -344,7 +344,7 @@ class Client:
         if "please try again" in res.text:
             print("[!] Recevier has not register AG")
             return ""
-
+        print("[+] Get Payment Txns")
         txn = json.loads(res.text)["txn"]
         txnCH = json.loads(res.text)["txnCH"]
         contractAddr = json.loads(res.text)["contractAddr"]
