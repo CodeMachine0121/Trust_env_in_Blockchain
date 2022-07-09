@@ -452,7 +452,6 @@ class Client:
 
     # 效能測試
     def PerformanceTesting(self, times, to_address, balance):
-        start = time.time()
         cost = []
         for i in range(0, 1):
             self.askTransaction(self.address, to_address, int(balance))
@@ -463,17 +462,14 @@ class Client:
         print("Transaction 耗時: {}".format(time.time() - start))
         print("----------------------------------------------------")
 
+        start = time.time()
         for i in range(0, times):
             self.payment(self.address, to_address, int(balance / times))
             if (i + 1) % 10 == 0:
                 cost.append(time.time() - start)
-
-        for counter in range(0, len(cost)):
-            print("\t[-] {}: {}".format((counter + 1) * 10, cost[counter]))
-
-        # print("----------------------------------------------------")
-        # print("payment 耗時: {}".format(time.time()-start))
-        # print("----------------------------------------------------")
+        print("----------------------------------------------------")
+        print("payment 耗時: ", str(cost))
+        print("----------------------------------------------------")
 
     # 效能測試 - 一般交易
     def TransactionTesting(self, times, to_address, balance):
