@@ -458,9 +458,9 @@ class Client:
             # if (i+1)%10 ==0:
             #   cost.append(time.time()-start)
 
-        print("----------------------------------------------------")
-        print("Transaction 耗時: {}".format(time.time() - start))
-        print("----------------------------------------------------")
+        #print("----------------------------------------------------")
+        #print("Transaction 耗時: {}".format(time.time() - start))
+        #print("----------------------------------------------------")
 
         start = time.time()
         for i in range(0, times):
