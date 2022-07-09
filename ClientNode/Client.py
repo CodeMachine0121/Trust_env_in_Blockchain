@@ -355,7 +355,8 @@ class Client:
         print("\t[-] Get Signature Txn: {}".format(txnCH))
         print("\t[-] Contract Address: {}".format(contractAddr))
         print("\t[-] AG1's Address: {}".format(agAddress))
-        print("\t[-] AG1's PublicKey:\n\t\tx: {}\n\t\ty: {}".format(self.Public_AG.x, self.Public_AG.y))
+        print("\t[-] AG1's PublicKey:\n\t\tx: {}\n\t\ty: {}".format(
+            hex(self.Public_AG.x), hex(self.Public_AG.y)))
         print("\t[-] Sender's Address: {}".format(self.address))
         print("\t[-] Payment Balance: {}".format(self.w3.fromWei(balance, 'ether')))
         print("\t[-] Get payment Signature: {}".format(paymentSign))
@@ -393,28 +394,31 @@ class Client:
         return self.w3.fromWei(response.get("totalAmount"), 'ether'), \
                self.w3.fromWei(response.get("payedAmount"), 'ether')
 
-    # 接收TXn後 要透過Txn領取金額
+    # 接收Txn後 要透過Txn領取金額
     def withdraw_from_Contract(self, txn, txnCH, contractAddr, senderAGAddr, data):
         print("[+] Withdrawing Phase ")
         # 取得發送方AG的公要
         senderAGPubX = int(data["AGKnx"])
         senderAGPubY = int(data["AGKny"])
-        print("\t[-] sender AG PublicKey X: ", hex(senderAGPubX))
-        print("\t[-] sender AG PublicKey Y: ", hex(senderAGPubY))
+        print("\t[-] AG PublicKey \n\t\tx: {}\n\t\ty: {}".format( hex(senderAGPubX), hex(senderAGPubY)))
+        print("\t[-] payment Txn: ", txn)
+        print("\t[-] signature Txn: ", txnCH)
 
         # 取得發送方與其AG的變色龍雜湊值
         res = requests.post("{}/AG/getChameleonHash/".format(self.server),
                             data=json.dumps({"clientAddr": data["from_address"], "agAddr": senderAGAddr}))
         HashX = int(json.loads(res.text)["HashX"])
         HashY = int(json.loads(res.text)["HashY"])
-        print("\t[-] AG Hash: \n\t\tx: {}\n\t\ty: {}".format(HashX, HashY))
+        print("\t[-] AG Hash: \n\t\tx: {}\n\t\ty: {}".format(hex(HashX), hex(HashY)))
 
         # 驗正簽章
         print("[+] Verifying payment Txn Phase")
         # 從txnCH上取得針對觸發payment函數的變色龍簽章(sender AG簽的)
-        txnSign = int(self.w3.eth.getTransaction(txnCH)["input"], 16)
+        # AG把交易處發函數的txn簽呈變色龍 再發到區塊鏈
+        txnSign = int(self.w3.eth.getTransaction(txnCH)["input"], 16) # 變色龍簽章
         msg = txn
         result = self.part.verifyPaymentSignature(msg, HashX, HashY, senderAGPubX, senderAGPubY, txnSign)
+        print("\t[-] Get signature in signature Txn:\n\t\t", txnSign)
         print("\t[-] Txn Verify: ", result)
         if not result:
             return result
