@@ -173,6 +173,7 @@ def short_Receiver_Actions(data):
     result = sver.Verifying(msg, r_plum, Knx, Kny, address)
 
     print("[+] Initialize Result: {}".format(result))
+    sver.refresh_KeyPair()
     return result, returnData
 
 
@@ -234,7 +235,6 @@ def createTransaction(request):
     # AG 自行再針對交易訊息進行簽章
     msg = str(from_addr) + str(to_addr) + str(balance)
     r = sver.Signing(msg, from_addr)
-    sver.refresh_KeyPair()
 
     try:
         txn = TContract.createTransaction(from_addr, to_addr, toAG, balance, r, RContract.nonce)
@@ -273,7 +273,7 @@ def makePayment(request):
     # AG 自行再針對交易訊息進行簽章
     msg = str(from_addr) + str(to_addr) + str(balance)
     r = sver.Signing(msg, from_addr)
-    sver.refresh_KeyPair()
+
 
     # 要透過 To_addr 取找他所屬的AG的位址
     toAG = RContract.findAGviaAddress(to_addr)
