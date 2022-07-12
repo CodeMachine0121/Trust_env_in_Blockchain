@@ -7,7 +7,7 @@ import time
 
 class Verifier:
     def __init__(self, k):
-        print("[+] Importing System parameters")
+        print("[+] Importing System parameters (for Client)")
         self.P = S256.G
         self.Px = self.P.x
         self.Py = self.P.y
