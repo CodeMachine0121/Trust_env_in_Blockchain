@@ -347,3 +347,6 @@ def getChameleonHash(request):
     })
     print("\t[-] ", data)
     return HttpResponse(data, content_type='application/json', status=200)
+
+
+## 後續追蹤部分

@@ -120,7 +120,7 @@ class Participator:
         print("\t\tx: ", hex(CHashX))
         print("\t\ty: ", hex(CHashY))
         print("\t[-] r: ", hex(signatures))
-        print("\t[-] txn msg: ", msgs)
+        print("\t[-] txn msg: ", msg)
 
         H1 = HMAC.new(b'', digestmod=SHA256)
         H1.update(msg.encode())
