@@ -2,28 +2,30 @@ from Participator import Participator
 from Verifier import Verifier
 import time
 
-ver = Verifier()
-Px = int(ver.P.x)
-Py = int(ver.P.y)
+if __name__ == '__main__':
 
-msg = 'Hello'
-signatures=[]
-cost=[]
+    ver = Verifier(512)
 
-for i in range(1,101):
-    vr = ver.Signing(msg)
-    signatures.append(vr)
+    msg = 'Hello'
+    signature = -1
 
-part = Participator(ver.k)
-start = time.time()
-for i in range(0,100):
-    s = part.Verifying(msg, signatures[i], ver.Kn.x, ver.Kn.y)
-    if (i+1)%10 == 0 :
-        cost.append(time.time()-start)
+    loopTime = [i for i in range(10, 110, 10)]
+    timeList = []
 
-counter=1
-for t in cost:
-    print("[+] {}: {}".format(counter*10,t))
-    counter+=1
+    for t in loopTime:
+        counter = 0
+        for i in range(t):
+            signature, c = ver.Signing(msg)
+            counter += c
+        timeList.append(counter)
+    print(timeList)
+    print("-----------")
 
-
+    timeList = []
+    for t in loopTime:
+        counter = 0
+        for i in range(t):
+            s, c = ver.Verifying(msg, signature, ver.Kn.x, ver.Kn.y)
+            counter += c
+        timeList.append(counter)
+    print(timeList)
