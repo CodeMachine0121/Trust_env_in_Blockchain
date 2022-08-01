@@ -39,10 +39,10 @@ class Verifier:
     def start_SessionKey(self):
         return int(self.xP.x), int(self.xP.y)
 
-    def set_SessionKey(self, zpx, zpy, Cli_PubX, chain_Address):
+    def set_SessionKey(self, zpx, zpy, OtpAns, Cli_PubX, chain_Address):
         print("[+] client: {} Registering".format(chain_Address))
         zP = Point(zpx, zpy, curve=S256)
-        sk = int((zP * self.x).x)
+        sk = int((zP * self.x).x) ^ OtpAns
         print("\t[-] Session Key:\n\t\t{}".format(hex(sk)))
 
         # 初始化變色龍雜湊跟使用者紀錄

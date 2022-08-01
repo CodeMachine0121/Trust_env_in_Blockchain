@@ -22,12 +22,11 @@ class Participator:
         print("\t[-] Kn x: ", hex(self.Kn.x))
         print("\t[-] kn y: ", hex(self.Kn.y))
 
-
-    def start_SessionKey(self, z, xpx, xpy, servPubX):
+    def start_SessionKey(self, z, xpx, xpy, optAns):
         xP = Point(xpx, xpy, curve=secp256k1)
-        self.sk = int((xP * z).x)
+        self.sk = int((xP * z).x) ^ optAns
         print("[+] Setting sk: ")
-        print("\tsk: ",hex(self.sk))
+        print("\tsk: ", hex(self.sk))
         # 初始化 變色龍雜湊
         self.init_CHash(self.sk)
 
@@ -85,7 +84,7 @@ class Participator:
         print("\t\tx: ", hex(Knx))
         print("\t\ty: ", hex(Kny))
         print("\t[-] sender's CH: ")
-        print("\t\tx: ",hex(CHashX))
+        print("\t\tx: ", hex(CHashX))
         print("\t\ty: ", hex(CHashY))
         print("\n")
 

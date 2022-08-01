@@ -78,7 +78,8 @@ def updateSessionKey(request):
     client = sver.sessionKeys[address]
     SKM.emptySessionKey(client)
 
-    sver.set_SessionKey(zpX, zpY, cli_PubX, address)  # 這邊就會初始化變色龍雜湊
+    sver.set_SessionKey(zpX, zpY, userList[address]["otp"], cli_PubX, address)  # 這邊就會初始化變色龍雜湊
+    # 這邊就會初始化變色龍雜湊
     result = RContract.registerClient(address, sver.sessionKeys[address]["Chash"])
 
     xpX, xpY = sver.start_SessionKey()
@@ -128,7 +129,8 @@ def sessionKey_exchange(request):
 
     # 向合約登記此client在他的管轄內
     TContract.balanceList[address] = dict()
-    sver.set_SessionKey(zpX, zpY, KnX, address)  # 這邊就會初始化變色龍雜湊
+    userList[address]["otp"] = OtpAns
+    sver.set_SessionKey(zpX, zpY, OtpAns, KnX, address)  # 這邊就會初始化變色龍雜湊
 
     result = RContract.registerClient(address, sver.sessionKeys[address]["Chash"])
     if not result:

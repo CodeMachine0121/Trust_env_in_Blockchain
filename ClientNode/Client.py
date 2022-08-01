@@ -61,6 +61,7 @@ class Client:
         self.nonce = self.w3.eth.getTransactionCount(self.address)
 
         self.paymentRecord = dict()  # 紀錄支付名單
+        self.optAns = None
 
     ## 讀取ABI
     def getABI(self, ):
@@ -86,7 +87,7 @@ class Client:
         if res.status_code != 200:
             print("[!] Something Error!")
         print("[+] The OTP has already send to you as SMS message please check it")
-        optAns = str(input("\t[-] Your OTP: "))
+        self.optAns = str(input("\t[-] Your OTP: "))
 
         ## Session key Exchange
         ## 計算 zP
@@ -97,7 +98,7 @@ class Client:
         while True:
             res = requests.post('{}/AG/SessionKey/'.format(self.server),
                                 data=json.dumps({
-                                    'otpAnswer': optAns,
+                                    'otpAnswer': self.optAns,
                                     'phoneNumber': userData["phoneNumber"],
                                     'zpX': zpX,
                                     'zpY': zpY,
@@ -116,7 +117,7 @@ class Client:
                                             data=json.dumps({
                                                 "phoneNumber": userData["phoneNumber"]}))
                         print("[+] The OTP has already send to ur Email, please check it")
-                        optAns = str(input("\t[-] Your OTP: "))
+                        self.optAns = str(input("\t[-] Your OTP: "))
                         continue
                     else:
                         print("[!] Quit the Registering Phase! ")
@@ -129,7 +130,7 @@ class Client:
         self.agAddr = json.loads(res.text).get("address")
 
         ### 計算sk
-        self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
+        self.part.start_SessionKey(z, xpX, xpY, self.optAns)
         print("\t[-] 完成註冊")
         return
 
@@ -149,7 +150,7 @@ class Client:
         xpX = json.loads(res.text).get("xpX")
         xpY = json.loads(res.text).get("xpY")
         ## 重新計算sk
-        self.part.start_SessionKey(z, xpX, xpY, int(self.Public_AG.x))
+        self.part.start_SessionKey(z, xpX, xpY, self.optAns)
         return
 
     ## 開啟通道、支付時使用

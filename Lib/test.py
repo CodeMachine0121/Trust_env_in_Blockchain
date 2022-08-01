@@ -13,16 +13,19 @@ def sessionKey():
 
     timeLoop = [i for i in range(10, 110, 10)]
     timeList = []
-
+    da = int(getrandbits(512))
+    db = int(getrandbits(512))
+    otp = int(getrandbits(512))
     for t in timeLoop:
         counter = 0
+
         for i in range(t):
-            da = int(getrandbits(512))
-            db = int(getrandbits(512))
             daP = da * p
             counter += int(math.log2(da)) + 1
             dbdaP = db * daP
-            counter += int(math.log2(db))+1
+            counter += int(math.log2(db)) + 1
+            sk = dbdaP.x ^ otp
+            counter += 1
 
         timeList.append(counter)
     print(timeList)
@@ -73,5 +76,32 @@ def inverse(u, v):
     return u1, counter
 
 
+def test():
+
+    counterList = []
+    counter = 1
+    for t in range(100):
+        for i in range(100):
+            counter += 1
+            for j in range(100):
+                counter += 2
+            counter += 1
+        counterList.append(counter)
+    print(counterList)
+
+    counterList = []
+    counter = 0
+    for i in range(100):
+        n = 100
+        while n>0:
+            counter+=1
+            n/=2
+        counterList.append(counter)
+    print(counterList)
+    return
+
+
 if __name__ == '__main__':
-    sessionKey()
+    test()
+
+    #sessionKey()
